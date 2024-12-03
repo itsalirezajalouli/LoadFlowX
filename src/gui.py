@@ -1,23 +1,22 @@
 # Main GUI setup and window management
 
 # Imports
-from PyQt6.QtGui import QAction 
-from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QMainWindow, QVBoxLayout, QWidget
-from guiComponents import Color
+from PyQt6.QtCore import QSize
+from guiComponents import Color,Grid
+from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QMainWindow, QVBoxLayout, QWidget, QToolButton
 
 # Main Window Object
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle('DickSilent!')
-        self.setFixedSize(1300, 700)
+        self.setMinimumSize(800, 700)
 
         # Menu Bar
         menu = self.menuBar()
         menu.setStyleSheet('''
-            background-color: #2c2f33;
-            color: #fff;
-        ''')
+            background-color: #2c2f33; color: #fff; ''')
         fileMenu = menu.addMenu('&File')
         editMenu = menu.addMenu('&Edit')
         loadFlowMenu = menu.addMenu('&Load Flow')
@@ -81,12 +80,94 @@ class MainWindow(QMainWindow):
         loadFlowMenu.addSeparator()
 
         # Layouts
-        layout = QHBoxLayout()
-        layout.addWidget(Color('red'), 1)
-        layout.addWidget(Color('orange'), 12)
-        layout.addWidget(Color('blue'), 3)
+        self.mainLayout = QHBoxLayout()
+        self.mainLayout.setSpacing(10)
+        self.toolBox = QWidget()
+        self.toolBoxLayout = QVBoxLayout()
+        self.toolBox.setLayout(self.toolBoxLayout)
+        self.toolBox.setStyleSheet('''
+            background-color: #23272a;
+            border-radius: 12px;
+        ''')
+
+        #   Select button
+        selectButton = QToolButton()
+        selectButton.setIcon(QIcon('../icons/select.png'))
+        selectButton.setIconSize(QSize(28, 28))
+        selectButton.setStyleSheet('''
+        QToolButton {
+            background-color: #3b3e45;
+            border-radius: 10px;
+            padding: 2px;
+            color: #ffffff;
+        }
+        QToolButton:hover {
+            background-color: #3b3e45;
+        }
+        QToolButton:pressed {
+            background-color: #23272a;
+        }
+        ''')
+        self.toolBoxLayout.addWidget(selectButton)
+
+        #   Add Generator button
+        addGenButton = QToolButton()
+        addGenButton.setText('G')
+        addGenButton.setStyleSheet('''
+        QToolButton {
+            font-size: 24px;
+            background-color: #3b3e45;
+            border-radius: 10px;
+            padding: 2px;
+            color: #ffffff;
+        }
+        QToolButton:hover {
+            background-color: #3b3e45;
+        }
+        QToolButton:pressed {
+            background-color: #23272a;
+        }
+        ''')
+        self.toolBoxLayout.addWidget(addGenButton)
+
+        #   Add Bus button
+        addBusButton = QToolButton()
+        addBusButton.setText('B')
+        addBusButton.setStyleSheet('''
+        QToolButton {
+            font-size: 24px;
+            background-color: #3b3e45;
+            border-radius: 10px;
+            padding: 2px;
+            color: #ffffff;
+        }
+        QToolButton:hover {
+            background-color: #3b3e45;
+        }
+        QToolButton:pressed {
+            background-color: #23272a;
+        }
+        ''')
+        self.toolBoxLayout.addWidget(addBusButton)
+
+        self.mainLayout.addWidget(self.toolBox)
+
+        # Grid Layout
+        self.grid = Grid(30)
+        # self.gridLayout = QVBoxLayout()
+        # self.grid.setLayout(self.gridLayout)
+        # self.grid.setStyleSheet('''
+        #     background-color: #3b3e45;
+        #     border-radius: 12px;
+        # ''')
+        self.mainLayout.addWidget(self.grid, 10)
+        
+        # Main Widget
         widget = QWidget()
-        widget.setLayout(layout)
+        widget.setLayout(self.mainLayout)
+        widget.setStyleSheet('''
+            background-color: #23272a
+        ''')
         self.setCentralWidget(widget)
 
     def makeProject(self) -> None:

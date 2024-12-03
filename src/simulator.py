@@ -5,7 +5,7 @@ import pandapower as pp
 from termcolor import colored
 
 # Creates the network
-class netMaker():
+class NetworkCreator():
     def __init__(self) -> None:
         self.net = pp.create_empty_network()
         self.buses = {}
@@ -60,7 +60,7 @@ class netMaker():
         pp.runpp(self.net, algorithm = method)
         print(self.net.res_bus)
 
-nMaker = netMaker()
+nMaker = NetworkCreator()
 nMaker.addBusBar(110, 'Bus1')
 nMaker.addBusBar(20, 'Bus2')
 nMaker.addBusBar(110, 'Bus3')
