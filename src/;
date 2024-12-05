@@ -1,0 +1,6 @@
+#   Components like Bus, Line and Network...
+
+class BusBar():
+    def __init__(id: int):
+        self.name = name # just for GUI display
+        self.id = id

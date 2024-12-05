@@ -2,7 +2,8 @@
 
 # Imports
 from PyQt6.QtCore import QSize
-from guiComponents import Color,Grid
+from gui_components import Color,Grid
+from psa_components import BusBar
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QMainWindow, QVBoxLayout, QWidget, QToolButton
 
@@ -171,6 +172,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
     def makeProject(self) -> None:
+        bus = BusBar()
         pass
 
     def openProject(self) -> None:
@@ -193,3 +195,4 @@ class MainWindow(QMainWindow):
 
     def fdLoadFlow(self) -> None:
         pass
+
