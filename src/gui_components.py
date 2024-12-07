@@ -13,6 +13,7 @@ class Color(QWidget):
         palette = self.palette()
         palette.setColor(QPalette.ColorRole.Window, QColor(color))
         self.setPalette(palette)
+        # Mouse Tracking for Hovering
 
 class Grid(QWidget):
     def __init__(self, dist, *args, ** kwargs):
@@ -28,21 +29,38 @@ class Grid(QWidget):
         self.projectName = None
         self.busCounter = 0
         self.busses = {}
+        self.highLightedPoint = None
+        self.setMouseTracking(True)
 
         # Disable the widgets to ignore all events
         # Widget should not become mousegrabber
         # self.setDisabled(True)
 
+    def mouseMoveEvent(self, event) -> None:
+        pos = event.pos()
+        x = pos.x()
+        y = pos.y()
+        xmod = x % self.dist
+        ymod = y % self.dist
+        if xmod < (self.dist / 2):
+            x -= xmod
+        else: 
+            x += (self.dist - xmod)
+        if ymod < (self.dist / 2):
+            y -= ymod
+        else: 
+            y += (self.dist - ymod)
+        self.highLightedPoint = QPoint(x, y)
+        self.update()
+
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
             if self.insertBusMode:
                 pos = event.pos()
-                print(pos)
                 x = pos.x()
                 y = pos.y()
                 xmod = x % self.dist
                 ymod = y % self.dist
-                print(self.dist, xmod, ymod)
                 if xmod < (self.dist / 2):
                     x -= xmod
                 else: 
@@ -52,7 +70,6 @@ class Grid(QWidget):
                 else: 
                     y += (self.dist - ymod)
                 pos = QPoint(x, y)
-                print(pos)
                 self.addBusDialog = AddBusDialog(self)
                 self.addBusDialog.busPos = pos
                 self.busCounter += 1
@@ -61,7 +78,6 @@ class Grid(QWidget):
                 self.addBusDialog.exec()
                 self.busses[self.addBusDialog.nameInput.text()] = pos
                 self.update()
-                print(self.busses)
                 self.insertBusMode = False
 
     def insertBus(self) -> None:
@@ -112,12 +128,23 @@ class Grid(QWidget):
         while y < self.height():
             while x < self.width():
                 dotPen = QPen()
-                dotPen.setColor(self.txtColor)
+                dotPen.setColor(self.dotColor)
                 painter.setPen(dotPen)
                 painter.drawEllipse(x - 1, y - 1, 2, 2)
                 x += self.dist
             y += self.dist
             x = 0
+
+        highLightedPoint = self.highLightedPoint
+        if highLightedPoint is not None:
+            print(highLightedPoint)
+            dotPen = QPen()
+            dotPen.setColor(self.txtColor)
+            dotPen.setWidth(self.txtWidth)
+            painter.setPen(dotPen)
+            xHigh = highLightedPoint.x()
+            yHigh = highLightedPoint.y()
+            painter.drawEllipse(xHigh - 1, yHigh - 1, 2, 2)
 
         for text, point in self.busses.items():
             txtPen = QPen()

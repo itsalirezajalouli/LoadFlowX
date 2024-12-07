@@ -236,7 +236,7 @@ class MainWindow(QMainWindow):
         self.toolBoxLayout.addWidget(addLoadButton)
 
         # Grid Layout
-        self.grid = Grid(30)
+        self.grid = Grid(32)
         self.mainLayout.addWidget(self.grid, 10)
         
         # Main Widget
