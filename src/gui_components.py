@@ -19,11 +19,14 @@ class Grid(QWidget):
         super().__init__(*args, **kwargs)
         self.dist = dist 
         self.penWidth = 1
+        self.txtWidth = 2
         self.lineColor = QColor(100, 100, 100, 100)
+        self.txtColor = QColor(255, 255, 255, 255)
         self.offSet = QPoint(0, 0)
         self.insertBusMode = False
         self.projectName = None
         self.busCounter = 0
+        self.busses = {}
 
         # Disable the widgets to ignore all events
         # Widget should not become mousegrabber
@@ -33,12 +36,31 @@ class Grid(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             if self.insertBusMode:
                 pos = event.pos()
+                print(pos)
+                x = pos.x()
+                y = pos.y()
+                xmod = x % self.dist
+                ymod = y % self.dist
+                print(self.dist, xmod, ymod)
+                if xmod < (self.dist / 2):
+                    x -= xmod
+                else: 
+                    x += (self.dist - xmod)
+                if ymod < (self.dist / 2):
+                    y -= ymod
+                else: 
+                    y += (self.dist - ymod)
+                pos = QPoint(x, y)
+                print(pos)
                 self.addBusDialog = AddBusDialog(self)
                 self.addBusDialog.busPos = pos
                 self.busCounter += 1
                 self.addBusDialog.busId = self.busCounter
                 self.addBusDialog.projectName = self.projectName
                 self.addBusDialog.exec()
+                self.busses[self.addBusDialog.nameInput.text()] = pos
+                self.update()
+                print(self.busses)
                 self.insertBusMode = False
 
     def insertBus(self) -> None:
@@ -78,6 +100,13 @@ class Grid(QWidget):
             painter.drawLine(startV, endV)
             startV += distanceV
             endV += distanceV
+
+        for text, point in self.busses.items():
+            txtPen = QPen()
+            txtPen.setWidth(self.txtWidth)
+            txtPen.setColor(self.txtColor)
+            painter.setPen(txtPen)
+            painter.drawText(point, text)
 
         painter.end()
 
