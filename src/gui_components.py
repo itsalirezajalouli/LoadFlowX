@@ -123,8 +123,6 @@ class Grid(QWidget):
 
         x = 0
         y = 0
-        print(self.height())
-        print(self.width())
         while y < self.height():
             while x < self.width():
                 dotPen = QPen()
@@ -137,7 +135,6 @@ class Grid(QWidget):
 
         highLightedPoint = self.highLightedPoint
         if highLightedPoint is not None:
-            print(highLightedPoint)
             dotPen = QPen()
             dotPen.setColor(self.txtColor)
             dotPen.setWidth(self.txtWidth)
@@ -152,6 +149,13 @@ class Grid(QWidget):
             txtPen.setColor(self.txtColor)
             painter.setPen(txtPen)
             painter.drawText(point, text)
+            dotPen = QPen()
+            dotPen.setColor(self.txtColor)
+            dotPen.setWidth(self.txtWidth)
+            painter.setPen(dotPen)
+            busX = point.x()
+            busY = point.y()
+            painter.drawEllipse(busX - 1, busY - 1, 2, 2)
 
         painter.end()
 
