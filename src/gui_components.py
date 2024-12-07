@@ -22,7 +22,7 @@ class Grid(QWidget):
         self.penWidth = 1
         self.txtWidth = 2
         self.lineColor = QColor(100, 100, 100, 100)
-        self.dotColor = QColor(125, 125, 125, 125)
+        self.dotColor = QColor(25, 125, 125, 125)
         self.txtColor = QColor(255, 255, 255, 255)
         self.offSet = QPoint(0, 0)
         self.insertBusMode = False

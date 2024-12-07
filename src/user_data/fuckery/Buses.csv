@@ -1,3 +1,0 @@
-1,shitBus,"PyQt6.QtCore.QPoint(320, 224)",BusType.SLACK,1.0,1.0,1.0,1.0
-2,fuckBus,"PyQt6.QtCore.QPoint(704, 448)",BusType.PV,2.0,3.0,2.0,1.0
-3,fartBus,"PyQt6.QtCore.QPoint(224, 608)",BusType.PQ,1.0,2.0,1.0,2.0
