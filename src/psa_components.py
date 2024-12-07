@@ -1,5 +1,7 @@
 #   Components like Bus, Line and Network...
+import pandas as pd
 from enum import Enum
+from termcolor import colored
 
 class BusType(Enum):
     SLACK = 'slack'
@@ -30,6 +32,39 @@ class BusBar():
         self.vAng = vAng
         self.P = P
         self.Q = Q
+
+    def log(self) -> None:
+        print(colored(
+        '''
+                                █   █▀█ █▀▀ █▀
+                                █▄▄ █▄█ █▄█ ▄█
+        '''
+        , 'light_blue'))
+        print(colored('-' * 80, 'red'))
+        print(colored('-> ID:', 'light_blue'), self.id)
+        print(colored('-> Name:', 'light_blue'), self.name)
+        print(colored('-> Pos:', 'light_blue'), self.pos)
+        print(colored('-> Bus Type:', 'light_blue'), self.bType)
+        print(colored('-> Voltage Magnitude:', 'light_blue'), self.vMag)
+        print(colored('-> Voltage Angle:', 'light_blue'), self.vAng)
+        print(colored('-> Active Power:', 'light_blue'), self.P)
+        print(colored('-> Passive Power:', 'light_blue'), self.Q)
+
+    def makeCSV(self, path) -> None:
+        data = {
+            'id': [self.id],
+            'name': [self.name],
+            'pos': [self.pos],
+            'bType': [self.bType],
+            'vMag': [self.vMag],
+            'vAng': [self.vAng],
+            'P': [self.P],
+            'Q': [self.Q],
+        }
+        df = pd.DataFrame(data)
+        csvPath = path + '/Buses.csv'
+        df.to_csv(csvPath, mode = 'a', index = False, header = False)
+        print('Data appended successfuly.')
 
 class Transformer():
     def __init__(self,
