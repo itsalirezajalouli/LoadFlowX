@@ -21,6 +21,7 @@ class Grid(QWidget):
         self.penWidth = 1
         self.txtWidth = 2
         self.lineColor = QColor(100, 100, 100, 100)
+        self.dotColor = QColor(125, 125, 125, 125)
         self.txtColor = QColor(255, 255, 255, 255)
         self.offSet = QPoint(0, 0)
         self.insertBusMode = False
@@ -100,6 +101,23 @@ class Grid(QWidget):
             painter.drawLine(startV, endV)
             startV += distanceV
             endV += distanceV
+
+        startH = QPoint(0, int(self.offSet.y()))
+        startV = QPoint(int(self.offSet.x()), 0)
+
+        x = 0
+        y = 0
+        print(self.height())
+        print(self.width())
+        while y < self.height():
+            while x < self.width():
+                dotPen = QPen()
+                dotPen.setColor(self.txtColor)
+                painter.setPen(dotPen)
+                painter.drawEllipse(x - 1, y - 1, 2, 2)
+                x += self.dist
+            y += self.dist
+            x = 0
 
         for text, point in self.busses.items():
             txtPen = QPen()
