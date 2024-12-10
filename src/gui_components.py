@@ -1,9 +1,10 @@
 # Imports
 import os
-from os.path import isdir
+# from os.path import isdir
 from PyQt6.QtCore import QPoint, Qt
 from psa_components import BusBar, BusType
-from PyQt6.QtGui import QColor, QPalette, QPaintEvent, QPen, QPainter
+from theme import DiscordPalette as theme
+from PyQt6.QtGui import QColor, QPalette, QPaintEvent, QPen, QPainter, QBrush
 from PyQt6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QWidget, QLabel, QDialogButtonBox, QMessageBox
 
 class Color(QWidget):
@@ -13,31 +14,32 @@ class Color(QWidget):
         palette = self.palette()
         palette.setColor(QPalette.ColorRole.Window, QColor(color))
         self.setPalette(palette)
-        # Mouse Tracking for Hovering
 
 class Grid(QWidget):
     def __init__(self, dist, *args, ** kwargs):
         super().__init__(*args, **kwargs)
         self.dist = dist 
-        self.penWidth = 1
+        self.gridWidth = 1
         self.txtWidth = 2
+        self.lineWidth = 2
         self.lineColor = QColor(100, 100, 100, 100)
-        self.dotColor = QColor(25, 125, 125, 125)
-        self.txtColor = QColor(255, 255, 255, 255)
+        self.dotColor = QColor(125, 125, 125, 125)
+        self.highLightWhite = QColor(255, 255, 255, 255)
+        self.txtColor = theme.toQtColor(theme.foreground)
+        self.red = theme.toQtColor(theme.red) 
+        self.blue = theme.toQtColor(theme.blue) 
+        self.purple = theme.toQtColor(theme.purple) 
         self.offSet = QPoint(0, 0)
         self.insertBusMode = False
         self.projectName = None
         self.busCounter = 0
         self.busses = {}
         self.highLightedPoint = None
+        # Mouse Tracking for Hovering
         self.setMouseTracking(True)
 
-        # Disable the widgets to ignore all events
-        # Widget should not become mousegrabber
-        # self.setDisabled(True)
-
-    def mouseMoveEvent(self, event) -> None:
-        pos = event.pos()
+    def snap(self, pos: QPoint) -> QPoint:
+        # To escape repetition of code i created this function it's gonna be very useful
         x = pos.x()
         y = pos.y()
         xmod = x % self.dist
@@ -50,49 +52,52 @@ class Grid(QWidget):
             y -= ymod
         else: 
             y += (self.dist - ymod)
-        self.highLightedPoint = QPoint(x, y)
+        return QPoint(x, y)
+
+    def mouseMoveEvent(self, event) -> None:
+        self.highLightedPoint = self.snap(event.pos())
         self.update()
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
             if self.insertBusMode:
-                pos = event.pos()
-                x = pos.x()
-                y = pos.y()
-                xmod = x % self.dist
-                ymod = y % self.dist
-                if xmod < (self.dist / 2):
-                    x -= xmod
-                else: 
-                    x += (self.dist - xmod)
-                if ymod < (self.dist / 2):
-                    y -= ymod
-                else: 
-                    y += (self.dist - ymod)
-                pos = QPoint(x, y)
+                pos = self.snap(event.pos())
+                defaultCapacity = 1
+                busTuple = (pos, defaultCapacity)
                 self.addBusDialog = AddBusDialog(self)
                 self.addBusDialog.busPos = pos
                 self.busCounter += 1
                 self.addBusDialog.busId = self.busCounter
                 self.addBusDialog.projectName = self.projectName
                 self.addBusDialog.exec()
-                self.busses[self.addBusDialog.nameInput.text()] = pos
+                self.busses[self.addBusDialog.nameInput.text()] = busTuple
                 self.update()
                 self.insertBusMode = False
+
+        if event.button() == Qt.MouseButton.RightButton:
+            pos = self.snap(event.pos())
+            x = pos.x()
+            y = pos.y()
+            for bus, (point, capacity) in self.busses.items():
+                busX = point.x()
+                busY = point.y()
+                if x == busX and y in range(busY, busY + capacity * self.dist):
+                    capacity += 1
+                    busTuple = (point, capacity)
+                    self.busses[bus] = busTuple
 
     def insertBus(self) -> None:
         pass
 
     def setOffset(self, offset):
-        '''
-        Sets an offset on the grid to simulate a move.
-        '''
+        # Sets an offset on the grid to simulate a move.
         self.offSet = QPoint(int(offset.x() % self.dist),
                                int(offset.y() % self.dist))
 
     def paintEvent(self, event: QPaintEvent) -> None:
+        # Set Pen for Grid painting
         pen = QPen()
-        pen.setWidth(self.penWidth)
+        pen.setWidth(self.gridWidth)
         pen.setColor(self.lineColor)
         painter = QPainter()
         painter.begin(self)
@@ -121,6 +126,7 @@ class Grid(QWidget):
         startH = QPoint(0, int(self.offSet.y()))
         startV = QPoint(int(self.offSet.x()), 0)
 
+        # Drawing little dots on the collision
         x = 0
         y = 0
         while y < self.height():
@@ -133,29 +139,50 @@ class Grid(QWidget):
             y += self.dist
             x = 0
 
+        # Drawing where the mouse is pointing to drop the item
         highLightedPoint = self.highLightedPoint
         if highLightedPoint is not None:
             dotPen = QPen()
-            dotPen.setColor(self.txtColor)
+            dotPen.setColor(self.highLightWhite)
             dotPen.setWidth(self.txtWidth)
             painter.setPen(dotPen)
             xHigh = highLightedPoint.x()
             yHigh = highLightedPoint.y()
             painter.drawEllipse(xHigh - 1, yHigh - 1, 2, 2)
 
-        for text, point in self.busses.items():
+        # Drawing all the busbars here
+        for bus, (point, capacity) in self.busses.items():
+            # Get the points
+            busX = point.x()
+            busY = point.y()
+            # Create Symbol
+            symbolPen = QPen()
+            symbolPen.setWidth(self.lineWidth)
+            symbolPen.setColor(self.purple)
+            painter.setPen(symbolPen)
+            painter.drawLine(busX, busY - self.dist, busX, busY + ( capacity * self.dist))
+            # Create Text
             txtPen = QPen()
             txtPen.setWidth(self.txtWidth)
             txtPen.setColor(self.txtColor)
+            # Calculate text dimensions
+            textRect = painter.fontMetrics().boundingRect(bus)
+            textWidth = textRect.width()
+            textHeight = textRect.height()
+            # Center text horizontally and vertically relative to the bus line
+            txtPointX = busX - (textWidth // 2)
+            txtPointY = busY - (self.dist) - (textHeight // 2)
+            txtPoint = QPoint(txtPointX, txtPointY)
             painter.setPen(txtPen)
-            painter.drawText(point, text)
-            dotPen = QPen()
-            dotPen.setColor(self.txtColor)
-            dotPen.setWidth(self.txtWidth)
-            painter.setPen(dotPen)
-            busX = point.x()
-            busY = point.y()
-            painter.drawEllipse(busX - 1, busY - 1, 2, 2)
+            txtPoint = QPoint(txtPointX, txtPointY)
+            painter.drawText(txtPoint, bus)
+            # Create the Connection Capacities
+            painter.setPen(Qt.PenStyle.NoPen)
+            brush = QBrush(self.txtColor)  
+            painter.setBrush(brush)
+            for _ in range(0, capacity):
+                painter.drawEllipse(busX - 2, busY - 2, 4, 4)
+                busY += self.dist
 
         painter.end()
 
@@ -335,3 +362,4 @@ class AddBusDialog(QDialog):
         projectPath = os.path.join('./user_data/', self.projectName)
         bus.makeCSV(projectPath)
         super().accept()
+
