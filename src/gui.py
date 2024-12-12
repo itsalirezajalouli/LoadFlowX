@@ -284,7 +284,8 @@ class MainWindow(QMainWindow):
     def addBus(self) -> None:
         if self.projectName is None:
             self.getProjectNameDialog.exec()
-            self.projectName = self.getProjectNameDialog.projectName
+            if not self.getProjectNameDialog.nameError:
+                self.projectName = self.getProjectNameDialog.projectName
         self.grid.projectName = self.projectName
         self.grid.insertBusMode = True
         self.update()

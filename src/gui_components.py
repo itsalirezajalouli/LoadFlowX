@@ -1,10 +1,10 @@
 # Imports
 import os
-# from os.path import isdir
+from os.path import isdir
 from PyQt6.QtCore import QPoint, Qt
 from psa_components import BusBar, BusType
 from theme import DiscordPalette as theme
-from PyQt6.QtGui import QColor, QPalette, QPaintEvent, QPen, QPainter, QBrush
+from PyQt6.QtGui import QColor, QPalette, QPaintEvent, QPen, QPainter, QBrush, QDoubleValidator 
 from PyQt6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QWidget, QLabel, QDialogButtonBox, QMessageBox
 
 class Color(QWidget):
@@ -28,13 +28,15 @@ class Grid(QWidget):
         self.txtColor = theme.toQtColor(theme.foreground)
         self.red = theme.toQtColor(theme.red) 
         self.blue = theme.toQtColor(theme.blue) 
-        self.purple = theme.toQtColor(theme.purple) 
+        self.yellow = theme.toQtColor(theme.yellow) 
         self.offSet = QPoint(0, 0)
         self.insertBusMode = False
         self.projectName = None
+        self.addBusDialog = None
         self.busCounter = 0
         self.busses = {}
         self.highLightedPoint = None
+        self.currentMousePos = None
         # Mouse Tracking for Hovering
         self.setMouseTracking(True)
 
@@ -55,6 +57,7 @@ class Grid(QWidget):
         return QPoint(x, y)
 
     def mouseMoveEvent(self, event) -> None:
+        self.currentMousePos = event.pos()
         self.highLightedPoint = self.snap(event.pos())
         self.update()
 
@@ -63,7 +66,8 @@ class Grid(QWidget):
             if self.insertBusMode:
                 pos = self.snap(event.pos())
                 defaultCapacity = 1
-                busTuple = (pos, defaultCapacity)
+                defaultOrientation = '-90'
+                busTuple = (pos, defaultCapacity, defaultOrientation)
                 self.addBusDialog = AddBusDialog(self)
                 self.addBusDialog.busPos = pos
                 self.busCounter += 1
@@ -78,16 +82,50 @@ class Grid(QWidget):
             pos = self.snap(event.pos())
             x = pos.x()
             y = pos.y()
-            for bus, (point, capacity) in self.busses.items():
+            for bus, (point, capacity, orient) in self.busses.items():
                 busX = point.x()
                 busY = point.y()
-                if x == busX and y in range(busY, busY + capacity * self.dist):
-                    capacity += 1
-                    busTuple = (point, capacity)
-                    self.busses[bus] = busTuple
+                if orient == '-90':
+                    if x == busX and y in range(busY, busY + capacity * self.dist):
+                        capacity += 1
+                elif orient == '0':
+                    if x in range(busX, busX + capacity * self.dist) and y == busY:
+                        capacity += 1
+                elif orient == '90':
+                    if x == busX and y in range(busY - capacity * self.dist, busY):
+                        capacity += 1
+                elif orient == '180':
+                    if x in range(busX - capacity * self.dist, busX) and y == busY:
+                        capacity += 1
+                busTuple = (point, capacity, orient)
+                self.busses[bus] = busTuple
+                self.update()
 
-    def insertBus(self) -> None:
-        pass
+    def wheelEvent(self, event) -> None:
+        pos = self.currentMousePos
+        pos = self.snap(pos)
+        x = pos.x()
+        y = pos.y()
+        for bus, (point, capacity, orient) in self.busses.items():
+            busX = point.x()
+            busY = point.y()
+            print(busX, busY)
+            if orient == '-90':
+                if x == busX and y in range(busY, busY + capacity * self.dist):
+                    orient = '0'
+            elif orient == '0':
+                if x in range(busX, busX + capacity * self.dist) and y == busY:
+                    orient = '90'
+            elif orient == '90':
+                if x == busX and y in range(busY - capacity * self.dist, busY):
+                    orient = '180'
+            elif orient == '180':
+                if x in range(busX - capacity * self.dist, busX) and y == busY:
+                    orient = '-90'
+            print(orient)
+            busTuple = (point, capacity, orient)
+            self.busses[bus] = busTuple
+            self.update()
 
     def setOffset(self, offset):
         # Sets an offset on the grid to simulate a move.
@@ -151,38 +189,69 @@ class Grid(QWidget):
             painter.drawEllipse(xHigh - 1, yHigh - 1, 2, 2)
 
         # Drawing all the busbars here
-        for bus, (point, capacity) in self.busses.items():
-            # Get the points
-            busX = point.x()
-            busY = point.y()
-            # Create Symbol
-            symbolPen = QPen()
-            symbolPen.setWidth(self.lineWidth)
-            symbolPen.setColor(self.purple)
-            painter.setPen(symbolPen)
-            painter.drawLine(busX, busY - self.dist, busX, busY + ( capacity * self.dist))
-            # Create Text
-            txtPen = QPen()
-            txtPen.setWidth(self.txtWidth)
-            txtPen.setColor(self.txtColor)
-            # Calculate text dimensions
-            textRect = painter.fontMetrics().boundingRect(bus)
-            textWidth = textRect.width()
-            textHeight = textRect.height()
-            # Center text horizontally and vertically relative to the bus line
-            txtPointX = busX - (textWidth // 2)
-            txtPointY = busY - (self.dist) - (textHeight // 2)
-            txtPoint = QPoint(txtPointX, txtPointY)
-            painter.setPen(txtPen)
-            txtPoint = QPoint(txtPointX, txtPointY)
-            painter.drawText(txtPoint, bus)
-            # Create the Connection Capacities
-            painter.setPen(Qt.PenStyle.NoPen)
-            brush = QBrush(self.txtColor)  
-            painter.setBrush(brush)
-            for _ in range(0, capacity):
-                painter.drawEllipse(busX - 2, busY - 2, 4, 4)
-                busY += self.dist
+        if self.addBusDialog is not None and not self.addBusDialog.inputError:
+            for bus, (point, capacity, orient) in self.busses.items():
+                # Get the points
+                busX = point.x()
+                busY = point.y()
+                # Create Symbol
+                symbolPen = QPen()
+                symbolPen.setWidth(self.lineWidth)
+                symbolPen.setColor(self.blue)
+                painter.setPen(symbolPen)
+                if orient == '-90':
+                    painter.drawLine(busX, busY - self.dist, busX,
+                                     busY + ( capacity * self.dist))
+                elif orient == '0':
+                    painter.drawLine(busX - self.dist, busY, busX + ( capacity * self.dist),
+                                     busY)
+                elif orient == '90':
+                    painter.drawLine(busX, busY + self.dist, busX,
+                                     busY - ( capacity * self.dist))
+                elif orient == '180':
+                    painter.drawLine(busX + self.dist, busY, busX - ( capacity * self.dist),
+                                     busY)
+                # Create Text
+                txtPen = QPen()
+                txtPen.setWidth(self.txtWidth)
+                txtPen.setColor(self.yellow)
+                # Calculate text dimensions
+                textRect = painter.fontMetrics().boundingRect(bus)
+                textWidth = textRect.width()
+                textHeight = textRect.height()
+                # Center text horizontally and vertically relative to the bus line
+                if orient == '-90' or orient == '90':
+                    txtPointX = busX - (textWidth // 2)
+                elif orient == '0':
+                    txtPointX = busX - (textWidth // 2) + (capacity * self.dist)
+                elif orient == '180':
+                    txtPointX = busX - (textWidth // 2) - (capacity * self.dist)
+                txtPointY = busY - (self.dist) - (textHeight // 2)
+                txtPoint = QPoint(txtPointX, txtPointY)
+                painter.setPen(txtPen)
+                txtPoint = QPoint(txtPointX, txtPointY)
+                painter.drawText(txtPoint, bus)
+                # Create the Connection Capacities
+                dotPen = QPen()
+                dotPen.setColor(self.highLightWhite)
+                dotPen.setWidth(self.txtWidth)
+                painter.setPen(dotPen)
+                if orient == '-90':
+                    for _ in range(0, capacity):
+                        painter.drawEllipse(busX - 1, busY - 1, 2, 2)
+                        busY += self.dist
+                elif orient == '0':
+                    for _ in range(0, capacity):
+                        painter.drawEllipse(busX - 1, busY - 1, 2, 2)
+                        busX += self.dist
+                elif orient == '90':
+                    for _ in range(0, capacity):
+                        painter.drawEllipse(busX - 1, busY - 1, 2, 2)
+                        busY -= self.dist
+                elif orient == '180':
+                    for _ in range(0, capacity):
+                        painter.drawEllipse(busX - 1, busY - 1, 2, 2)
+                        busX -= self.dist
 
         painter.end()
 
@@ -190,6 +259,7 @@ class GetProjectNameDialog(QDialog):
     def __init__(self, parent) -> None:
         super().__init__(parent)
         self.projectName = None
+        self.nameError = False
         self.setWindowTitle('New Project')
         self.setStyleSheet('''
         QDialog {
@@ -225,16 +295,18 @@ class GetProjectNameDialog(QDialog):
         self.setLayout(layout)
 
     def startProject(self) -> None:
-        self.accept()
         self.projectName = self.nameInput.text()
-        if not os.path.isdir('./user_data'):
-            os.mkdir('./user_data')
         projectPath = os.path.join('./user_data/', self.projectName)
+        if not isdir('./user_data'):
+            os.mkdir('./user_data')
         if os.path.isdir(projectPath):
             QMessageBox.warning(self, 'Project Exists',
                 'A Project with the same name exists.', QMessageBox.StandardButton.Ok)
+            self.nameError = True
         else:
+            self.nameError = False
             os.mkdir(projectPath)
+            self.accept()
 
 class AddBusDialog(QDialog):
     def __init__(self, parent) -> None:
@@ -244,10 +316,21 @@ class AddBusDialog(QDialog):
         QDialog {
             font-size: 24px;
             color: #ffffff;
-            background-color: #3b3e45;
             border: 2px solid #7289da;
             border-radius: 10px;
             padding: 2px;
+        }
+        QLineEdit {
+            font-size: 12px;
+            color: #ffffff;
+        }
+        QLabel {
+            font-size: 12px;
+            color: #ffffff;
+        }
+        QComboBox {
+            font-size: 12px;
+            color: #ffffff;
         }
         ''')
         self.title = QLabel('Add Bus Bar to Network')
@@ -262,6 +345,7 @@ class AddBusDialog(QDialog):
         self.busPos = None
         self.busType = BusType.SLACK 
         self.projectName = None
+        self.inputError = False
 
         # Bus Name Input Box
         self.nameInputLabel = QLabel('Bus Name:')
@@ -321,10 +405,15 @@ class AddBusDialog(QDialog):
         self.pqHBox.addWidget(self.qUnitDropDown)
         self.pqWidget.setLayout(self.pqHBox)
 
+        self.vMagInput.setValidator(QDoubleValidator())
+        self.vAngInput.setValidator(QDoubleValidator())
+        self.qInput.setValidator(QDoubleValidator())
+        self.pInput.setValidator(QDoubleValidator())
+
         # Button Box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
+        self.buttonBox.accepted.connect(self.accept)
 
         layout = QVBoxLayout()
         layout.addWidget(self.title)
@@ -348,6 +437,22 @@ class AddBusDialog(QDialog):
             self.busType = BusType.PQ
 
     def accept(self) -> None:
+        # Error Handling
+        inputList = []
+        inputList.append(self.nameInput.text())
+        inputList.append(self.vMagInput.text())
+        inputList.append(self.vAngInput.text())
+        inputList.append(self.pInput.text())
+        inputList.append(self.qInput.text())
+        print(inputList)
+        if '' in inputList:
+            self.inputError = True
+            QMessageBox.warning(self, 'Fill all the fields.',
+                'No field can be empty! Please fill them all.', QMessageBox.StandardButton.Ok)
+            return
+        else:
+            self.inputError = False
+        # Creating the BusBar
         bus = BusBar(
             id = self.busId,
             pos = self.busPos,
@@ -362,4 +467,3 @@ class AddBusDialog(QDialog):
         projectPath = os.path.join('./user_data/', self.projectName)
         bus.makeCSV(projectPath)
         super().accept()
-
