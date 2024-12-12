@@ -1,4 +1,0 @@
-id,name,pos,bType,vMag,vAng,P,Q
-1,Bus1,"PyQt6.QtCore.QPoint(128, 256)",BusType.SLACK,69.0,85.0,85.0,69.0
-id,name,pos,bType,vMag,vAng,P,Q
-2,Bus 2,"PyQt6.QtCore.QPoint(416, 288)",BusType.SLACK,420.0,420.0,420.0,420.0
