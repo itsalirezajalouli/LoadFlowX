@@ -63,7 +63,7 @@ class BusBar():
         }
         df = pd.DataFrame(data)
         csvPath = path + '/Buses.csv'
-        df.to_csv(csvPath, mode = 'a', index = False, header = False)
+        df.to_csv(csvPath, mode = 'a', index = False, header = True)
         print('Data appended successfuly.')
 
 class Transformer():

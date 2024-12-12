@@ -96,6 +96,7 @@ class MainWindow(QMainWindow):
         selectButton = QToolButton()
         selectButton.setIcon(QIcon('../icons/select.png'))
         selectButton.setIconSize(QSize(28, 28))
+        selectButton.clicked.connect(self.setSelectMode)
         selectButton.setStyleSheet('''
         QToolButton {
             font-size: 24px;
@@ -289,3 +290,6 @@ class MainWindow(QMainWindow):
         self.grid.projectName = self.projectName
         self.grid.insertBusMode = True
         self.update()
+
+    def setSelectMode(self) -> None:
+        self.grid.insertBusMode = False
