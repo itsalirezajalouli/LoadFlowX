@@ -2,7 +2,8 @@
 
 # Imports
 from PyQt6.QtCore import QSize
-from gui_components import Color, Grid, AddBusDialog, GetProjectNameDialog
+from grid import Grid
+from dialogs import GetProjectNameDialog
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QMainWindow, QStatusBar, QVBoxLayout, QWidget, QToolButton
 
