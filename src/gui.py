@@ -3,9 +3,9 @@
 # Imports
 from PyQt6.QtCore import QSize
 from grid import Grid
-from dialogs import GetProjectNameDialog
+from dialogs import GetProjectNameDialog, LoadProject
 from PyQt6.QtGui import QAction, QIcon
-from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QMainWindow, QStatusBar, QVBoxLayout, QWidget, QToolButton
+from PyQt6.QtWidgets import QHBoxLayout, QMainWindow, QStatusBar, QVBoxLayout, QWidget, QToolButton
 
 # Main Window Object
 class MainWindow(QMainWindow):
@@ -15,6 +15,7 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(800, 700)
         self.projectName = None
         self.getProjectNameDialog = GetProjectNameDialog(self)
+        self.loadProject = LoadProject(self)
 
         # Menu Bar
         menu = self.menuBar()
@@ -60,6 +61,20 @@ class MainWindow(QMainWindow):
         exitButton.triggered.connect(self.exitProgram)
         fileMenu.addAction(exitButton)
         fileMenu.addSeparator()
+
+        # Undo Button
+        undoButton = QAction('Undo', self)
+        undoButton.setStatusTip('Undo last action')
+        undoButton.triggered.connect(self.undoLastAction)
+        editMenu.addAction(undoButton)
+        editMenu.addSeparator()
+
+        # Redo Button
+        redoButton = QAction('Redo', self)
+        redoButton.setStatusTip('Redo last action')
+        redoButton.triggered.connect(self.redoLastAction)
+        editMenu.addAction(redoButton)
+        editMenu.addSeparator()
 
         # Run Gauss-Siedel Button
         gsButton = QAction('Run Gauss-Siedel Method', self)
@@ -144,6 +159,29 @@ class MainWindow(QMainWindow):
 
         self.mainLayout.addWidget(self.toolBox)
 
+        #   Add Line button
+        addLineButton = QToolButton()
+        addLineButton.setText('Li')
+        addLineButton.setStyleSheet('''
+        QToolButton {
+            font-size: 24px;
+            background-color: #3b3e45;
+            border: 2px solid #7289da;
+            border-radius: 10px;
+            padding: 2px;
+            color: #ffffff;
+        }
+        QToolButton:hover {
+            background-color: #3b3e45;
+            border: 2px solid #99aab5;
+        }
+        QToolButton:pressed {
+            background-color: #23272a;
+            border: 2px solid #7289da;
+        }
+        ''')
+        addLineButton.clicked.connect(self.addLine)
+        self.toolBoxLayout.addWidget(addLineButton)
 
         #   Add Generator button
         addGenButton = QToolButton()
@@ -190,29 +228,6 @@ class MainWindow(QMainWindow):
         }
         ''')
         self.toolBoxLayout.addWidget(addTrafoButton)
-
-        #   Add Line button
-        addLineButton = QToolButton()
-        addLineButton.setText('Li')
-        addLineButton.setStyleSheet('''
-        QToolButton {
-            font-size: 24px;
-            background-color: #3b3e45;
-            border: 2px solid #7289da;
-            border-radius: 10px;
-            padding: 2px;
-            color: #ffffff;
-        }
-        QToolButton:hover {
-            background-color: #3b3e45;
-            border: 2px solid #99aab5;
-        }
-        QToolButton:pressed {
-            background-color: #23272a;
-            border: 2px solid #7289da;
-        }
-        ''')
-        self.toolBoxLayout.addWidget(addLineButton)
 
         #   Add Load button
         addLoadButton = QToolButton()
@@ -263,7 +278,7 @@ class MainWindow(QMainWindow):
         pass
 
     def openProject(self) -> None:
-        pass
+        self.loadProject.exec()
 
     def saveProject(self) -> None:
         pass
@@ -272,6 +287,12 @@ class MainWindow(QMainWindow):
         pass
 
     def exitProgram(self) -> None:
+        pass
+
+    def undoLastAction(self) -> None:
+        pass
+
+    def redoLastAction(self) -> None:
         pass
 
     def gsLoadFlow(self) -> None:
@@ -292,5 +313,11 @@ class MainWindow(QMainWindow):
         self.grid.insertBusMode = True
         self.update()
 
+    def addLine(self) -> None:
+        self.grid.insertBusMode = False
+        self.grid.insertLineMode = True
+        self.update()
+
     def setSelectMode(self) -> None:
         self.grid.insertBusMode = False
+

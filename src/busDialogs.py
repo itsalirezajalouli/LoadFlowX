@@ -1,14 +1,18 @@
 import os
 from os.path import isdir
 from psa_components import BusBar, BusType
-from theme import DiscordPalette as theme
-from PyQt6.QtGui import QColor, QPalette, QPaintEvent, QPen, QPainter, QBrush, QDoubleValidator, QKeyEvent
-from PyQt6.QtWidgets import QApplication, QComboBox, QDialog, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QWidget, QLabel, QDialogButtonBox, QMessageBox
+from PyQt5.QtCore import Qt
+from PyQt6.QtGui import QDoubleValidator
+from PyQt6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QWidget, QLabel, QDialogButtonBox, QMessageBox, QScrollArea, QToolButton
+
 class GetProjectNameDialog(QDialog):
     def __init__(self, parent) -> None:
         super().__init__(parent)
         self.projectName = None
         self.nameError = False
+        self.root = './user_data/'
+        if not isdir(self.root):
+            os.mkdir(self.root)
         self.setWindowTitle('New Project')
         self.setStyleSheet('''
         QDialog {
@@ -45,7 +49,7 @@ class GetProjectNameDialog(QDialog):
 
     def startProject(self) -> None:
         self.projectName = self.nameInput.text()
-        projectPath = os.path.join('./user_data/', self.projectName)
+        projectPath = os.path.join(self.root, self.projectName)
         if not isdir('./user_data'):
             os.mkdir('./user_data')
         if os.path.isdir(projectPath):
@@ -56,6 +60,27 @@ class GetProjectNameDialog(QDialog):
             self.nameError = False
             os.mkdir(projectPath)
             self.accept()
+
+class LoadProject(QDialog):
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
+        self.setWindowTitle('Load Project')
+        self.setStyleSheet('''
+        QDialog {
+            font-size: 24px;
+            color: #ffffff;
+            background-color: #3b3e45;
+            border: 2px solid #7289da;
+            border-radius: 10px;
+            padding: 2px;
+        }
+        ''')
+        self.nameInputLabel = QLabel('Project Name:')
+        self.nameInputLabel.setStyleSheet('color: #ffffff;')
+        self.root = './user_data/'
+        if not isdir(self.root):
+            os.mkdir(self.root)
+        # TODO!: Make a scroller
 
 class AddBusDialog(QDialog):
     def __init__(self, parent) -> None:
