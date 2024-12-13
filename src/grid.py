@@ -1,11 +1,12 @@
 # Imports
 import os
+from random import choice
 from sys import settrace
 import typing
 import pandas as pd
 from os.path import isdir
 from PyQt6.QtCore import QPoint, Qt
-from dialogs import GetProjectNameDialog, AddBusDialog
+from busDialogs import GetProjectNameDialog, AddBusDialog
 from theme import DiscordPalette as theme
 from PyQt6.QtGui import QColor, QPalette, QPaintEvent, QPen, QPainter, QBrush, QDoubleValidator, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QComboBox, QDialog, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QWidget, QLabel, QDialogButtonBox, QMessageBox
@@ -38,6 +39,7 @@ class Grid(QWidget):
         self.firstNode = None
         self.lines = []
         self.tokenPoints = []
+        self.xDists = []
         # Mouse Tracking for Hovering
         self.setMouseTracking(True)
 
@@ -357,7 +359,16 @@ class Grid(QWidget):
                         firstNode = points[i1]
                     elif bus2Name == bus:
                         secondNode = points[i2]
-                painter.drawLine(firstNode.x(), firstNode.y(), secondNode.x(), secondNode.y())
+
+                if secondNode.x() > firstNode.x():
+                    midPoint1X = firstNode.x() + (self.dist)
+                elif secondNode.x() <= firstNode.x():
+                    midPoint1X = firstNode.x() - (self.dist)
+                midPoint1Y = firstNode.y()
+                painter.drawLine(firstNode.x(), firstNode.y(), midPoint1X, midPoint1Y)
+                painter.drawLine(midPoint1X, midPoint1Y, midPoint1X, secondNode.y() - self.dist)
+                painter.drawLine(midPoint1X, secondNode.y() - self.dist, secondNode.x(), secondNode.y() - self.dist)
+                painter.drawLine(secondNode.x(), secondNode.y() - self.dist, secondNode.x(), secondNode.y())
 
         if self.insertLineMode and self.correctNodeSelect:
             if self.firstNode is not None:

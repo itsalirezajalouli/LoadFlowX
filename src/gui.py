@@ -3,7 +3,7 @@
 # Imports
 from PyQt6.QtCore import QSize
 from grid import Grid
-from dialogs import GetProjectNameDialog, LoadProject
+from busDialogs import GetProjectNameDialog, LoadProject
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QHBoxLayout, QMainWindow, QStatusBar, QVBoxLayout, QWidget, QToolButton
 
