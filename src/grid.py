@@ -7,6 +7,7 @@ import pandas as pd
 from os.path import isdir
 from PyQt6.QtCore import QPoint, Qt
 from busDialogs import GetProjectNameDialog, AddBusDialog
+from lineDialogs import AddLineDialog
 from theme import DiscordPalette as theme
 from PyQt6.QtGui import QColor, QPalette, QPaintEvent, QPen, QPainter, QBrush, QDoubleValidator, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QComboBox, QDialog, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QWidget, QLabel, QDialogButtonBox, QMessageBox
@@ -32,6 +33,7 @@ class Grid(QWidget):
         self.correctNodeSelect = False 
         self.projectName = None
         self.addBusDialog = None
+        self.addLineDialog = None
         self.busCounter = 0
         self.busses = {}
         self.highLightedPoint = None
@@ -110,7 +112,9 @@ class Grid(QWidget):
                                         self.firstNode = None
                                         self.insertLineMode = False
                                         self.tokenPoints.append(points[i])
+                                        self.addLineDialog = AddLineDialog(self)
                                         self.update()
+                                        self.addLineDialog.exec()
 
         # Clicked on an existing bus
         if event.button() == Qt.MouseButton.LeftButton and self.insertBusMode == False and self.insertLineMode == False:

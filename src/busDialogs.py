@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from os.path import isdir
 from psa_components import BusBar, BusType
 from PyQt5.QtCore import Qt
@@ -211,7 +212,18 @@ class AddBusDialog(QDialog):
             self.busType = BusType.PQ
 
     def accept(self) -> None:
-        # Error Handling
+        # TODO: I hate this shit fix it later
+        # Handling Same Name Bus Names
+        # projectPath = os.path.join('./user_data/', self.projectName)
+        # csvPath = projectPath + '/Buses.csv'
+        # if os.path.exists(csvPath):
+        #     if not matchedRow.empty:
+        #         self.inputError = True
+        #         QMessageBox.warning(self, 'Clone Bus Name',
+        #             'A bus with the same name already exists.', QMessageBox.StandardButton.Ok)
+        #         return
+
+        # Handling Empty Inputs Error
         inputList = []
         inputList.append(self.nameInput.text())
         inputList.append(self.vMagInput.text())
