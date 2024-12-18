@@ -1,5 +1,5 @@
 #   Components like Bus, Line and Network...
-import pandas as pd
+import csv
 from enum import Enum
 from termcolor import colored
 
@@ -50,21 +50,23 @@ class BusBar():
         print(colored('-> Active Power:', 'light_blue'), self.P)
         print(colored('-> Passive Power:', 'light_blue'), self.Q)
 
-    def makeCSV(self, path) -> None:
+    def makeCSV(self, path: str) -> None:
         data = {
-            'id': [self.id],
-            'name': [self.name],
-            'pos': [self.pos],
-            'bType': [self.bType],
-            'vMag': [self.vMag],
-            'vAng': [self.vAng],
-            'P': [self.P],
-            'Q': [self.Q],
+            'id': self.id,
+            'name': self.name,
+            'pos': self.pos,
+            'bType': self.bType,
+            'vMag': self.vMag,
+            'vAng': self.vAng,
+            'P': self.P,
+            'Q': self.Q,
         }
-        df = pd.DataFrame(data)
         csvPath = path + '/Buses.csv'
-        df.to_csv(csvPath, mode = 'a', index = False, header = False)
-        print('Data appended successfuly.')
+        with open(csvPath, 'a', newline = '') as file:
+            writer = csv.DictWriter(file,fieldnames=['id','name','pos','bType','vMag',
+                                                     'vAng','P','Q'])
+            writer.writerow(data)
+        print(f'Data appended to {path} successfuly.')
 
 class Transformer():
     def __init__(self,
