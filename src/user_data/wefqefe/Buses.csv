@@ -1,0 +1,4 @@
+id,name,pos,bType,vMag,vAng,P,Q
+1,what the hell is happening,"PyQt6.QtCore.QPoint(288, 224)",BusType.SLACK,1.0,1.0,1.0,1.0
+2,shit,"PyQt6.QtCore.QPoint(768, 224)",BusType.SLACK,1.0,1.0,1.0,1.0
+3,why doesn't it break,"PyQt6.QtCore.QPoint(480, 448)",BusType.SLACK,1.0,1.0,1.0,1.0

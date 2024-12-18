@@ -1,0 +1,2 @@
+id,name,pos,bType,vMag,vAng,P,Q
+1,busFuck,"PyQt6.QtCore.QPoint(384, 160)",BusType.SLACK,2.0,1.0,3.0,4.0

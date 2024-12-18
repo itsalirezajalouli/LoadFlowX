@@ -50,7 +50,7 @@ class BusBar():
         print(colored('-> Active Power:', 'light_blue'), self.P)
         print(colored('-> Passive Power:', 'light_blue'), self.Q)
 
-    def makeCSV(self, path: str) -> None:
+    def append2CSV(self, path: str) -> None:
         data = {
             'id': self.id,
             'name': self.name,
@@ -67,6 +67,30 @@ class BusBar():
                                                      'vAng','P','Q'])
             writer.writerow(data)
         print(f'Data appended to {path} successfuly.')
+
+    def editCSV(self, path: str, prevName: str) -> None:
+        csvPath = path + '/Buses.csv'
+        newBusList = []
+        with open(csvPath) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if row['name'] == prevName:
+                    row['name'] = self.name
+                    row['id'] = self.id
+                    row['pos'] = self.pos
+                    row['bType'] = self.bType
+                    row['vMag'] = self.vMag
+                    row['vAng'] = self.vAng
+                    row['P'] = self.P
+                    row['Q'] = self.Q
+                newBusList.append(row)
+
+        with open(csvPath, 'w', newline = '') as file:
+            writer = csv.DictWriter(file,fieldnames=['id','name','pos','bType','vMag',
+                                                     'vAng','P','Q'])
+            writer.writeheader()
+            writer.writerows(newBusList)
+            print(f'Data edited to {path} successfuly.')
 
 class Transformer():
     def __init__(self,

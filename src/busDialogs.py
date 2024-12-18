@@ -68,20 +68,10 @@ class GetProjectNameDialog(QDialog):
 
         # Adding Headers and Making CSVs
         self.busCSV = self.root + self.projectName + '/Buses.csv'
-        data = {
-            'id': 'id',
-            'name': 'name',
-            'pos': 'pos',
-            'bType': 'bType',
-            'vMag': 'vMag',
-            'vAng': 'vAng',
-            'P': 'P',
-            'Q': 'Q',
-        }
         with open(self.busCSV, 'a', newline = '') as file:
             writer = csv.DictWriter(file,fieldnames=['id','name','pos','bType','vMag',
                                                      'vAng','P','Q'])
-            writer.writerow(data)
+            writer.writeheader()
 
         print(f'header succefully added to {self.busCSV}')
 
@@ -275,7 +265,7 @@ class AddBusDialog(QDialog):
         )
         bus.log()
         projectPath = os.path.join('./user_data/', self.projectName)
-        bus.makeCSV(projectPath)
+        bus.append2CSV(projectPath)
         super().accept()
 
 class EditBusDialog(QDialog):
@@ -316,6 +306,7 @@ class EditBusDialog(QDialog):
         self.busType = BusType.SLACK 
         self.projectName = None
         self.inputError = False
+        self.previousName = None
 
         # Bus Name Input Box
         self.nameInputLabel = QLabel('Bus Name:')
@@ -434,7 +425,8 @@ class EditBusDialog(QDialog):
             return
         else:
             self.inputError = False
-        # Creating the BusBar
+
+        # Edit the BusBar
         bus = BusBar(
             id = self.busId,
             pos = self.busPos,
@@ -447,5 +439,5 @@ class EditBusDialog(QDialog):
         )
         bus.log()
         projectPath = os.path.join('./user_data/', self.projectName)
-        bus.makeCSV(projectPath)
+        bus.editCSV(projectPath, self.previousName)
         super().accept()

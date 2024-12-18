@@ -6,6 +6,7 @@ import typing
 import csv
 from os.path import isdir
 from PyQt6.QtCore import QPoint, Qt
+from sqlalchemy import tuple_
 from busDialogs import AddBusDialog, EditBusDialog
 from lineDialogs import AddLineDialog
 from theme import DiscordPalette as theme
@@ -33,6 +34,7 @@ class Grid(QWidget):
         self.correctNodeSelect = False 
         self.projectName = None
         self.addBusDialog = None
+        self.editBusDialog = None
         self.addLineDialog = None
         self.busCounter = 0
         self.busses = {}
@@ -121,22 +123,38 @@ class Grid(QWidget):
             pos = self.snap(event.pos())
             x = pos.x()
             y = pos.y()
-            for bus, (point, capacity, orient, points) in self.busses.items():
+            editedBus = None
+            editedTuple = None 
+            for bus, bigTuple in self.busses.items():
+                point, capacity, orient, points = bigTuple
                 busX = point.x()
                 busY = point.y()
                 if orient == '-90':
                     if x == busX and y in range(busY, busY + capacity * self.dist):
                         self.initEditBox(bus, point)
+                        editedBus = bus
+                        editedTuple = bigTuple
                 elif orient == '0':
                     if x in range(busX, busX + capacity * self.dist) and y == busY:
                         self.initEditBox(bus, point)
+                        editedBus = bus
+                        editedTuple = bigTuple
                 elif orient == '90':
                     if x == busX and y in range(busY - capacity * self.dist, busY):
                         self.initEditBox(bus, point)
+                        editedBus = bus
+                        editedTuple = bigTuple
                 elif orient == '180':
                     if x in range(busX - capacity * self.dist, busX) and y == busY:
                         self.initEditBox(bus, point)
-                self.update()
+                        editedBus = bus
+                        editedTuple = bigTuple
+            if editedBus is not None:
+                print(editedBus)
+                editedBus = self.editedBusses(editedBus, editedTuple)
+                del self.busses[editedBus]
+                editedBus = None
+            self.update()
 
         if event.button() == Qt.MouseButton.RightButton and QApplication.keyboardModifiers() == Qt.KeyboardModifier.AltModifier:
             pos = self.snap(event.pos())
@@ -403,18 +421,24 @@ class Grid(QWidget):
         self.busses[name] = busTuple
 
     def initEditBox(self, busName: str, point: QPoint) -> None:
-        self.editBusDialog = EditBusDialog(self)
-        self.editBusDialog.busPos = point
         projectPath = os.path.join('./user_data/', self.projectName)
         csvPath = projectPath + '/Buses.csv'
+        self.editBusDialog = EditBusDialog(self)
+        self.editBusDialog.projectName = self.projectName
         with open(csvPath) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 if busName == row['name']:
-                    self.editBusDialog
+                    self.editBusDialog.busPos = point
+                    self.editBusDialog.busId = row['id']
                     self.editBusDialog.nameInput.setText(row['name'])
+                    self.editBusDialog.previousName = row['name']
                     self.editBusDialog.vMagInput.setText(row['vMag'])
                     self.editBusDialog.vAngInput.setText(row['vAng'])
                     self.editBusDialog.pInput.setText(row['P'])
                     self.editBusDialog.qInput.setText(row['Q'])
                     self.editBusDialog.exec()
+
+    def editedBusses(self, editedBus: str, bigTuple: tuple) -> None:
+        self.busses[self.editBusDialog.nameInput.text()] = bigTuple
+        return editedBus
