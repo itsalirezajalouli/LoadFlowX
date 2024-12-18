@@ -1,2 +1,0 @@
-id,name,pos,bType,vMag,vAng,P,Q
-1,headerdumbar,"PyQt6.QtCore.QPoint(384, 224)",BusType.SLACK,1.0,1.0,1.0,1.0

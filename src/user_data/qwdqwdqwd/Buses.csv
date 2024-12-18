@@ -1,3 +1,0 @@
-id,name,pos,bType,vMag,vAng,P,Q
-1,madafucker,"PyQt6.QtCore.QPoint(480, 224)",BusType.SLACK,1.0,1.0,1.0,1.0
-2,HellNah,"PyQt6.QtCore.QPoint(800, 224)",BusType.SLACK,1.0,1.0,1.0,1.0
