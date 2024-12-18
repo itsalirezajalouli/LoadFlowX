@@ -1,17 +1,13 @@
 # Imports
 import os
-from random import choice
-from sys import settrace
-import typing
 import csv
-from os.path import isdir
+from copy import deepcopy
 from PyQt6.QtCore import QPoint, Qt
-from sqlalchemy import tuple_
-from busDialogs import AddBusDialog, EditBusDialog
-from lineDialogs import AddLineDialog
+from bus_dialogs import AddBusDialog, EditBusDialog
+from line_dialogs import AddLineDialog
 from theme import DiscordPalette as theme
-from PyQt6.QtGui import QColor, QPalette, QPaintEvent, QPen, QPainter, QBrush, QDoubleValidator, QKeyEvent
-from PyQt6.QtWidgets import QApplication, QComboBox, QDialog, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QWidget, QLabel, QDialogButtonBox, QMessageBox
+from PyQt6.QtGui import QColor, QPaintEvent, QPen, QPainter
+from PyQt6.QtWidgets import QApplication, QWidget
 
 class Grid(QWidget):
     def __init__(self, dist, *args, ** kwargs):
@@ -31,21 +27,27 @@ class Grid(QWidget):
         self.offSet = QPoint(0, 0)
         self.insertBusMode = False
         self.insertLineMode = False
+        self.selectMode = False
         self.correctNodeSelect = False 
         self.projectName = None
         self.addBusDialog = None
         self.editBusDialog = None
         self.addLineDialog = None
+        self.pathFinder = None
         self.busCounter = 0
         self.busses = {}
         self.highLightedPoint = None
         self.currentMousePos = None
         self.firstNode = None
-        self.lines = []
-        self.tokenPoints = []
+        self.paths = []
+        self.tokenBusPorts = []
         self.xDists = []
+        self.tempPath = []
         # Mouse Tracking for Hovering
         self.setMouseTracking(True)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)  # Enable focus for key events
+
+        self.spacePressed = False  # Track the state of the Space key
 
     def snap(self, pos: QPoint) -> QPoint:
         # To escape repetition of code i created this function it's gonna be very useful
@@ -66,10 +68,36 @@ class Grid(QWidget):
     def mouseMoveEvent(self, event) -> None:
         self.currentMousePos = event.pos()
         self.highLightedPoint = self.snap(event.pos())
+        if self.spacePressed and self.leftMouseHold:
+            xDiff = self.comboLocation.x() - self.currentMousePos.x()
+            yDiff = self.comboLocation.y() - self.currentMousePos.y()
+            # self.setOffset(QPoint(xDiff, yDiff))
+        # print('Mouse pos for debug:', self.highLightedPoint)
         self.update()
 
+    # def keyPressEvent(self, event):
+    #     if event.key() == Qt.Key.Key_Space:
+    #         self.spacePressed = True
+    #         # print('Space pressed!')
+    #         self.checkCombo()
+    # def keyReleaseEvent(self, event):
+    #     if event.key() == Qt.Key.Key_Space:
+    #         self.spacePressed = False
+    #         # print("Space key released")
+    #
+    # def mouseReleaseEvent(self, event):
+    #     if event.button() == Qt.MouseButton.RightButton:
+    #         self.leftMouseHold= False
+    #
+    # def checkCombo(self):
+    #     if self.spacePressed and self.leftMouseHold:
+    #         self.comboLocation = deepcopy(self.currentMousePos)
+    #         # print('Space + Left Mouse Button pressed!')
+
     def mousePressEvent(self, event) -> None:
+        self.leftMouseHold = True
         if event.button() == Qt.MouseButton.LeftButton:
+            self.leftMouseHold = True
             # Placing a bus
             if self.insertBusMode:
                 pos = self.snap(event.pos())
@@ -85,38 +113,43 @@ class Grid(QWidget):
                 self.setBusDict(busName, pos, defaultCapacity, defaultOrientation)
                 self.update()
             
-            # Placing first Connection
-            if self.insertLineMode and not self.insertBusMode and self.firstNode is None:
+            # Placing Line: First Connection
+            if self.insertLineMode and self.firstNode is None:
                 firstPoint = self.snap(event.pos())
                 for bus, (point, capacity, orient, points) in self.busses.items():
                     for i in range(len(points)):
                         if points[i] == firstPoint:
-                            print(firstPoint)
-                            print(self.tokenPoints)
-                            if points[i] not in self.tokenPoints:
+                            if points[i] not in self.tokenBusPorts:
                                 self.correctNodeSelect = True
                                 self.firstNode = (bus, i)
-                                self.tokenPoints.append(points[i])
+                                self.tokenBusPorts.append(points[i])
 
             # Placing second Connection
             elif self.insertLineMode and self.firstNode is not None:
                     secondPoint = self.snap(event.pos())
                     bus1, firstPoint = self.firstNode
+                    self.tempPath.append(secondPoint)
+                    # print(self.paths)
+                    # print(self.tempPath)
+                    # print('Point added: ', self.tempPath)
                     for bus, (point, capacity, orient, points) in self.busses.items():
                         bus2 = bus
                         for i in range(len(points)):
-                            if points[i] == secondPoint and points[i] not in self.tokenPoints:
-                                if bus1 != bus2:
-                                    line = (bus1, bus2, firstPoint, i)
-                                    revLine = (bus1, bus2, firstPoint, i)
-                                    if line not in self.lines and revLine not in self.lines:
-                                        self.lines.append(line)
+                            if points[i] == secondPoint and points[i] not in self.tokenBusPorts:
+                                if bus1 != bus2 :
+                                    # Direct Line
+                                    self.tempPath.pop() 
+                                    tempPath = deepcopy(self.tempPath)
+                                    line = (bus1, bus2, firstPoint, i, tempPath) 
+                                    revLine = (bus2, bus1, firstPoint, i, tempPath)
+                                    if line not in self.paths and revLine not in self.paths:
+                                        self.paths.append(line)
                                         self.firstNode = None
-                                        self.insertLineMode = False
-                                        self.tokenPoints.append(points[i])
-                                        self.addLineDialog = AddLineDialog(self)
+                                        self.tokenBusPorts.append(points[i])
                                         self.update()
+                                        self.addLineDialog = AddLineDialog(self)
                                         self.addLineDialog.exec()
+                                        self.tempPath.clear() 
 
         # Clicked on an existing bus
         if event.button() == Qt.MouseButton.LeftButton and self.insertBusMode == False and self.insertLineMode == False:
@@ -150,12 +183,13 @@ class Grid(QWidget):
                         editedBus = bus
                         editedTuple = bigTuple
             if editedBus is not None:
-                print(editedBus)
+                print('paths: ',self.paths)
                 editedBus = self.editedBusses(editedBus, editedTuple)
                 del self.busses[editedBus]
                 editedBus = None
-            self.update()
+                self.update()
 
+        # Left + Alt: Removes Node
         if event.button() == Qt.MouseButton.RightButton and QApplication.keyboardModifiers() == Qt.KeyboardModifier.AltModifier:
             pos = self.snap(event.pos())
             x = pos.x()
@@ -178,6 +212,7 @@ class Grid(QWidget):
                             capacity -= 2
                     self.setBusDict(bus, point, capacity, orient)
                     self.update()
+
 
         if event.button() == Qt.MouseButton.RightButton:
             pos = self.snap(event.pos())
@@ -224,7 +259,7 @@ class Grid(QWidget):
             self.setBusDict(bus, point, capacity, orient)
             self.update()
 
-    def setOffset(self, offset):
+    def setOffset(self, offset: QPoint):
         # Sets an offset on the grid to simulate a move.
         self.offSet = QPoint(int(offset.x() % self.dist),
                                int(offset.y() % self.dist))
@@ -277,12 +312,41 @@ class Grid(QWidget):
         # Drawing where the mouse is pointing to drop the item
         highLightedPoint = self.highLightedPoint
         if highLightedPoint is not None:
+            xHigh = highLightedPoint.x()
+            yHigh = highLightedPoint.y()
+            if self.insertBusMode:
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+                # Set the fill color with 20% transparency
+                color = QColor(255, 255, 255, int(255 * 0.1))  # with 10% transparency
+                painter.setBrush(color)
+                painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
+                painter.drawRect(xHigh - self.dist, yHigh - self.dist, 2 * self.dist, 2 * self.dist)
+
+                symbolPen = QPen()
+                symbolPen.setWidth(self.lineWidth)
+                symbolPen.setColor(self.blue)
+                painter.setPen(symbolPen)
+                painter.drawLine(xHigh, yHigh - self.dist, xHigh, yHigh + self.dist)
+
+                txt = 'Left Click to Drop Bus'
+                textRect = painter.fontMetrics().boundingRect(txt)
+                textWidth = textRect.width()
+                textHeight = textRect.height()
+                txtPointX = xHigh - (textWidth // 2)
+                txtPointY = yHigh + (self.dist) + (textHeight)
+                txtPoint = QPoint(xHigh, yHigh - self.dist)
+                txtPen = QPen()
+                txtPen.setWidth(self.txtWidth)
+                txtPen.setColor(color)
+                painter.setPen(txtPen)
+                txtPoint = QPoint(txtPointX, txtPointY)
+                painter.drawText(txtPoint, txt)
+
             dotPen = QPen()
             dotPen.setColor(self.highLightWhite)
             dotPen.setWidth(self.txtWidth)
             painter.setPen(dotPen)
-            xHigh = highLightedPoint.x()
-            yHigh = highLightedPoint.y()
             painter.drawEllipse(xHigh - 1, yHigh - 1, 2, 2)
 
         # Drawing all the busbars here
@@ -363,25 +427,27 @@ class Grid(QWidget):
         linePen.setColor(self.yellow)
         painter.setPen(linePen)
 
-        if len(self.lines) > 0:
-            for line in self.lines:
-                bus1Name, bus2Name, i1, i2 = line
+        if len(self.paths) > 0:
+            for line in self.paths:
+                bus1Name, bus2Name, i1, i2, pathList = line
+                firstNode, secondNode = None, None
                 for bus, (point, capacity, orient, points) in self.busses.items():
                     if bus1Name == bus:
                         firstNode = points[i1]
                     elif bus2Name == bus:
                         secondNode = points[i2]
 
-                if secondNode.x() > firstNode.x():
-                    midPoint1X = firstNode.x() + (self.dist)
-                elif secondNode.x() <= firstNode.x():
-                    midPoint1X = firstNode.x() - (self.dist)
-                midPoint1Y = firstNode.y()
-                painter.drawLine(firstNode.x(), firstNode.y(), midPoint1X, midPoint1Y)
-                painter.drawLine(midPoint1X, midPoint1Y, midPoint1X, secondNode.y() - self.dist)
-                painter.drawLine(midPoint1X, secondNode.y() - self.dist, secondNode.x(), secondNode.y() - self.dist)
-                painter.drawLine(secondNode.x(), secondNode.y() - self.dist, secondNode.x(), secondNode.y())
+                if firstNode is not None and secondNode is not None:
+                    self.update()
+                    if len(pathList) == 0:
+                        painter.drawLine(firstNode.x(), firstNode.y(), secondNode.x(), secondNode.y())
+                    else:
+                        painter.drawLine(firstNode.x(), firstNode.y(), pathList[0].x(), pathList[0].y())
+                        for i in range(len(pathList) - 1):
+                            painter.drawLine(pathList[i].x(), pathList[i].y(), pathList[i + 1].x(), pathList[i + 1].y())
+                        painter.drawLine(pathList[-1].x(), pathList[-1].y(), secondNode.x(), secondNode.y())
 
+        # Doesn't matter to path finding
         if self.insertLineMode and self.correctNodeSelect:
             if self.firstNode is not None:
                 busName, i = self.firstNode
@@ -389,7 +455,14 @@ class Grid(QWidget):
                     if busName == bus:
                         firstNode = points[i]
                 mousePos = self.snap(self.currentMousePos)
-                painter.drawLine(firstNode.x(), firstNode.y(), mousePos.x(), mousePos.y())
+                pathList = self.tempPath
+                if len(pathList) == 0:
+                    painter.drawLine(firstNode.x(), firstNode.y(), mousePos.x(), mousePos.y())
+                else:
+                    painter.drawLine(firstNode.x(), firstNode.y(), pathList[0].x(), pathList[0].y())
+                    for i in range(len(pathList) - 1):
+                        painter.drawLine(pathList[i].x(), pathList[i].y(), pathList[i + 1].x(), pathList[i + 1].y())
+                    painter.drawLine(pathList[-1].x(), pathList[-1].y(), mousePos.x(), mousePos.y())
 
         else:
             return
@@ -441,4 +514,15 @@ class Grid(QWidget):
 
     def editedBusses(self, editedBus: str, bigTuple: tuple) -> None:
         self.busses[self.editBusDialog.nameInput.text()] = bigTuple
+        newPaths = []
+        for line in self.paths:
+            bus1Name, bus2Name, i1, i2, pathList = line
+            if bus1Name == editedBus:
+                bus1Name = self.editBusDialog.nameInput.text()
+            elif bus2Name == editedBus:
+                bus2Name = self.editBusDialog.nameInput.text()
+            line = bus1Name, bus2Name, i1, i2, pathList
+            newPaths.append(line)
+        self.paths = newPaths
         return editedBus
+

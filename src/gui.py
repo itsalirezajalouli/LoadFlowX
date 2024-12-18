@@ -1,9 +1,10 @@
 # Main GUI setup and window management
 
 # Imports
+from PyQt6.QtCore import Qt
 from PyQt6.QtCore import QSize
 from grid import Grid
-from busDialogs import GetProjectNameDialog, LoadProject
+from other_dialogs import GetProjectNameDialog, LoadProject
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QHBoxLayout, QMainWindow, QStatusBar, QVBoxLayout, QWidget, QToolButton
 
@@ -320,4 +321,6 @@ class MainWindow(QMainWindow):
 
     def setSelectMode(self) -> None:
         self.grid.insertBusMode = False
+        self.grid.insertLineMode = False
+        self.update()
 
