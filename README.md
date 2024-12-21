@@ -11,3 +11,10 @@
 - [ ] Implement Add Generator Class
 - [ ] Implement Add Load Class
 - [ ] Failed try to make offset work
+- [ ] Double check pp datastructures:
+-       static gen
+-       external grid
+-       transformators
+-       impedance
+- [ ] per unity algorithem, pp deos not have any data structure for this!
+- [ ] add objects geodata to csv files
