@@ -17,6 +17,8 @@ class MainWindow(QMainWindow):
         self.projectName = None
         self.getProjectNameDialog = GetProjectNameDialog(self)
         self.loadProject = LoadProject(self)
+        self.buttSize = 26
+        self.grid = None
 
         # Menu Bar
         menu = self.menuBar()
@@ -100,39 +102,157 @@ class MainWindow(QMainWindow):
 
         # Layouts
         self.mainLayout = QHBoxLayout()
-        self.mainLayout.setSpacing(10)
-        self.toolBox = QWidget()
-        self.toolBoxLayout = QVBoxLayout()
-        self.toolBox.setLayout(self.toolBoxLayout)
-        self.toolBox.setStyleSheet('''
+        
+        # View Toolbox
+        self.barWidget = QWidget()
+        self.barLayout = QVBoxLayout()
+        self.barWidget.setLayout(self.barLayout)
+        self.viewToolbox = QWidget()
+        self.viewToolbox.setStyleSheet('''
             background-color: #23272a;
-            border-radius: 12px;
+            border: 1px solid #23272a;
+            border-radius: 15px;
         ''')
+        self.viewToolbox.setFixedWidth(52)
+        self.viewToolbox.setFixedHeight(210)
+        self.viewBar = QVBoxLayout()
+        self.viewBar.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        #   Select button
-        selectButton = QToolButton()
-        selectButton.setIcon(QIcon('../icons/select.png'))
-        selectButton.setIconSize(QSize(28, 28))
-        selectButton.clicked.connect(self.setSelectMode)
-        selectButton.setStyleSheet('''
+        # Symbols Toolbox
+        self.symbolsToolbox = QWidget()
+        self.symbolsToolbox.setFixedWidth(60)
+        self.toolBoxLayout = QVBoxLayout()
+        self.symbolsToolbox.setLayout(self.toolBoxLayout)
+        self.symbolsToolbox.setFixedHeight(260)
+        self.symbolsToolbox.setStyleSheet('''
+            background-color:#23272a;
+            border-radius: 15px;
+        ''')
+        self.toolBoxLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # move button
+        moveButt = QToolButton()
+        moveButt.setIcon(QIcon('../icons/move.png'))
+        moveButt.setIconSize(QSize(self.buttSize, self.buttSize))
+        moveButt.setStyleSheet('''
         QToolButton {
             font-size: 24px;
             background-color: #3b3e45;
-            border: 2px solid #7289da;
+            border: 1px solid #3b3e45;
             border-radius: 10px;
             padding: 2px;
             color: #ffffff;
         }
         QToolButton:hover {
             background-color: #3b3e45;
-            border: 2px solid #99aab5;
+            border: 1px solid #7289da;
         }
         QToolButton:pressed {
             background-color: #23272a;
-            border: 2px solid #7289da;
+            border: 1px solid #FAA61A;
         }
         ''')
-        self.toolBoxLayout.addWidget(selectButton)
+        self.viewBar.addWidget(moveButt)
+        self.viewToolbox.setLayout(self.viewBar)
+
+        #   Edit button
+        self.editGridButton = QToolButton()
+        self.editGridButton.setIcon(QIcon('../icons/editGrid.png'))
+        self.editGridButton.setIconSize(QSize(self.buttSize, self.buttSize))
+        self.editGridButton.clicked.connect(self.setSelectMode)
+        self.editGridButton.setStyleSheet('''
+        QToolButton {
+            font-size: 24px;
+            background-color: #3b3e45;
+            border: 1px solid #3b3e45;
+            border-radius: 10px;
+            padding: 2px;
+            color: #ffffff;
+        }
+        QToolButton:hover {
+            background-color: #3b3e45;
+            border: 1px solid #7289da;
+        }
+        QToolButton:pressed {
+            background-color: #23272a;
+            border: 1px solid #FAA61A;
+        }
+        ''')
+        self.viewBar.addWidget(self.editGridButton)
+
+        #   erase button
+        eraseGridButt = QToolButton()
+        eraseGridButt.setIcon(QIcon('../icons/eraseGrid.png'))
+        eraseGridButt.setIconSize(QSize(self.buttSize, self.buttSize))
+        eraseGridButt.setStyleSheet('''
+        QToolButton {
+            font-size: 24px;
+            background-color: #3b3e45;
+            border: 1px solid #3b3e45;
+            border-radius: 10px;
+            padding: 2px;
+            color: #ffffff;
+        }
+        QToolButton:hover {
+            background-color: #3b3e45;
+            border: 1px solid #7289da;
+        }
+        QToolButton:pressed {
+            background-color: #23272a;
+            border: 1px solid #FAA61A;
+        }
+        ''')
+        self.viewBar.addWidget(eraseGridButt)
+
+        #   Zoom In button
+        zoomInButt = QToolButton()
+        zoomInButt.setIcon(QIcon('../icons/zoomIn.png'))
+        zoomInButt.setIconSize(QSize(self.buttSize, self.buttSize))
+        zoomInButt.setStyleSheet('''
+        QToolButton {
+            font-size: 24px;
+            background-color: #3b3e45;
+            border: 1px solid #3b3e45;
+            border-radius: 10px;
+            padding: 2px;
+            color: #ffffff;
+        }
+        QToolButton:hover {
+            background-color: #3b3e45;
+            border: 1px solid #7289da;
+        }
+        QToolButton:pressed {
+            background-color: #23272a;
+            border: 1px solid #FAA61A;
+        }
+        ''')
+        zoomInButt.clicked.connect(self.zoomIn)
+        self.viewBar.addWidget(zoomInButt)
+
+        #   Zoom Out button
+        zoomOutButt = QToolButton()
+        zoomOutButt.setIcon(QIcon('../icons/zoomOut.png'))
+        zoomOutButt.setIconSize(QSize(self.buttSize, self.buttSize))
+        zoomOutButt.setStyleSheet('''
+        QToolButton {
+            font-size: 24px;
+            background-color: #3b3e45;
+            border: 1px solid #3b3e45;
+            border-radius: 10px;
+            padding: 2px;
+            color: #ffffff;
+        }
+        QToolButton:hover {
+            background-color: #3b3e45;
+            border: 1px solid #7289da;
+        }
+        QToolButton:pressed {
+            background-color: #23272a;
+            border: 1px solid #FAA61A;
+        }
+        ''')
+        zoomOutButt.clicked.connect(self.zoomOut)
+        self.viewBar.addWidget(zoomOutButt)
 
         #   Add Bus button
         addBusButton = QToolButton()
@@ -141,24 +261,25 @@ class MainWindow(QMainWindow):
         QToolButton {
             font-size: 24px;
             background-color: #3b3e45;
-            border: 2px solid #7289da;
+            border: 1px solid #3b3e45;
             border-radius: 10px;
             padding: 2px;
             color: #ffffff;
         }
         QToolButton:hover {
             background-color: #3b3e45;
-            border: 2px solid #99aab5;
+            border: 1px solid #7289da;
         }
         QToolButton:pressed {
             background-color: #23272a;
-            border: 2px solid #7289da;
+            border: 1px solid #FAA61A;
         }
         ''')
         addBusButton.clicked.connect(self.addBus)
         self.toolBoxLayout.addWidget(addBusButton)
 
-        self.mainLayout.addWidget(self.toolBox)
+        self.barLayout.addWidget(self.viewToolbox)
+        self.barLayout.addWidget(self.symbolsToolbox)
 
         #   Add Line button
         addLineButton = QToolButton()
@@ -184,6 +305,30 @@ class MainWindow(QMainWindow):
         addLineButton.clicked.connect(self.addLine)
         self.toolBoxLayout.addWidget(addLineButton)
 
+        #   Add Transformer button
+        addTrafoButton = QToolButton()
+        addTrafoButton.setText('T')
+        addTrafoButton.setStyleSheet('''
+        QToolButton {
+            font-size: 24px;
+            background-color: #3b3e45;
+            border: 2px solid #7289da;
+            border-radius: 10px;
+            padding: 2px;
+            color: #ffffff;
+        }
+        QToolButton:hover {
+            background-color: #3b3e45;
+            border: 2px solid #99aab5;
+        }
+        QToolButton:pressed {
+            background-color: #23272a;
+            border: 2px solid #7289da;
+        }
+        ''')
+        addTrafoButton.clicked.connect(self.addTrafo)
+        self.toolBoxLayout.addWidget(addTrafoButton)
+
         #   Add Generator button
         addGenButton = QToolButton()
         addGenButton.setText('G')
@@ -206,29 +351,6 @@ class MainWindow(QMainWindow):
         }
         ''')
         self.toolBoxLayout.addWidget(addGenButton)
-
-        #   Add Transformer button
-        addTrafoButton = QToolButton()
-        addTrafoButton.setText('T')
-        addTrafoButton.setStyleSheet('''
-        QToolButton {
-            font-size: 24px;
-            background-color: #3b3e45;
-            border: 2px solid #7289da;
-            border-radius: 10px;
-            padding: 2px;
-            color: #ffffff;
-        }
-        QToolButton:hover {
-            background-color: #3b3e45;
-            border: 2px solid #99aab5;
-        }
-        QToolButton:pressed {
-            background-color: #23272a;
-            border: 2px solid #7289da;
-        }
-        ''')
-        self.toolBoxLayout.addWidget(addTrafoButton)
 
         #   Add Load button
         addLoadButton = QToolButton()
@@ -255,13 +377,14 @@ class MainWindow(QMainWindow):
 
         # Grid Layout
         self.grid = Grid(32)
-        self.mainLayout.addWidget(self.grid, 10)
+        self.mainLayout.addWidget(self.grid, 12)
+        self.mainLayout.addWidget(self.barWidget)
         
         # Main Widget
         widget = QWidget()
         widget.setLayout(self.mainLayout)
         widget.setStyleSheet('''
-            background-color: #23272a
+            background-color: #191b1d;
         ''')
         self.setCentralWidget(widget)
 
@@ -311,16 +434,43 @@ class MainWindow(QMainWindow):
             if not self.getProjectNameDialog.nameError:
                 self.projectName = self.getProjectNameDialog.projectName
         self.grid.projectName = self.projectName
+
+        self.grid.selectMode = False
+        self.grid.insertTrafoMode = False
+        self.grid.insertLineMode = False 
         self.grid.insertBusMode = True
         self.update()
 
     def addLine(self) -> None:
         self.grid.insertBusMode = False
+        self.grid.selectMode = False
+        self.grid.insertTrafoMode = False
         self.grid.insertLineMode = True
+        self.update()
+
+    def addTrafo(self) -> None:
+        print('Adding Trafo')
+        self.grid.insertBusMode = False
+        self.grid.insertLineMode = False 
+        self.grid.selectMode = False
+        self.grid.insertTrafoMode = True
         self.update()
 
     def setSelectMode(self) -> None:
         self.grid.insertBusMode = False
         self.grid.insertLineMode = False
+        self.grid.insertTrafoMode = False
+        self.grid.selectMode = True 
         self.update()
 
+    def zoomIn(self) -> None:
+        newSize = self.grid.dist * 2
+        if newSize in range(16, 256):
+            self.grid.dist = newSize
+            self.grid.update()
+
+    def zoomOut(self) -> None:
+        newSize = self.grid.dist // 2
+        if newSize in range(16, 256):
+            self.grid.dist = newSize
+            self.grid.update()

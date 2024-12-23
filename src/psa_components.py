@@ -66,7 +66,7 @@ class BusBar():
             writer = csv.DictWriter(file,fieldnames=['id','name','pos','bType','vMag',
                                                      'vAng','P','Q'])
             writer.writerow(data)
-        print(f'Data appended to {path} successfuly.')
+        print(f'-> Bus data appended to {path} successfuly.')
 
     def editCSV(self, path: str, prevName: str) -> None:
         csvPath = path + '/Buses.csv'
@@ -90,7 +90,53 @@ class BusBar():
                                                      'vAng','P','Q'])
             writer.writeheader()
             writer.writerows(newBusList)
-            print(f'Data edited to {path} successfuly.')
+            print(f'-> Bus Data edited to {path} successfuly.')
+class Line():
+    def __init__(self,
+                 bus1id: int,
+                 bus2id: int,
+                 R: float,
+                 X: float,
+                 len: float,
+                 vBase: float,
+                 ) -> None:
+        self.bus1id = bus1id
+        self.bus2id = bus2id
+        self.R = R
+        self.X = X
+        self.len = len
+        self.vBase = vBase
+
+    def log(self) -> None:
+        print(colored(
+        '''
+                                █   █▀█ █▀▀ █▀
+                                █▄▄ █▄█ █▄█ ▄█
+        '''
+        , 'light_blue'))
+        print(colored('-' * 80, 'red'))
+        print(colored('-> First Bus ID:', 'light_blue'), self.bus1id)
+        print(colored('-> Second Bus ID:', 'light_blue'), self.bus2id)
+        print(colored('-> R:', 'light_blue'), self.R)
+        print(colored('-> X:', 'light_blue'), self.X)
+        print(colored('-> Length:', 'light_blue'), self.len)
+        print(colored('-> V Base:', 'light_blue'), self.vBase)
+
+    def append2CSV(self, path: str) -> None:
+        data = {
+            'bus1id': self.bus1id, 
+            'bus2id': self.bus2id, 
+            'R': self.R,
+            'X': self.X,
+            'len': self.len,
+            'vBase': self.vBase,
+        }
+        csvPath = path + '/Lines.csv'
+        with open(csvPath, 'a', newline = '') as file:
+            writer = csv.DictWriter(file,fieldnames=['bus1id','bus2id','R','X','len',
+                                                     'vBase'])
+            writer.writerow(data)
+        print(f'-> Line data appended to {path} successfuly.')
 
 class Transformer():
     def __init__(self,
@@ -112,18 +158,3 @@ class Transformer():
         self.vBase = vBase
         self.winding = winding
 
-class Line():
-    def __init__(self,
-                 bus1id: int,
-                 bus2id: int,
-                 R: float,
-                 X: float,
-                 Length: float,
-                 vBase: float,
-                 ) -> None:
-        self.bus1id = bus1id
-        self.bus2id = bus2id
-        self.R = R
-        self.X = X
-        self.Length = Length
-        self.vBase = vBase

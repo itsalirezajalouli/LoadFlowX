@@ -9,9 +9,11 @@ from theme import DiscordPalette as theme
 from PyQt6.QtGui import QColor, QPaintEvent, QPen, QPainter
 from PyQt6.QtWidgets import QApplication, QWidget
 
+# Grid Gui Handler 
 class Grid(QWidget):
     def __init__(self, dist, *args, ** kwargs):
         super().__init__(*args, **kwargs)
+        # Style Properties
         self.dist = dist 
         self.gridWidth = 1
         self.txtWidth = 2
@@ -25,29 +27,36 @@ class Grid(QWidget):
         self.blue = theme.toQtColor(theme.blue) 
         self.yellow = theme.toQtColor(theme.yellow) 
         self.offSet = QPoint(0, 0)
+        self.highLightedPoint = None
+        self.currentMousePos = None
+        self.insertingOrient = -90
+
+        # State Properties
+        self.selectMode = False
         self.insertBusMode = False
         self.insertLineMode = False
-        self.selectMode = False
+        self.insertTrafoMode = False
+
         self.correctNodeSelect = False 
+        self.spacePressed = False  # Track the state of the Space key
+        
+        # Data Properties
         self.projectName = None
         self.addBusDialog = None
         self.editBusDialog = None
         self.addLineDialog = None
-        self.pathFinder = None
         self.busCounter = 0
-        self.busses = {}
-        self.highLightedPoint = None
-        self.currentMousePos = None
         self.firstNode = None
+        self.busses = {}
         self.paths = []
         self.tokenBusPorts = []
         self.xDists = []
         self.tempPath = []
+
         # Mouse Tracking for Hovering
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)  # Enable focus for key events
 
-        self.spacePressed = False  # Track the state of the Space key
 
     def snap(self, pos: QPoint) -> QPoint:
         # To escape repetition of code i created this function it's gonna be very useful
@@ -241,23 +250,44 @@ class Grid(QWidget):
         pos = self.snap(pos)
         x = pos.x()
         y = pos.y()
-        for bus, (point, capacity, orient, points) in self.busses.items():
+        for bus, (point, capacity, orient, _ ) in self.busses.items():
             busX = point.x()
             busY = point.y()
-            if orient == '-90':
-                if x == busX and y in range(busY, busY + capacity * self.dist):
-                    orient = '0'
-            elif orient == '0':
-                if x in range(busX, busX + capacity * self.dist) and y == busY:
-                    orient = '90'
-            elif orient == '90':
-                if x == busX and y in range(busY - capacity * self.dist, busY):
-                    orient = '180'
-            elif orient == '180':
-                if x in range(busX - capacity * self.dist, busX) and y == busY:
-                    orient = '-90'
+            if event.angleDelta().y() > 0:
+                if orient == '-90':
+                    if x == busX and y in range(busY, busY + capacity * self.dist):
+                        orient = '0'
+                elif orient == '0':
+                    if x in range(busX, busX + capacity * self.dist) and y == busY:
+                        orient = '90'
+                elif orient == '90':
+                    if x == busX and y in range(busY - capacity * self.dist, busY):
+                        orient = '180'
+                elif orient == '180':
+                    if x in range(busX - capacity * self.dist, busX) and y == busY:
+                        orient = '-90'
+            if event.angleDelta().y() < 0:
+                if orient == '-90':
+                    if x == busX and y in range(busY, busY + capacity * self.dist):
+                        orient = '180'
+                elif orient == '0':
+                    if x in range(busX, busX + capacity * self.dist) and y == busY:
+                        orient = '-90'
+                elif orient == '90':
+                    if x == busX and y in range(busY - capacity * self.dist, busY):
+                        orient = '0'
+                elif orient == '180':
+                    if x in range(busX - capacity * self.dist, busX) and y == busY:
+                        orient = '90'
             self.setBusDict(bus, point, capacity, orient)
-            self.update()
+
+        if self.insertTrafoMode or self.insertBusMode:
+            if self.insertingOrient == -90:
+                self.insertingOrient = 0
+            else:
+                self.insertingOrient = -90
+
+        self.update()
 
     def setOffset(self, offset: QPoint):
         # Sets an offset on the grid to simulate a move.
@@ -266,12 +296,12 @@ class Grid(QWidget):
 
     def paintEvent(self, event: QPaintEvent) -> None:
         # Set Pen for Grid painting
-        pen = QPen()
-        pen.setWidth(self.gridWidth)
-        pen.setColor(self.lineColor)
+        gridPen = QPen()
+        gridPen.setWidth(self.gridWidth)
+        gridPen.setColor(self.lineColor)
         painter = QPainter()
         painter.begin(self)
-        painter.setPen(pen)
+        painter.setPen(gridPen)
 
         # Horizontal lines
         startH = QPoint(0, int(self.offSet.y()))
@@ -311,43 +341,72 @@ class Grid(QWidget):
 
         # Drawing where the mouse is pointing to drop the item
         highLightedPoint = self.highLightedPoint
+        color = QColor(255, 255, 255, int(255 * 0.1))  # with 10% transparency
+        symbolPen = QPen()
+        symbolPen.setWidth(self.lineWidth)
+        symbolPen.setColor(self.blue)
+        dotPen = QPen()
+        dotPen.setColor(self.highLightWhite)
+        dotPen.setWidth(self.txtWidth)
+        txtPen = QPen()
+        txtPen.setWidth(self.txtWidth)
+        txtPen.setColor(color)
+
         if highLightedPoint is not None:
             xHigh = highLightedPoint.x()
             yHigh = highLightedPoint.y()
-            if self.insertBusMode:
+            if self.insertBusMode or self.insertTrafoMode:
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
                 # Set the fill color with 20% transparency
-                color = QColor(255, 255, 255, int(255 * 0.1))  # with 10% transparency
                 painter.setBrush(color)
                 painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
                 painter.drawRect(xHigh - self.dist, yHigh - self.dist, 2 * self.dist, 2 * self.dist)
-
-                symbolPen = QPen()
-                symbolPen.setWidth(self.lineWidth)
-                symbolPen.setColor(self.blue)
                 painter.setPen(symbolPen)
-                painter.drawLine(xHigh, yHigh - self.dist, xHigh, yHigh + self.dist)
 
-                txt = 'Left Click to Drop Bus'
-                textRect = painter.fontMetrics().boundingRect(txt)
-                textWidth = textRect.width()
-                textHeight = textRect.height()
-                txtPointX = xHigh - (textWidth // 2)
-                txtPointY = yHigh + (self.dist) + (textHeight)
-                txtPoint = QPoint(xHigh, yHigh - self.dist)
-                txtPen = QPen()
-                txtPen.setWidth(self.txtWidth)
-                txtPen.setColor(color)
-                painter.setPen(txtPen)
-                txtPoint = QPoint(txtPointX, txtPointY)
-                painter.drawText(txtPoint, txt)
+                if self.insertBusMode:
+                    painter.setPen(symbolPen)
+                    painter.drawLine(xHigh, yHigh - self.dist, xHigh, yHigh + self.dist)
 
-            dotPen = QPen()
-            dotPen.setColor(self.highLightWhite)
-            dotPen.setWidth(self.txtWidth)
-            painter.setPen(dotPen)
-            painter.drawEllipse(xHigh - 1, yHigh - 1, 2, 2)
+                    txt = 'Left Click to Drop Bus'
+                    textRect = painter.fontMetrics().boundingRect(txt)
+                    textWidth = textRect.width()
+                    textHeight = textRect.height()
+                    txtPointX = xHigh - (textWidth // 2)
+                    txtPointY = yHigh + (self.dist) + (textHeight)
+                    txtPoint = QPoint(xHigh, yHigh - self.dist)
+                    painter.setPen(txtPen)
+                    txtPoint = QPoint(txtPointX, txtPointY)
+                    painter.drawText(txtPoint, txt)
+
+                if self.insertTrafoMode:
+                    gridPen.setColor(self.yellow)
+                    painter.setPen(gridPen)
+                    if self.insertingOrient == -90:
+                        painter.drawLine(xHigh, yHigh - self.dist, xHigh, yHigh - 20)
+                        painter.drawLine(xHigh, yHigh + self.dist, xHigh, yHigh + 20)
+                    else:
+                        painter.drawLine(xHigh - self.dist, yHigh, xHigh - 20, yHigh)
+                        painter.drawLine(xHigh + self.dist, yHigh, xHigh + 20, yHigh)
+                    symbolPen.setColor(self.yellow)
+                    painter.setPen(symbolPen)
+                    if self.insertingOrient == -90:
+                        painter.drawEllipse(xHigh - 12, yHigh - 12 - 7, 24, 24)
+                        painter.drawEllipse(xHigh - 12, yHigh - 12 + 7, 24, 24)
+                    else:
+                        painter.drawEllipse(xHigh - 12 - 7, yHigh - 12, 24, 24)
+                        painter.drawEllipse(xHigh - 12 + 7, yHigh - 12, 24, 24)
+                    painter.setPen(dotPen)
+                    if self.insertingOrient == -90:
+                        painter.drawEllipse(xHigh - 1, yHigh - self.dist, 2, 2)
+                        painter.drawEllipse(xHigh - 1, yHigh + self.dist, 2, 2)
+                    else:
+                        painter.drawEllipse(xHigh - self.dist, yHigh - 1, 2, 2)
+                        painter.drawEllipse(xHigh + self.dist, yHigh - 1, 2, 2)
+
+            if not self.insertTrafoMode:
+                painter.setPen(dotPen)
+                painter.drawEllipse(xHigh - 1, yHigh - 1, 2, 2)
 
         # Drawing all the busbars here
         if self.addBusDialog is not None and not self.addBusDialog.inputError:

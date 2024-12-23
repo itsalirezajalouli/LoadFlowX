@@ -73,6 +73,7 @@ class AddBusDialog(QDialog):
         self.vUnitDropDown.addItem('PU')
         self.vUnitDropDown.addItem('KV')
         self.vUnitDropDown.addItem('V')
+        self.vUnitDropDown.activated.connect(self.vMagUnitActivator)
         self.vDegreeTypeDropDown = QComboBox(self) 
         self.vDegreeTypeDropDown.addItem('Deg')
         self.vDegreeTypeDropDown.addItem('Rad')
@@ -126,6 +127,7 @@ class AddBusDialog(QDialog):
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
 
+    # Handling bus type combo box
     def busTypeActivator(self, index) -> None:
         if index == 0: 
             self.busType = BusType.SLACK
@@ -133,6 +135,9 @@ class AddBusDialog(QDialog):
             self.busType = BusType.PV
         elif index == 2:
             self.busType = BusType.PQ
+
+    def vMagUnitActivator(self, index) -> None:
+        pass
 
     def accept(self) -> None:
         # Handling Same Name Bus Names

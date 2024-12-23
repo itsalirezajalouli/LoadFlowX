@@ -1,6 +1,8 @@
 #   DickSilent
 
 ##  TODO!
+- [x] Add Clear & Hand Button
+- [ ] Add Select Box when hovering on a bus
 - [x] Write a path finding script that gets the two clicked points and finds the shortes set of node between them
 - [x] Write the editing bus with clicking on them
 - [x] CSV system is shit
