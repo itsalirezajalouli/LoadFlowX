@@ -1,0 +1,17 @@
+import pandapower as pp
+# create empty net
+net=pp.create.create_empty_network(name='network1', f_hz=50.0, sn_mva=100, add_stdtypes=True)
+pp.create_bus(net,6,'bus1',index=1,geodata=(0,2),coords=[(0, 0), (0, 5)])
+pp.create_bus(net,11,'bus2',index=2,geodata=(0,10),coords=[(0, 6), (0, 11)])
+pp.create_bus(net,0.22,"bus3",index=3,geodata=(10,2),coords=[(5, 0), (5, 5)])
+pp.create_line(net,from_bus=1,to_bus=2,length_km=4,name='line12',index=1,std_type="NAYY 4x50 SE")
+pp.create_line(net,from_bus=2,to_bus=3,length_km=4,name='line23',index=2,std_type="NAYY 4x50 SE")
+pp.create_line(net,from_bus=1,to_bus=3,length_km=4,name='line13',index=3,std_type="NAYY 4x50 SE")
+pp.create.create_switch(net,1,element = 1,et = 'b',closed = True,z_ohm=1,name='s1',index = 1)
+pp.create.create_switch(net,2,element = 2,et = 'b',closed = False,z_ohm=0,name='s2',index = 2)
+pp.create.create_switch(net,3,element = 3,et = 'b',closed = True,z_ohm=15,name='s3',index = 3)
+pp.create_load(net,2,p_mw=300,q_mvar=100,scaling=1,index=1)
+pp.create_load(net,3,p_mw=250,q_mvar=-150,index=2)
+pp.create_sgen(net,1,p_mw=650)
+pp.run.runpp_pgm(net, algorithm='nr', max_iterations=20, error_tolerance_vm_pu=1e-08, symmetric=True, validate_input=False)
+print(net.bus)
