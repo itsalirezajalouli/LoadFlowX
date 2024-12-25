@@ -120,14 +120,14 @@ class MainWindow(QMainWindow):
 
         # Symbols Toolbox
         self.symbolsToolbox = QWidget()
-        self.symbolsToolbox.setFixedWidth(60)
         self.toolBoxLayout = QVBoxLayout()
         self.symbolsToolbox.setLayout(self.toolBoxLayout)
-        self.symbolsToolbox.setFixedHeight(260)
         self.symbolsToolbox.setStyleSheet('''
             background-color:#23272a;
             border-radius: 15px;
         ''')
+        self.symbolsToolbox.setFixedWidth(52)
+        self.symbolsToolbox.setFixedHeight(210)
         self.toolBoxLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # move button
@@ -256,7 +256,8 @@ class MainWindow(QMainWindow):
 
         #   Add Bus button
         addBusButton = QToolButton()
-        addBusButton.setText('B')
+        addBusButton.setIcon(QIcon('../icons/bus.png'))
+        addBusButton.setIconSize(QSize(self.buttSize, self.buttSize))
         addBusButton.setStyleSheet('''
         QToolButton {
             font-size: 24px;
@@ -283,23 +284,24 @@ class MainWindow(QMainWindow):
 
         #   Add Line button
         addLineButton = QToolButton()
-        addLineButton.setText('Li')
+        addLineButton.setIcon(QIcon('../icons/line.png'))
+        addLineButton.setIconSize(QSize(self.buttSize, self.buttSize))
         addLineButton.setStyleSheet('''
         QToolButton {
             font-size: 24px;
             background-color: #3b3e45;
-            border: 2px solid #7289da;
+            border: 1px solid #3b3e45;
             border-radius: 10px;
             padding: 2px;
             color: #ffffff;
         }
         QToolButton:hover {
             background-color: #3b3e45;
-            border: 2px solid #99aab5;
+            border: 1px solid #7289da;
         }
         QToolButton:pressed {
             background-color: #23272a;
-            border: 2px solid #7289da;
+            border: 1px solid #FAA61A;
         }
         ''')
         addLineButton.clicked.connect(self.addLine)
@@ -307,23 +309,24 @@ class MainWindow(QMainWindow):
 
         #   Add Transformer button
         addTrafoButton = QToolButton()
-        addTrafoButton.setText('T')
+        addTrafoButton.setIcon(QIcon('../icons/transformer.png'))
+        addTrafoButton.setIconSize(QSize(self.buttSize, self.buttSize))
         addTrafoButton.setStyleSheet('''
         QToolButton {
             font-size: 24px;
             background-color: #3b3e45;
-            border: 2px solid #7289da;
+            border: 1px solid #3b3e45;
             border-radius: 10px;
             padding: 2px;
             color: #ffffff;
         }
         QToolButton:hover {
             background-color: #3b3e45;
-            border: 2px solid #99aab5;
+            border: 1px solid #7289da;
         }
         QToolButton:pressed {
             background-color: #23272a;
-            border: 2px solid #7289da;
+            border: 1px solid #FAA61A;
         }
         ''')
         addTrafoButton.clicked.connect(self.addTrafo)
@@ -331,46 +334,48 @@ class MainWindow(QMainWindow):
 
         #   Add Generator button
         addGenButton = QToolButton()
-        addGenButton.setText('G')
+        addGenButton.setIcon(QIcon('../icons/generator.png'))
+        addGenButton.setIconSize(QSize(self.buttSize, self.buttSize))
         addGenButton.setStyleSheet('''
         QToolButton {
             font-size: 24px;
             background-color: #3b3e45;
-            border: 2px solid #7289da;
+            border: 1px solid #3b3e45;
             border-radius: 10px;
             padding: 2px;
             color: #ffffff;
         }
         QToolButton:hover {
             background-color: #3b3e45;
-            border: 2px solid #99aab5;
+            border: 1px solid #7289da;
         }
         QToolButton:pressed {
             background-color: #23272a;
-            border: 2px solid #7289da;
+            border: 1px solid #FAA61A;
         }
         ''')
         self.toolBoxLayout.addWidget(addGenButton)
 
         #   Add Load button
         addLoadButton = QToolButton()
-        addLoadButton.setText('Lo')
+        addLoadButton.setIcon(QIcon('../icons/load.png'))
+        addLoadButton.setIconSize(QSize(self.buttSize, self.buttSize))
         addLoadButton.setStyleSheet('''
         QToolButton {
             font-size: 24px;
             background-color: #3b3e45;
-            border: 2px solid #7289da;
+            border: 1px solid #3b3e45;
             border-radius: 10px;
             padding: 2px;
             color: #ffffff;
         }
         QToolButton:hover {
             background-color: #3b3e45;
-            border: 2px solid #99aab5;
+            border: 1px solid #7289da;
         }
         QToolButton:pressed {
             background-color: #23272a;
-            border: 2px solid #7289da;
+            border: 1px solid #FAA61A;
         }
         ''')
         self.toolBoxLayout.addWidget(addLoadButton)
