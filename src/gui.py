@@ -4,7 +4,7 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtCore import QSize
 from grid import Grid
-from other_dialogs import GetProjectNameDialog, LoadProject
+from start_window import StartUp
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QHBoxLayout, QMainWindow, QStatusBar, QVBoxLayout, QWidget, QToolButton
 
@@ -14,11 +14,14 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle('DickSilent!')
         self.setMinimumSize(800, 700)
-        self.projectName = None
-        self.getProjectNameDialog = GetProjectNameDialog(self)
-        self.loadProject = LoadProject(self)
+        self.projectPath = None
+        self.startUp = StartUp(self)
         self.buttSize = 26
         self.grid = None
+        if self.projectPath is None:
+            self.startUp.exec()
+            if not self.startUp.nameError:
+                self.projectPath = self.startUp.projectPath
 
         # Menu Bar
         menu = self.menuBar()
@@ -130,31 +133,6 @@ class MainWindow(QMainWindow):
         self.symbolsToolbox.setFixedHeight(210)
         self.toolBoxLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # move button
-        moveButt = QToolButton()
-        moveButt.setIcon(QIcon('../icons/move.png'))
-        moveButt.setIconSize(QSize(self.buttSize, self.buttSize))
-        moveButt.setStyleSheet('''
-        QToolButton {
-            font-size: 24px;
-            background-color: #3b3e45;
-            border: 1px solid #3b3e45;
-            border-radius: 10px;
-            padding: 2px;
-            color: #ffffff;
-        }
-        QToolButton:hover {
-            background-color: #3b3e45;
-            border: 1px solid #7289da;
-        }
-        QToolButton:pressed {
-            background-color: #23272a;
-            border: 1px solid #FAA61A;
-        }
-        ''')
-        self.viewBar.addWidget(moveButt)
-        self.viewToolbox.setLayout(self.viewBar)
-
         #   Edit button
         self.editGridButton = QToolButton()
         self.editGridButton.setIcon(QIcon('../icons/editGrid.png'))
@@ -179,6 +157,31 @@ class MainWindow(QMainWindow):
         }
         ''')
         self.viewBar.addWidget(self.editGridButton)
+
+        # move button
+        moveButt = QToolButton()
+        moveButt.setIcon(QIcon('../icons/move.png'))
+        moveButt.setIconSize(QSize(self.buttSize, self.buttSize))
+        moveButt.setStyleSheet('''
+        QToolButton {
+            font-size: 24px;
+            background-color: #3b3e45;
+            border: 1px solid #3b3e45;
+            border-radius: 10px;
+            padding: 2px;
+            color: #ffffff;
+        }
+        QToolButton:hover {
+            background-color: #3b3e45;
+            border: 1px solid #7289da;
+        }
+        QToolButton:pressed {
+            background-color: #23272a;
+            border: 1px solid #FAA61A;
+        }
+        ''')
+        self.viewBar.addWidget(moveButt)
+        self.viewToolbox.setLayout(self.viewBar)
 
         #   erase button
         eraseGridButt = QToolButton()
@@ -382,6 +385,7 @@ class MainWindow(QMainWindow):
 
         # Grid Layout
         self.grid = Grid(32)
+        self.grid.projectPath = self.projectPath
         self.mainLayout.addWidget(self.grid, 12)
         self.mainLayout.addWidget(self.barWidget)
         
@@ -407,7 +411,7 @@ class MainWindow(QMainWindow):
         pass
 
     def openProject(self) -> None:
-        self.loadProject.exec()
+        pass
 
     def saveProject(self) -> None:
         pass
@@ -434,12 +438,6 @@ class MainWindow(QMainWindow):
         pass
 
     def addBus(self) -> None:
-        if self.projectName is None:
-            self.getProjectNameDialog.exec()
-            if not self.getProjectNameDialog.nameError:
-                self.projectName = self.getProjectNameDialog.projectName
-        self.grid.projectName = self.projectName
-
         self.grid.selectMode = False
         self.grid.insertTrafoMode = False
         self.grid.insertLineMode = False 

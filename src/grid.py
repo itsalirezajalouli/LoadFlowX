@@ -41,7 +41,7 @@ class Grid(QWidget):
         self.spacePressed = False  # Track the state of the Space key
         
         # Data Properties
-        self.projectName = None
+        self.projectPath = None
         self.addBusDialog = None
         self.editBusDialog = None
         self.addLineDialog = None
@@ -116,7 +116,7 @@ class Grid(QWidget):
                 self.addBusDialog.busPos = pos
                 self.busCounter += 1
                 self.addBusDialog.busId = self.busCounter
-                self.addBusDialog.projectName = self.projectName
+                self.addBusDialog.projectPath = self.projectPath
                 self.addBusDialog.exec()
                 busName = self.addBusDialog.nameInput.text()
                 self.setBusDict(busName, pos, defaultCapacity, defaultOrientation)
@@ -553,10 +553,9 @@ class Grid(QWidget):
         self.busses[name] = busTuple
 
     def initEditBox(self, busName: str, point: QPoint) -> None:
-        projectPath = os.path.join('./user_data/', self.projectName)
-        csvPath = projectPath + '/Buses.csv'
+        csvPath = self.projectPath + '/Buses.csv'
         self.editBusDialog = EditBusDialog(self)
-        self.editBusDialog.projectName = self.projectName
+        self.editBusDialog.projectPath = self.projectPath
         with open(csvPath) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:

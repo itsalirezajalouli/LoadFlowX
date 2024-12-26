@@ -141,8 +141,7 @@ class AddBusDialog(QDialog):
 
     def accept(self) -> None:
         # Handling Same Name Bus Names
-        projectPath = os.path.join('./user_data/', self.projectName)
-        csvPath = projectPath + '/Buses.csv'
+        csvPath = self.projectPath + '/Buses.csv'
         if os.path.exists(csvPath):
             with open(csvPath) as csvfile:
                 reader = csv.DictReader(csvfile)
@@ -179,8 +178,7 @@ class AddBusDialog(QDialog):
             Q = float(self.qInput.text()),
         )
         bus.log()
-        projectPath = os.path.join('./user_data/', self.projectName)
-        bus.append2CSV(projectPath)
+        bus.append2CSV(self.projectPath)
         super().accept()
 
 class EditBusDialog(QDialog):
@@ -219,7 +217,7 @@ class EditBusDialog(QDialog):
         self.busId = None
         self.busPos = None
         self.busType = BusType.SLACK 
-        self.projectName = None
+        self.projectPath = None
         self.inputError = False
         self.previousName = None
 
@@ -314,8 +312,7 @@ class EditBusDialog(QDialog):
 
     def accept(self) -> None:
         # Handling Same Name Bus Names
-        projectPath = os.path.join('./user_data/', self.projectName)
-        csvPath = projectPath + '/Buses.csv'
+        csvPath = self.projectPath + '/Buses.csv'
         if os.path.exists(csvPath):
             with open(csvPath) as csvfile:
                 reader = csv.DictReader(csvfile)
@@ -353,8 +350,7 @@ class EditBusDialog(QDialog):
             Q = float(self.qInput.text()),
         )
         bus.log()
-        projectPath = os.path.join('./user_data/', self.projectName)
-        bus.editCSV(projectPath, self.previousName)
+        bus.editCSV(self.projectPath, self.previousName)
         super().accept()
 
     def reject(self) -> None:
@@ -370,6 +366,5 @@ class EditBusDialog(QDialog):
             Q = float(self.qInput.text()),
         )
         bus.log()
-        projectPath = os.path.join('./user_data/', self.projectName)
-        bus.editCSV(projectPath, self.previousName)
+        bus.editCSV(self.projectPath, self.previousName)
         super().reject()
