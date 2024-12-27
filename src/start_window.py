@@ -136,25 +136,8 @@ class StartUp(QDialog):
         self.exProWidget.setLayout(self.exampleBox)
         self.loadBox.addWidget(self.userProWidget)
         self.loadBox.addWidget(self.exProWidget)
-        loadButtonStr = 'Load Project'
-        self.loadButton = QPushButton()
-        self.loadButton.setText(loadButtonStr)
-        self.loadButton.clicked.connect(self.load)
-        self.loadButton.setStyleSheet('''
-            color: #ffffff;
-            background-color: #3b3e45;
-            border: 1px solid #7289da;
-            border-radius: 5px;
-            padding: 7px;
-        ''')
         self.loadWidget.setLayout(self.loadBox)
         
-        loadBiggerWidget = QWidget()
-        loadBiggerLayout = QVBoxLayout()
-        loadBiggerLayout.addWidget(self.loadWidget, 4)
-        loadBiggerLayout.addWidget(self.loadButton, 1)
-        loadBiggerWidget.setLayout(loadBiggerLayout)
-
         # self.loadLabel = QLabel('or Select & Load a Project:')
         # self.loadLabel.setStyleSheet('color: #ffffff;')
 
@@ -163,17 +146,19 @@ class StartUp(QDialog):
         layout.addWidget(self.nameInputLabel)
         layout.addWidget(self.newProjectWidget)
         # layout.addWidget(self.loadLabel)
-        layout.addWidget(loadBiggerWidget)
+        layout.addWidget(self.loadWidget)
         self.setLayout(layout)
 
     def exNameChanger(self, index) -> None:
         self.projectName = self.exProList[index.row()]
         self.projectPath = os.path.join(self.exPath, self.projectName)
+        self.load()
         print(self.projectPath)
 
     def usrNameChanger(self, index) -> None:
         self.projectName = self.usrProList[index.row()]
         self.projectPath = os.path.join(self.usrPath, self.projectName)
+        self.load()
         print(self.projectPath)
 
     def load(self) -> None:

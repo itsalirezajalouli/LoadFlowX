@@ -30,9 +30,11 @@ class Grid(QWidget):
         self.highLightedPoint = None
         self.currentMousePos = None
         self.insertingOrient = -90
+        self.handActivatedPos = None
 
         # State Properties
         self.selectMode = False
+        self.handMode = False
         self.insertBusMode = False
         self.insertLineMode = False
         self.insertTrafoMode = False
@@ -77,11 +79,25 @@ class Grid(QWidget):
     def mouseMoveEvent(self, event) -> None:
         self.currentMousePos = event.pos()
         self.highLightedPoint = self.snap(event.pos())
-        if self.spacePressed and self.leftMouseHold:
-            xDiff = self.comboLocation.x() - self.currentMousePos.x()
-            yDiff = self.comboLocation.y() - self.currentMousePos.y()
-            # self.setOffset(QPoint(xDiff, yDiff))
-        # print('Mouse pos for debug:', self.highLightedPoint)
+        self.update()
+        if self.handMode and self.handActivatedPos is not None:
+            xDiff = (self.highLightedPoint.x() - self.handActivatedPos.x())
+            yDiff = (self.highLightedPoint.y() - self.handActivatedPos.y())
+            print(xDiff, yDiff)
+            for bus, (point, capacity, orient, points) in self.busses.items():
+                newOriginX = point.x() + xDiff 
+                newOriginY = point.y() + yDiff 
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+                bigTuple = (point, capacity, orient, points)
+                edited = self.editedBusses(bus, bigTuple)
+                # for p in points:
+                #     p.x() * 2
+                #     p.y() * 2
+            handActivatedPosX = self.handActivatedPos.x() + xDiff
+            handActivatedPosY = self.handActivatedPos.y() + yDiff
+            newHAP = QPoint(handActivatedPosX, handActivatedPosY)
+            self.handActivatedPos = self.snap(newHAP)
         self.update()
 
     # def keyPressEvent(self, event):
@@ -94,9 +110,9 @@ class Grid(QWidget):
     #         self.spacePressed = False
     #         # print("Space key released")
     #
-    # def mouseReleaseEvent(self, event):
-    #     if event.button() == Qt.MouseButton.RightButton:
-    #         self.leftMouseHold= False
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and self.handMode:
+            self.handActivatedPos = None
     #
     # def checkCombo(self):
     #     if self.spacePressed and self.leftMouseHold:
@@ -197,6 +213,10 @@ class Grid(QWidget):
                 del self.busses[editedBus]
                 editedBus = None
                 self.update()
+
+        # Hand mode pressed
+        if event.button() == Qt.MouseButton.LeftButton and self.handMode:
+            self.handActivatedPos = self.snap(event.pos())
 
         # Left + Alt: Removes Node
         if event.button() == Qt.MouseButton.RightButton and QApplication.keyboardModifiers() == Qt.KeyboardModifier.AltModifier:
@@ -571,16 +591,19 @@ class Grid(QWidget):
                     self.editBusDialog.exec()
 
     def editedBusses(self, editedBus: str, bigTuple: tuple) -> None:
-        self.busses[self.editBusDialog.nameInput.text()] = bigTuple
-        newPaths = []
-        for line in self.paths:
-            bus1Name, bus2Name, i1, i2, pathList = line
-            if bus1Name == editedBus:
-                bus1Name = self.editBusDialog.nameInput.text()
-            elif bus2Name == editedBus:
-                bus2Name = self.editBusDialog.nameInput.text()
-            line = bus1Name, bus2Name, i1, i2, pathList
-            newPaths.append(line)
-        self.paths = newPaths
+        if self.editBusDialog is not None:
+            self.busses[self.editBusDialog.nameInput.text()] = bigTuple
+            newPaths = []
+            for line in self.paths:
+                bus1Name, bus2Name, i1, i2, pathList = line
+                if bus1Name == editedBus:
+                    bus1Name = self.editBusDialog.nameInput.text()
+                elif bus2Name == editedBus:
+                    bus2Name = self.editBusDialog.nameInput.text()
+                line = bus1Name, bus2Name, i1, i2, pathList
+                newPaths.append(line)
+            self.paths = newPaths
+        else:
+            self.busses[editedBus] = bigTuple
         return editedBus
 

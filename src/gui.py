@@ -1,7 +1,7 @@
 # Main GUI setup and window management
 
 # Imports
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtCore import QSize
 from grid import Grid
 from start_window import StartUp
@@ -18,6 +18,8 @@ class MainWindow(QMainWindow):
         self.startUp = StartUp(self)
         self.buttSize = 26
         self.grid = None
+        self.minZoom = 8 
+        self.maxZoom = 512
         if self.projectPath is None:
             self.startUp.exec()
             if not self.startUp.nameError:
@@ -162,6 +164,7 @@ class MainWindow(QMainWindow):
         moveButt = QToolButton()
         moveButt.setIcon(QIcon('../icons/move.png'))
         moveButt.setIconSize(QSize(self.buttSize, self.buttSize))
+        moveButt.clicked.connect(self.hand)
         moveButt.setStyleSheet('''
         QToolButton {
             font-size: 24px;
@@ -466,14 +469,34 @@ class MainWindow(QMainWindow):
         self.grid.selectMode = True 
         self.update()
 
+    def hand(self) -> None:
+        self.grid.handMode = True
+
     def zoomIn(self) -> None:
         newSize = self.grid.dist * 2
-        if newSize in range(16, 256):
+        if newSize in range(self.minZoom, self.maxZoom):
             self.grid.dist = newSize
+            for bus, (point, capacity, orient, points) in self.grid.busses.items():
+                newOriginX = point.x() * 2
+                newOriginY = point.y() * 2
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.grid.snap(newOrigin)
+                bigTuple = (point, capacity, orient, points)
+                edited = self.grid.editedBusses(bus, bigTuple)
+                # for p in points:
+                #     p.x() * 2
+                #     p.y() * 2
             self.grid.update()
 
     def zoomOut(self) -> None:
         newSize = self.grid.dist // 2
-        if newSize in range(16, 256):
+        if newSize in range(self.minZoom, self.maxZoom):
             self.grid.dist = newSize
+            for bus, (point, capacity, orient, points) in self.grid.busses.items():
+                newOriginX = point.x() // 2
+                newOriginY = point.y() // 2
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.grid.snap(newOrigin)
+                bigTuple = (point, capacity, orient, points)
+                edited = self.grid.editedBusses(bus, bigTuple)
             self.grid.update()
