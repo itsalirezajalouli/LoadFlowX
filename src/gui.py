@@ -470,7 +470,10 @@ class MainWindow(QMainWindow):
         self.update()
 
     def hand(self) -> None:
-        self.grid.handMode = True
+        if not self.grid.handMode: 
+            self.grid.handMode = True
+        else: 
+            self.grid.handMode = False 
 
     def zoomIn(self) -> None:
         newSize = self.grid.dist * 2

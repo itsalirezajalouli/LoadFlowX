@@ -58,6 +58,7 @@ class Grid(QWidget):
         # Mouse Tracking for Hovering
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)  # Enable focus for key events
+        self.update()
 
 
     def snap(self, pos: QPoint) -> QPoint:
