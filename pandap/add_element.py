@@ -56,6 +56,7 @@ def main():
     print(net.bus)
     print(net.trafo)
     print(net.line)
+    pp.plotting.simple_plot(net)
 
 if __name__ == "__main__":
     main()
