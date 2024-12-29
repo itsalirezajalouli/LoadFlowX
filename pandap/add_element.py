@@ -53,6 +53,9 @@ def main():
     add_line(lines_data,net)
     add_trans(tranfomers_data,net)
     print(net)
+    print(net.bus)
+    print(net.trafo)
+    print(net.line)
 
 if __name__ == "__main__":
     main()
