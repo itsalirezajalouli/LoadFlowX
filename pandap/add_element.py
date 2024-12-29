@@ -57,6 +57,7 @@ def main():
     print(net.trafo)
     print(net.line)
     pp.plotting.simple_plot(net)
+    # pp.runpp(net, numba = False)
 
 if __name__ == "__main__":
     main()
