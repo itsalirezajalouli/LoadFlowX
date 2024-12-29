@@ -52,10 +52,7 @@ def main():
     add_bus(buses_data, net)
     add_line(lines_data,net)
     add_trans(tranfomers_data,net)
-    pp.runpp(net, numba = False)
-    print(net.res_bus)
-    print(net.res_trafo)
-    print(net.res_line)
+    print(net)
 
 if __name__ == "__main__":
     main()
