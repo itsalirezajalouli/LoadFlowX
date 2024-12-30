@@ -1,0 +1,3 @@
+id,name,pos,bType,vMag,vAng,P,Q
+1,dqwdqwdqw,"PyQt6.QtCore.QPoint(320, 224)",BusType.SLACK,1.0,1.0,1.0,1.0
+2,afsdfasdf,"PyQt6.QtCore.QPoint(608, 224)",BusType.SLACK,1.0,1.0,1.0,1.0

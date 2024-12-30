@@ -3,3 +3,15 @@ id,name,pos,bType,vMag,vAng,P,Q
 1,asdasd,"PyQt6.QtCore.QPoint(544, 256)",BusType.SLACK,1.0,1.0,1.0,1.0
 1,dfasdf,"PyQt6.QtCore.QPoint(384, 256)",BusType.SLACK,1.0,1.0,1.0,1.0
 1,sdfasdf,"PyQt6.QtCore.QPoint(448, 256)",BusType.SLACK,1.0,1.0,1.0,1.0
+1,Bus1,"PyQt6.QtCore.QPoint(352, 224)",BusType.SLACK,1.0,1.0,1.0,1.0
+2,Bus2,"PyQt6.QtCore.QPoint(864, 224)",BusType.PV,2.0,2.0,2.0,2.0
+3,Bus3,"PyQt6.QtCore.QPoint(1088, 192)",BusType.SLACK,1.0,1.0,1.0,1.0
+1,Nigga1,"PyQt6.QtCore.QPoint(224, 224)",BusType.SLACK,1.0,1.0,1.0,1.0
+2,Nigga2,"PyQt6.QtCore.QPoint(672, 224)",BusType.PV,2.0,2.0,2.0,2.0
+3,Nigga3,"PyQt6.QtCore.QPoint(864, 608)",BusType.SLACK,1.0,1.0,1.0,1.0
+1,Bus1asdadasd,"PyQt6.QtCore.QPoint(352, 192)",BusType.SLACK,1.0,1.0,1.0,1.0
+2,awsdadasdas,"PyQt6.QtCore.QPoint(768, 192)",BusType.SLACK,1.0,1.0,1.0,1.0
+1,wefqef,"PyQt6.QtCore.QPoint(320, 256)",BusType.SLACK,1.0,1.0,1.0,1.0
+2,qwdqdw,"PyQt6.QtCore.QPoint(768, 256)",BusType.SLACK,1.0,1.0,1.0,1.0
+1,qwfqwqwd,"PyQt6.QtCore.QPoint(320, 224)",BusType.SLACK,1.0,1.0,1.0,1.0
+2,qwdqwdqwd,"PyQt6.QtCore.QPoint(704, 224)",BusType.SLACK,1.0,1.0,1.0,1.0
