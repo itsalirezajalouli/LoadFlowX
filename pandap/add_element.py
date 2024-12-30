@@ -1,5 +1,6 @@
 import pandapower as pp
 import csv
+from termcolor import colored
 
 
 buses_data = 'buses.csv'
@@ -81,8 +82,9 @@ def main():
     # print(net.trafo)
     # print(net.line)
     # pp.plotting.simple_plot(net)
-    pp.runpp(net)
+    # pp.runpp(net)
     # print(net.res_bus)
+    print(colored('the program runed succesfully!','green'))
 
 if __name__ == "__main__":
     main()
