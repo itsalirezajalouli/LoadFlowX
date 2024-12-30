@@ -84,7 +84,7 @@ def main():
     # pp.plotting.simple_plot(net)
     # pp.runpp(net)
     # print(net.res_bus)
-    print(colored('the program runed succesfully!','green'))
+    print(colored('the program runned succesfully!','green'))
 
 if __name__ == "__main__":
     main()
