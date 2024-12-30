@@ -20,3 +20,4 @@
 -       impedance
 - [ ] per unity algorithem, pp deos not have any data structure for this!
 - [ ] add objects geodata to csv files
+- [ ] add result writer to add_element.py

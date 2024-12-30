@@ -5,6 +5,8 @@ import csv
 buses_data = 'buses.csv'
 lines_data = 'lines.csv'
 tranfomers_data = 'transformers.csv'
+gens_data = 'gens.csv'
+loads_data = 'loads.csv'
 
 
 def create_net(network,f:float = 50, s:float = 100):
@@ -45,6 +47,26 @@ def add_line(lines_data, net):
             pp.create_line(net,from_bus=int(line['from_bus']), to_bus=int(line['to_bus']), length_km= float(line['length_km']), name= line['name'],std_type= line['std_type'], index=int(line['index']))
 
 
+def add_gen(gens_data, net):
+    gens = []
+    with open(gens_data,"r") as file:
+        reader = csv.DictReader(file, fieldnames=['bus', 'p_mw', 'vm_pu', 'sn_mva', 'name', 'index','slack'])
+        for _ in reader :
+            gens.append(_)
+        
+        for gen in gens:
+            pp.create.create_gen(net,bus=int(gen['bus']),p_mw=float(gen['p_mw']),vm_pu=float(gen['vm_pu']),sn_mva = float(gen['sn_mva']),name = gen['name'],index = int(gen['index']), slack = gen['slack'])
+
+
+def add_load(loads_data, net):
+    loads = []
+    with open(loads_data,"r") as file:
+        reader = csv.DictReader(file,fieldnames=['bus','p_mw','q_mvar','index'])
+        for _ in reader:
+            loads.append(_)
+
+        for load in loads:
+            pp.create_load(net,bus=int(load['bus']),p_mw=float(load['p_mw']),q_mvar=float(load['q_mvar']),index=int(load['index']))
 
 
 def main():
@@ -52,12 +74,15 @@ def main():
     add_bus(buses_data, net)
     add_line(lines_data,net)
     add_trans(tranfomers_data,net)
+    add_gen(gens_data,net)
+    add_load(loads_data,net)
     print(net)
-    print(net.bus)
-    print(net.trafo)
-    print(net.line)
-    pp.plotting.simple_plot(net)
-    # pp.runpp(net, numba = False)
+    # print(net.bus)
+    # print(net.trafo)
+    # print(net.line)
+    # pp.plotting.simple_plot(net)
+    pp.runpp(net)
+    # print(net.res_bus)
 
 if __name__ == "__main__":
     main()
