@@ -48,6 +48,18 @@ def add_line(lines_data, net):
             pp.create_line(net,from_bus=int(line['from_bus']), to_bus=int(line['to_bus']), length_km= float(line['length_km']), name= line['name'],std_type= line['std_type'], index=int(line['index']))
 
 
+def add_line_from_param(lines_data, net):
+    lines = []
+    with open(lines_data,"r") as file:
+        reader = csv.DictReader(file, fieldnames=['from_bus','to_bus','length_km','r_ohm_per_km','x_ohm_per_km', 'c_nf_per_km','max_i_ka'])
+        for _ in reader:
+            lines.append(_)
+
+        for line in lines:
+            pp.create_line_from_parameters(net,from_bus=int(line['from_bus']), to_bus=int(line['to_bus']), length_km= float(line['length_km']), r_ohm_per_km= float(line['r_ohm_per_km']),x_ohm_per_km= float(line['x_ohm_per_km']), c_nf_per_km=float(line['c_nf_per_km']), max_i_ka=float(line['max_i_ka']))
+
+
+
 def add_gen(gens_data, net):
     gens = []
     with open(gens_data,"r") as file:
@@ -84,7 +96,7 @@ def main():
     # pp.plotting.simple_plot(net)
     # pp.runpp(net)
     # print(net.res_bus)
-    print(colored('the program runned succesfully!','green'))
+    # print(colored('the program runned succesfully!','green'))
 
 if __name__ == "__main__":
     main()
