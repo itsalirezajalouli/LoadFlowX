@@ -15,3 +15,10 @@ id,name,pos,bType,vMag,vAng,P,Q
 2,qwdqdw,"PyQt6.QtCore.QPoint(768, 256)",BusType.SLACK,1.0,1.0,1.0,1.0
 1,qwfqwqwd,"PyQt6.QtCore.QPoint(320, 224)",BusType.SLACK,1.0,1.0,1.0,1.0
 2,qwdqwdqwd,"PyQt6.QtCore.QPoint(704, 224)",BusType.SLACK,1.0,1.0,1.0,1.0
+1,wdqwdq,"PyQt6.QtCore.QPoint(384, 256)",BusType.SLACK,1.0,1.0,1.0,1.0
+2,qwqd,"PyQt6.QtCore.QPoint(640, 256)",BusType.SLACK,1.0,1.0,1.0,1.0
+3,wqdw,"PyQt6.QtCore.QPoint(864, 256)",BusType.SLACK,1.0,1.0,1.0,1.0
+4,dqdqd,"PyQt6.QtCore.QPoint(320, 256)",BusType.SLACK,1.0,1.0,1.0,1.0
+1,wdq,"PyQt6.QtCore.QPoint(256, 256)",BusType.SLACK,1.0,1.0,1.0,1.0
+2,qq,"PyQt6.QtCore.QPoint(672, 256)",BusType.SLACK,1.0,1.0,1.0,1.0
+3,qqq,"PyQt6.QtCore.QPoint(1024, 256)",BusType.SLACK,1.0,1.0,1.0,1.0

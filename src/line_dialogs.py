@@ -1,9 +1,13 @@
 # Dialogs for lines
-from PyQt6.QtWidgets import QDialog, QLabel, QWidget, QHBoxLayout, QLineEdit, QComboBox, QVBoxLayout, QDialogButtonBox
+from psa_components import Line
+from PyQt6.QtWidgets import QDialog, QLabel, QWidget, QHBoxLayout, QLineEdit, QComboBox, QVBoxLayout, QDialogButtonBox, QMessageBox
 
 class AddLineDialog(QDialog):
-    def __init__(self, parent) -> None:
+    def __init__(self, parent, bus1, bus2) -> None:
         super().__init__(parent)
+        self.inputError = False
+        self.bus1Id = bus1
+        self.bus2Id = bus2
         self.setWindowTitle('Add Line')
         self.setStyleSheet('''
         QDialog {
@@ -94,3 +98,22 @@ class AddLineDialog(QDialog):
         layout.addWidget(self.lenWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
+        print('line b/w: ', bus1, bus2)
+
+    def accept(self) -> None:
+        inputList = []
+        inputList.append(self.rInput.text())
+        inputList.append(self.xInput.text())
+        inputList.append(self.lenInput.text())
+        inputList.append(self.vBaseInput.text())
+        if '' in inputList:
+            self.inputError = True
+            QMessageBox.warning(self, 'Fill all the fields.',
+                'No field can be empty! Please fill them all.', QMessageBox.StandardButton.Ok)
+            return
+        else:
+            self.inputError = False
+        # line = Line(
+        #     bus1Id = 
+        # )
+        super().accept()

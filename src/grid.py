@@ -148,7 +148,7 @@ class Grid(QWidget):
                             if points[i] not in self.tokenBusPorts:
                                 self.correctNodeSelect = True
                                 self.firstNode = (bus, i)
-                                self.tokenBusPorts.append(points[i])
+                                # self.tokenBusPorts.append(points[i])
 
             # Placing second Connection
             elif self.insertLineMode and self.firstNode is not None:
@@ -171,9 +171,9 @@ class Grid(QWidget):
                                     if line not in self.paths and revLine not in self.paths:
                                         self.paths.append(line)
                                         self.firstNode = None
-                                        self.tokenBusPorts.append(points[i])
+                                        # self.tokenBusPorts.append(points[i])
                                         self.update()
-                                        self.addLineDialog = AddLineDialog(self)
+                                        self.addLineDialog = AddLineDialog(self, bus1, bus2)
                                         self.addLineDialog.exec()
                                         self.tempPath.clear() 
 
