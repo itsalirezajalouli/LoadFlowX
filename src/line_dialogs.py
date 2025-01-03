@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QDialog, QLabel, QWidget, QHBoxLayout, QLineEdit, QC
 class AddLineDialog(QDialog):
     def __init__(self, parent, bus1, bus2) -> None:
         super().__init__(parent)
+        self.projectPath = None
         self.inputError = False
         self.bus1Id = bus1
         self.bus2Id = bus2
@@ -39,8 +40,6 @@ class AddLineDialog(QDialog):
         ''')
         
         self.lineId = None
-        self.bus1Id = None
-        self.bus2Id = None
         self.R = None
         self.X = None
         self.Length = None
@@ -98,7 +97,6 @@ class AddLineDialog(QDialog):
         layout.addWidget(self.lenWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
-        print('line b/w: ', bus1, bus2)
 
     def accept(self) -> None:
         inputList = []
@@ -113,7 +111,14 @@ class AddLineDialog(QDialog):
             return
         else:
             self.inputError = False
-        # line = Line(
-        #     bus1Id = 
-        # )
+        line = Line(
+            bus1id = self.bus1Id, 
+            bus2id = self.bus2Id, 
+            R = float(self.rInput.text()),
+            X = float(self.xInput.text()),
+            len = float(self.lenInput.text()),
+            vBase = float(self.vBaseInput.text())
+        )
+        line.log()
+        line.append2CSV(self.projectPath)
         super().accept()
