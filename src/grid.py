@@ -5,6 +5,7 @@ from copy import deepcopy
 from PyQt6.QtCore import QPoint, Qt
 from bus_dialogs import AddBusDialog, EditBusDialog
 from line_dialogs import AddLineDialog
+from run_dialogs import RunSimDialog
 from theme import DiscordPalette as theme
 from PyQt6.QtGui import QColor, QPaintEvent, QPen, QPainter
 from PyQt6.QtWidgets import QApplication, QWidget
@@ -43,13 +44,16 @@ class Grid(QWidget):
 
         self.correctNodeSelect = False 
         self.spacePressed = False  # Track the state of the Space key
-        
-        # Data Properties
-        self.projectPath = None
+
+        # Dialogs
         self.addBusDialog = None
         self.editBusDialog = None
         self.addLineDialog = None
         self.addTrafoDialog = None
+        self.runSimDialog = None
+        
+        # Data Properties
+        self.projectPath = None
         self.busCounter = 0
         self.trafoCounter = 0
         self.firstNode = None
@@ -62,6 +66,10 @@ class Grid(QWidget):
         self.tempPath = []
         self.orientations = ['-90', '0', '90', '180']
         self.trafoCenters = []
+
+        # Defaults
+        self.freq = 50
+        self.sBase = 100
 
         # Mouse Tracking for Hovering
         self.setMouseTracking(True)
@@ -742,3 +750,7 @@ class Grid(QWidget):
             self.busses[editedBus] = bigTuple
         return editedBus
 
+    def openRunDialog(self) -> None:
+        self.runSimDialog = RunSimDialog(self, self.freq, self.sBase)
+        self.runSimDialog.projectPath = self.projectPath
+        self.runSimDialog.exec()

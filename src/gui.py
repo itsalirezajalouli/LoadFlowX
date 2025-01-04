@@ -111,7 +111,9 @@ class MainWindow(QMainWindow):
         # View Toolbox
         self.barWidget = QWidget()
         self.barLayout = QVBoxLayout()
+        self.barLayout.setSpacing(2)
         self.barWidget.setLayout(self.barLayout)
+
         self.viewToolbox = QWidget()
         self.viewToolbox.setStyleSheet('''
             background-color: #23272a;
@@ -122,6 +124,18 @@ class MainWindow(QMainWindow):
         self.viewToolbox.setFixedHeight(210)
         self.viewBar = QVBoxLayout()
         self.viewBar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Run Toolbox
+        self.runWidget = QWidget()
+        self.runLayout = QVBoxLayout()
+        self.runWidget.setLayout(self.runLayout)
+        self.runWidget.setStyleSheet('''
+            background-color: #23272a;
+            border: 1px solid #23272a;
+            border-radius: 15px;
+        ''')
+        self.runWidget.setFixedWidth(52)
+        self.runWidget.setFixedHeight(55)
 
         # Symbols Toolbox
         self.symbolsToolbox = QWidget()
@@ -211,6 +225,14 @@ class MainWindow(QMainWindow):
         self.zoomOutButt.clicked.connect(self.zoomOut)
         self.viewBar.addWidget(self.zoomOutButt)
 
+        #   Run button
+        self.runButton = QToolButton()
+        self.runButton.setIcon(QIcon('../icons/run.png'))
+        self.runButton.setIconSize(QSize(self.buttSize, self.buttSize))
+        self.runButton.setStyleSheet(self.normalStyle)
+        self.runButton.clicked.connect(self.run)
+        self.runLayout.addWidget(self.runButton)
+
         #   Add Bus button
         self.addBusButton = QToolButton()
         self.addBusButton.setIcon(QIcon('../icons/bus.png'))
@@ -220,6 +242,7 @@ class MainWindow(QMainWindow):
         self.toolBoxLayout.addWidget(self.addBusButton)
 
         self.barLayout.addWidget(self.viewToolbox)
+        self.barLayout.addWidget(self.runWidget)
         self.barLayout.addWidget(self.symbolsToolbox)
 
         #   Add Line button
@@ -305,6 +328,9 @@ class MainWindow(QMainWindow):
 
     def fdLoadFlow(self) -> None:
         pass
+
+    def run(self) -> None:
+        self.grid.openRunDialog()
 
     def addBus(self) -> None:
         self.grid.selectMode = False
