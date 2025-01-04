@@ -9,6 +9,8 @@ from theme import DiscordPalette as theme
 from PyQt6.QtGui import QColor, QPaintEvent, QPen, QPainter
 from PyQt6.QtWidgets import QApplication, QWidget
 
+from trafo_dialogs import AddTrafoDialog
+
 # Grid Gui Handler 
 class Grid(QWidget):
     def __init__(self, dist, *args, ** kwargs):
@@ -47,6 +49,7 @@ class Grid(QWidget):
         self.addBusDialog = None
         self.editBusDialog = None
         self.addLineDialog = None
+        self.addTrafoDialog = None
         self.busCounter = 0
         self.trafoCounter = 0
         self.firstNode = None
@@ -106,7 +109,7 @@ class Grid(QWidget):
                 connection1, connection2, fp, i, tempPath = p
                 newTp = []
                 for tp in tempPath:
-                    tp = self.snap(QPoint(tp.x() + xDiff, tp.y() + yDiff))
+                    tp = self.snap(QPoint(tp.x() + xDiff, tp.y() + xDiff))
                     newTp.append(tp)
                 p = connection1, connection2, fp, i, newTp
                 newPaths.append(p)
@@ -159,13 +162,11 @@ class Grid(QWidget):
             # Placing a Transformator 
             if self.insertTrafoMode:
                 pos = self.snap(event.pos())
-                # defaultOrientation = '-90'
-                # self.addBusDialog = AddBusDialog(self)
-                # self.addBusDialog.busPos = pos
-                # self.busCounter += 1
-                # self.addBusDialog.busId = self.busCounter
-                # self.addBusDialog.projectPath = self.projectPath
-                # self.addBusDialog.exec()
+                self.addTrafoDialog = AddTrafoDialog(self)
+                self.addTrafoDialog.projectPath = self.projectPath
+                self.addTrafoDialog.trafoBus = pos
+                self.addTrafoDialog.trafoId = self.trafoCounter
+                self.addTrafoDialog.exec()
                 # busName = self.addBusDialog.nameInput.text()
                 self.setTrafoDict(pos)
                 self.update()
