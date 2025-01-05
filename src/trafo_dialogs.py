@@ -1,15 +1,18 @@
-# Dialogs for lines
-from psa_components import Line
+# Import
+from psa_components import Transformer
 from PyQt6.QtWidgets import QDialog, QLabel, QWidget, QHBoxLayout, QLineEdit, QComboBox, QVBoxLayout, QDialogButtonBox, QMessageBox
 
-class AddLineDialog(QDialog):
-    def __init__(self, parent, bus1, bus2) -> None:
+# Dialogs Related to Trafo 
+class AddTrafoDialog(QDialog):
+    def __init__(self, parent) -> None:
         super().__init__(parent)
         self.projectPath = None
+        self.trafoPos = None
+        self.trafoId = None
         self.inputError = False
-        self.bus1Id = bus1
-        self.bus2Id = bus2
-        self.setWindowTitle('Add Line')
+        self.bus1Id = None
+        self.bus2Id = None 
+        self.setWindowTitle('Add Transformer')
         self.setStyleSheet('''
         QDialog {
             font-size: 24px;
@@ -31,7 +34,7 @@ class AddLineDialog(QDialog):
             color: #ffffff;
         }
         ''')
-        self.title = QLabel('Add Line to Network')
+        self.title = QLabel('Add Transformer to Network')
         self.title.setStyleSheet('''
             color: #ffffff;
             border: 2px solid #7289da;
@@ -39,13 +42,7 @@ class AddLineDialog(QDialog):
             padding: 8px;
         ''')
         
-        self.lineId = None
-        self.R = None
-        self.X = None
-        self.Length = None
-        self.vBase = None
-
-        # Line Z Input Box
+        # Trafo Z Input Box
         self.zLabel = QLabel('Impedances:')
         self.zLabel.setStyleSheet('color: #ffffff;')
         self.zWidget = QWidget()
@@ -66,24 +63,22 @@ class AddLineDialog(QDialog):
         self.zHBox.addWidget(self.xUnitDropDown)
         self.zWidget.setLayout(self.zHBox)
 
-        # Length & V Base
-        self.lenHBox = QHBoxLayout()
-        self.lenInput = QLineEdit(self)
-        self.lenInput.setPlaceholderText('Line Length')
+        # A & V Base
+        self.vLabel = QLabel('Voltages:')
+        self.vLabel.setStyleSheet('color: #ffffff;')
+        self.aHBox = QHBoxLayout()
+        self.aInput = QLineEdit(self)
+        self.aInput.setPlaceholderText('a (N1 / N2 or V1 / V2)')
         self.vBaseInput = QLineEdit(self)
         self.vBaseInput.setPlaceholderText('V Base')
-        self.lenUnitDropDown = QComboBox(self) 
-        self.lenUnitDropDown.addItem('KM')
-        self.lenUnitDropDown.addItem('Miles')
         self.vbUnitDropDown = QComboBox(self) 
         self.vbUnitDropDown.addItem('PU')
         self.vbUnitDropDown.addItem('KV')
-        self.lenHBox.addWidget(self.lenInput)
-        self.lenHBox.addWidget(self.lenUnitDropDown)
-        self.lenHBox.addWidget(self.vBaseInput)
-        self.lenHBox.addWidget(self.vbUnitDropDown)
-        self.lenWidget = QWidget()
-        self.lenWidget.setLayout(self.lenHBox)
+        self.aHBox.addWidget(self.aInput)
+        self.aHBox.addWidget(self.vBaseInput)
+        self.aHBox.addWidget(self.vbUnitDropDown)
+        self.aWidget = QWidget()
+        self.aWidget.setLayout(self.aHBox)
 
         # Button Box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -94,7 +89,8 @@ class AddLineDialog(QDialog):
         layout.addWidget(self.title)
         layout.addWidget(self.zLabel)
         layout.addWidget(self.zWidget)
-        layout.addWidget(self.lenWidget)
+        layout.addWidget(self.vLabel)
+        layout.addWidget(self.aWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
 
@@ -102,7 +98,7 @@ class AddLineDialog(QDialog):
         inputList = []
         inputList.append(self.rInput.text())
         inputList.append(self.xInput.text())
-        inputList.append(self.lenInput.text())
+        inputList.append(self.aInput.text())
         inputList.append(self.vBaseInput.text())
         if '' in inputList:
             self.inputError = True
@@ -111,14 +107,4 @@ class AddLineDialog(QDialog):
             return
         else:
             self.inputError = False
-        line = Line(
-            bus1id = self.bus1Id, 
-            bus2id = self.bus2Id, 
-            R = float(self.rInput.text()),
-            X = float(self.xInput.text()),
-            len = float(self.lenInput.text()),
-            vBase = float(self.vBaseInput.text())
-        )
-        line.log()
-        line.append2CSV(self.projectPath)
         super().accept()

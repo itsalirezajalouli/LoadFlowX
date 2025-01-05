@@ -15,6 +15,9 @@ class StartUp(QDialog):
         self.exPath = './examples/'
         self.projectPath = None
         self.busCSV = None
+        self.guiCSV = None
+        self.lineCSV = None
+        self.loaded = False
 
         # Making the necessary folders if not there
         if not isdir(self.usrPath):
@@ -66,10 +69,10 @@ class StartUp(QDialog):
 
         # Button Box
         buttonStr = 'Start New Project'
-        self.loadButton = QPushButton()
-        self.loadButton.setText(buttonStr)
-        self.loadButton.clicked.connect(self.startProject)
-        self.loadButton.setStyleSheet('''
+        self.newProButton = QPushButton()
+        self.newProButton.setText(buttonStr)
+        self.newProButton.clicked.connect(self.startProject)
+        self.newProButton.setStyleSheet('''
             color: #ffffff;
             background-color: #3b3e45;
             border: 1px solid #7289da;
@@ -78,7 +81,7 @@ class StartUp(QDialog):
         ''')
 
         self.newProjectLayout.addWidget(self.nameInput,6)
-        self.newProjectLayout.addWidget(self.loadButton, 2)
+        self.newProjectLayout.addWidget(self.newProButton, 2)
         self.newProjectWidget.setLayout(self.newProjectLayout)
 
         # Load Box
@@ -164,6 +167,7 @@ class StartUp(QDialog):
     def load(self) -> None:
         if self.projectPath is not None:
             self.nameError = False
+            self.loaded = True
             self.accept()
         else:
             QMessageBox.warning(self, 'No Project Loaded',
@@ -196,10 +200,21 @@ class StartUp(QDialog):
         # Adding Headers and Making CSVs
         if not self.nameError:
             self.busCSV = self.usrPath + self.projectName + '/Buses.csv'
-            with open(self.busCSV, 'a', newline = '') as file:
-                writer = csv.DictWriter(file,fieldnames=['id','name','pos','bType','vMag',
-                                                         'vAng','P','Q'])
+            self.lineCSV = self.usrPath + self.projectName + '/Lines.csv'
+            self.guiCSV = self.usrPath + self.projectName + '/GUI.csv'
+            with open(self.guiCSV, 'a', newline = '') as file:
+                writer = csv.DictWriter(file,fieldnames=['dist','paths'])
                 writer.writeheader()
-
-            print(f'header succefully added to {self.busCSV}')
+            print(f'-> GUI header appended to {self.lineCSV} successfuly.')
+            with open(self.busCSV, 'a', newline = '') as file:
+                writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'vAng',
+                                                         'P', 'Q', 'name', 'pos',
+                                                         'capacity', 'orient', 'points'])
+                writer.writeheader()
+            print(f'-> Bus header appended to {self.busCSV} successfuly.')
+            with open(self.lineCSV, 'a', newline = '') as file:
+                writer = csv.DictWriter(file,fieldnames=['bus1id','bus2id','R','X','len',
+                                                         'vBase'])
+                writer.writeheader()
+            print(f'-> Line header appended to {self.lineCSV} successfuly.')
 
