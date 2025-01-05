@@ -1,7 +1,9 @@
 #   Components like Bus, Line and Network...
 import csv
+import json
 from enum import Enum
 from termcolor import colored
+from PyQt6.QtCore import QPoint
 
 class BusType(Enum):
     SLACK = 'slack'
@@ -15,7 +17,7 @@ class Winding(Enum):
 
 class BusBar():
     def __init__(self,
-                 pos: tuple[float, float],
+                 pos: QPoint,
                  id: int,
                  name: str,
                  bType: BusType,
@@ -23,8 +25,11 @@ class BusBar():
                  vAng: float,
                  P: float, 
                  Q: float,
+                 capacity: int,
+                 orient: str,
+                 points: list,
                  ) -> None:
-        self.pos = pos
+        self.pos = (pos.x(), pos.y())
         self.name = name # just for GUI display
         self.id = id
         self.bType = bType
@@ -32,6 +37,14 @@ class BusBar():
         self.vAng = vAng
         self.P = P
         self.Q = Q
+        self.capacity = capacity
+        self.orient = orient
+        self.points = [] 
+        print(self.points)
+        for p in points:
+            for pp in p:
+                tup = (pp.x(), pp.y())
+                self.points.append(tup)
 
     def log(self) -> None:
         print(colored(
@@ -53,18 +66,22 @@ class BusBar():
     def append2CSV(self, path: str) -> None:
         data = {
             'id': self.id,
-            'name': self.name,
-            'pos': self.pos,
             'bType': self.bType,
             'vMag': self.vMag,
             'vAng': self.vAng,
             'P': self.P,
             'Q': self.Q,
+            'name': self.name,
+            'pos': json.dumps(self.pos),
+            'capacity': self.capacity,
+            'orient': self.orient,
+            'points': json.dumps(self.points)
         }
         csvPath = path + '/Buses.csv'
         with open(csvPath, 'a', newline = '') as file:
-            writer = csv.DictWriter(file,fieldnames=['id','name','pos','bType','vMag',
-                                                     'vAng','P','Q'])
+            writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'vAng',
+                                                     'P', 'Q', 'name', 'pos',
+                                                     'capacity', 'orient', 'points'])
             writer.writerow(data)
         print(f'-> Bus data appended to {path} successfuly.')
 
@@ -75,22 +92,27 @@ class BusBar():
             reader = csv.DictReader(csvfile)
             for row in reader:
                 if row['name'] == prevName:
-                    row['name'] = self.name
                     row['id'] = self.id
-                    row['pos'] = self.pos
                     row['bType'] = self.bType
                     row['vMag'] = self.vMag
                     row['vAng'] = self.vAng
                     row['P'] = self.P
                     row['Q'] = self.Q
+                    row['name'] = self.name,
+                    row['pos'] = json.dumps(self.pos),
+                    row['capacity'] = self.capacity,
+                    row['orient'] = self.orient,
+                    row['points'] = json.dumps(self.points)
                 newBusList.append(row)
 
         with open(csvPath, 'w', newline = '') as file:
-            writer = csv.DictWriter(file,fieldnames=['id','name','pos','bType','vMag',
-                                                     'vAng','P','Q'])
+            writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'vAng',
+                                                     'P', 'Q', 'name', 'pos',
+                                                     'capacity', 'orient', 'points'])
             writer.writeheader()
             writer.writerows(newBusList)
             print(f'-> Bus Data edited to {path} successfuly.')
+
 class Line():
     def __init__(self,
                  bus1id: int,

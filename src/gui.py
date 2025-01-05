@@ -278,6 +278,8 @@ class MainWindow(QMainWindow):
         # Grid Layout
         self.grid = Grid(32)
         self.grid.projectPath = self.projectPath
+        if self.startUp.loaded:
+            self.grid.loadGUI()
         self.mainLayout.addWidget(self.grid, 12)
         self.mainLayout.addWidget(self.barWidget)
         
@@ -381,6 +383,9 @@ class MainWindow(QMainWindow):
         self.update()
 
     def setSelectMode(self) -> None:
+        self.grid.firstNode = None
+        if self.grid.insertLineMode:
+            self.grid.tempPath = []
         self.grid.insertBusMode = False
         self.grid.insertLineMode = False
         self.grid.insertTrafoMode = False
@@ -439,6 +444,8 @@ class MainWindow(QMainWindow):
                 newPaths.append(p)
             self.grid.paths = newPaths
             self.grid.update()
+            self.grid.updateGuiElementsCSV()
+            self.grid.updateBusCSVGuiParams()
 
     def zoomOut(self) -> None:
         newSize = self.grid.dist // 2
@@ -467,3 +474,5 @@ class MainWindow(QMainWindow):
                 newPaths.append(p)
             self.grid.paths = newPaths
             self.grid.update()
+            self.grid.updateGuiElementsCSV()
+            self.grid.updateBusCSVGuiParams()

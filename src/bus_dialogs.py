@@ -38,12 +38,15 @@ class AddBusDialog(QDialog):
             border-radius: 5px;
             padding: 8px;
         ''')
+        self.projectName = None
+        self.inputError = False
         
         self.busId = None
         self.busPos = None
         self.busType = BusType.SLACK 
-        self.projectName = None
-        self.inputError = False
+        self.capacity = None
+        self.orient = None
+        self.points = None
 
         # Bus Name Input Box
         self.nameInputLabel = QLabel('Bus Name:')
@@ -180,6 +183,9 @@ class AddBusDialog(QDialog):
             vMag = float(self.vMagInput.text()),
             P = float(self.pInput.text()),
             Q = float(self.qInput.text()),
+            capacity = self.capacity,
+            orient = self.orient,
+            points = self.points,
         )
         bus.log()
         bus.append2CSV(self.projectPath)
@@ -217,13 +223,17 @@ class EditBusDialog(QDialog):
             border-radius: 5px;
             padding: 8px;
         ''')
+
+        self.projectPath = None
+        self.inputError = False
+        self.previousName = None
         
         self.busId = None
         self.busPos = None
         self.busType = BusType.SLACK 
-        self.projectPath = None
-        self.inputError = False
-        self.previousName = None
+        self.capacity = None
+        self.orient = None
+        self.points = None
 
         # Bus Name Input Box
         self.nameInputLabel = QLabel('Bus Name:')
@@ -321,11 +331,12 @@ class EditBusDialog(QDialog):
             with open(csvPath) as csvfile:
                 reader = csv.DictReader(csvfile)
                 names = [row['name'] for row in reader]
-                if self.nameInput.text() in names:
-                    self.inputError = True
-                    QMessageBox.warning(self, 'Clone Bus Name',
-                        'A bus with the same name already exists.', QMessageBox.StandardButton.Ok)
-                    return
+                if self.nameInput.text() != self.previousName:
+                    if self.nameInput.text() in names:
+                        self.inputError = True
+                        QMessageBox.warning(self, 'Clone Bus Name',
+                            'A bus with the same name already exists.', QMessageBox.StandardButton.Ok)
+                        return
 
         # Handling Empty Inputs Error
         inputList = []
@@ -352,6 +363,9 @@ class EditBusDialog(QDialog):
             vMag = float(self.vMagInput.text()),
             P = float(self.pInput.text()),
             Q = float(self.qInput.text()),
+            capacity = self.capacity,
+            orient = self.orient,
+            points = self.points,
         )
         bus.log()
         bus.editCSV(self.projectPath, self.previousName)
@@ -368,6 +382,9 @@ class EditBusDialog(QDialog):
             vMag = float(self.vMagInput.text()),
             P = float(self.pInput.text()),
             Q = float(self.qInput.text()),
+            capacity = self.capacity,
+            orient = self.orient,
+            points = self.points,
         )
         bus.log()
         bus.editCSV(self.projectPath, self.previousName)

@@ -1,8 +1,9 @@
 # Imports
 import os
 import csv
+import json
 from copy import deepcopy
-from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtCore import QPoint, Qt, QEvent
 from bus_dialogs import AddBusDialog, EditBusDialog
 from line_dialogs import AddLineDialog
 from run_dialogs import RunSimDialog
@@ -54,6 +55,8 @@ class Grid(QWidget):
         
         # Data Properties
         self.projectPath = None
+        self.busCsvPath = None
+        self.guiCsvPath = None
         self.busCounter = 0
         self.trafoCounter = 0
         self.firstNode = None
@@ -111,18 +114,18 @@ class Grid(QWidget):
                     newPoints.append(p)
                 bigTuple = (point, capacity, orient, newPoints, id)
                 edited = self.editedBusses(bus, bigTuple)
-            self.update()
             newPaths = []
             for p in self.paths:
                 connection1, connection2, fp, i, tempPath = p
                 newTp = []
                 for tp in tempPath:
-                    tp = self.snap(QPoint(tp.x() + xDiff, tp.y() + xDiff))
+                    tp = self.snap(QPoint(tp.x() + xDiff, tp.y() + yDiff))
                     newTp.append(tp)
                 p = connection1, connection2, fp, i, newTp
                 newPaths.append(p)
             self.paths = newPaths
-            self.update()
+            self.updateBusCSVGuiParams()
+            self.updateGuiElementsCSV()
             handActivatedPosX = self.handActivatedPos.x() + xDiff
             handActivatedPosY = self.handActivatedPos.y() + yDiff
             newHAP = QPoint(handActivatedPosX, handActivatedPosY)
@@ -150,6 +153,9 @@ class Grid(QWidget):
 
     def mousePressEvent(self, event) -> None:
         self.leftMouseHold = True
+        if not self.insertLineMode:
+            self.firstNode = None
+
         if event.button() == Qt.MouseButton.LeftButton:
             self.leftMouseHold = True
             # Placing a bus
@@ -162,6 +168,9 @@ class Grid(QWidget):
                 self.busCounter += 1
                 self.addBusDialog.busId = self.busCounter
                 self.addBusDialog.projectPath = self.projectPath
+                self.addBusDialog.orient = defaultOrientation
+                self.addBusDialog.capacity = defaultCapacity 
+                self.addBusDialog.points = [] 
                 self.addBusDialog.exec()
                 busName = self.addBusDialog.nameInput.text()
                 id = self.busCounter
@@ -171,7 +180,7 @@ class Grid(QWidget):
             if self.insertTrafoMode:
                 pos = self.snap(event.pos())
                 self.addTrafoDialog = AddTrafoDialog(self)
-                self.addTrafoDialog.projectPath = self.projectPath
+                self.addTrafoDialogyprojectPath = self.projectPath
                 self.addTrafoDialog.trafoBus = pos
                 self.addTrafoDialog.trafoId = self.trafoCounter
                 self.addTrafoDialog.exec()
@@ -223,6 +232,7 @@ class Grid(QWidget):
                                     self.addLineDialog = AddLineDialog(self, connection1, connection2)
                                     self.addLineDialog.projectPath = self.projectPath
                                     self.addLineDialog.exec()
+                                    self.updateGuiElementsCSV()
                                     self.tempPath.clear() 
                 for trafo, (point, ori, hands) in self.trafos.items():
                     connection2 = trafo
@@ -241,10 +251,11 @@ class Grid(QWidget):
                                     self.addLineDialog = AddLineDialog(self, connection1, connection2)
                                     self.addLineDialog.projectPath = self.projectPath
                                     self.addLineDialog.exec()
+                                    self.updateGuiElementsCSV()
                                     self.tempPath.clear() 
 
-        # Clicked on an existing bus
-        if event.button() == Qt.MouseButton.LeftButton and self.insertBusMode == False and self.insertLineMode == False:
+        # Double Clicked on an existing bus
+        if event.type() == QEvent.Type.MouseButtonDblClick and event.button() == Qt.MouseButton.LeftButton and self.selectMode:
             pos = self.snap(event.pos())
             x = pos.x()
             y = pos.y()
@@ -254,26 +265,10 @@ class Grid(QWidget):
                 point, capacity, orient, points, id = bigTuple
                 busX = point.x()
                 busY = point.y()
-                if orient == '-90':
-                    if x == busX and y in range(busY, busY + capacity * self.dist):
-                        self.initEditBox(bus, point)
-                        editedBus = bus
-                        editedTuple = bigTuple
-                elif orient == '0':
-                    if x in range(busX, busX + capacity * self.dist) and y == busY:
-                        self.initEditBox(bus, point)
-                        editedBus = bus
-                        editedTuple = bigTuple
-                elif orient == '90':
-                    if x == busX and y in range(busY - capacity * self.dist, busY):
-                        self.initEditBox(bus, point)
-                        editedBus = bus
-                        editedTuple = bigTuple
-                elif orient == '180':
-                    if x in range(busX - capacity * self.dist, busX) and y == busY:
-                        self.initEditBox(bus, point)
-                        editedBus = bus
-                        editedTuple = bigTuple
+                if self.withinBounds(x, y, busX, busY, self.dist, capacity, orient):
+                    self.initEditBox(bus, point)
+                    editedBus = bus
+                    editedTuple = bigTuple
             if editedBus is not None:
                 print('paths: ',self.paths)
                 editedBus = self.editedBusses(editedBus, editedTuple)
@@ -293,21 +288,12 @@ class Grid(QWidget):
             for bus, (point, capacity, orient, points, id) in self.busses.items():
                 busX = point.x()
                 busY = point.y()
-                if capacity > 2:
-                    if orient == '-90':
-                        if x == busX and y in range(busY, busY + capacity * self.dist):
-                            capacity -= 2
-                    elif orient == '0':
-                        if x in range(busX, busX + capacity * self.dist) and y == busY:
-                            capacity -= 2
-                    elif orient == '90':
-                        if x == busX and y in range(busY - capacity * self.dist, busY):
-                            capacity -= 2
-                    elif orient == '180':
-                        if x in range(busX - capacity * self.dist, busX) and y == busY:
-                            capacity -= 2
-                    self.setBusDict(bus, point, capacity, orient, id)
-                    self.update()
+                if self.withinBounds(x, y, busX, busY, self.dist, capacity, orient):
+                    if (capacity - 2) != 0:
+                        capacity -= 2
+                self.setBusDict(bus, point, capacity, orient, id)
+            self.update()
+            self.updateBusCSVGuiParams()
 
 
         if event.button() == Qt.MouseButton.RightButton:
@@ -317,20 +303,11 @@ class Grid(QWidget):
             for bus, (point, capacity, orient, points, id) in self.busses.items():
                 busX = point.x()
                 busY = point.y()
-                if orient == '-90':
-                    if x == busX and y in range(busY, busY + capacity * self.dist):
-                        capacity += 1
-                elif orient == '0':
-                    if x in range(busX, busX + capacity * self.dist) and y == busY:
-                        capacity += 1
-                elif orient == '90':
-                    if x == busX and y in range(busY - capacity * self.dist, busY):
-                        capacity += 1
-                elif orient == '180':
-                    if x in range(busX - capacity * self.dist, busX) and y == busY:
-                        capacity += 1
+                if self.withinBounds(x, y, busX, busY, self.dist, capacity, orient):
+                    capacity += 1
                 self.setBusDict(bus, point, capacity, orient, id)
                 self.update()
+            self.updateBusCSVGuiParams()
 
     def withinBounds(self, x, y, busX, busY, dist, capacity, orient):
         if orient == '-90':
@@ -361,6 +338,7 @@ class Grid(QWidget):
 
                 self.setBusDict(bus, point, capacity, orient, id)
                 self.update()
+        self.updateBusCSVGuiParams()
 
         if self.insertTrafoMode or self.insertBusMode:
             if self.insertingOrient == '-90':
@@ -488,34 +466,35 @@ class Grid(QWidget):
                 painter.setPen(dotPen)
                 painter.drawEllipse(xHigh - 1, yHigh - 1, 2, 2)
 
-            for bus, (point, capacity, orient, points, _) in self.busses.items():
-                if self.highLightedPoint == point or self.highLightedPoint in points:
-                    # Set the fill color with 20% transparency
-                    painter.setBrush(color)
-                    painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
-                    if orient == '-90':
-                        painter.drawRect(point.x() - self.dist, point.y() - self.dist,
-                                         2 * self.dist, (capacity + 1) * self.dist)
-                    elif orient == '0':
-                        painter.drawRect(point.x() - self.dist, point.y() - self.dist,
-                                         (capacity + 1) * self.dist, 2 * self.dist)
-                    elif orient == '90':
-                        painter.drawRect(point.x() - self.dist, point.y() - (capacity) * self.dist,
-                                         2 * self.dist, (capacity + 1) * self.dist)
-                    elif orient == '180':
-                        painter.drawRect(point.x() - capacity * self.dist, point.y() - self.dist,
-                                         (capacity + 1) * self.dist, 2 * self.dist)
-                else:
-                    painter.setBrush(Qt.BrushStyle.NoBrush)
+            if self.selectMode:
+                for bus, (point, capacity, orient, points, _) in self.busses.items():
+                    if self.highLightedPoint == point or self.highLightedPoint in points:
+                        # Set the fill color with 20% transparency
+                        painter.setBrush(color)
+                        painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
+                        if orient == '-90':
+                            painter.drawRect(point.x() - self.dist, point.y() - self.dist,
+                                             2 * self.dist, (capacity + 1) * self.dist)
+                        elif orient == '0':
+                            painter.drawRect(point.x() - self.dist, point.y() - self.dist,
+                                             (capacity + 1) * self.dist, 2 * self.dist)
+                        elif orient == '90':
+                            painter.drawRect(point.x() - self.dist, point.y() - (capacity) * self.dist,
+                                             2 * self.dist, (capacity + 1) * self.dist)
+                        elif orient == '180':
+                            painter.drawRect(point.x() - capacity * self.dist, point.y() - self.dist,
+                                             (capacity + 1) * self.dist, 2 * self.dist)
+                    else:
+                        painter.setBrush(Qt.BrushStyle.NoBrush)
 
-            for trafo, (point, ori, hands) in self.trafos.items():
-                if self.highLightedPoint == point or self.highLightedPoint in hands:
-                    # Set the fill color with 20% transparency
-                    painter.setBrush(color)
-                    painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
-                    painter.drawRect(point.x() - self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
-                else: 
-                    painter.setBrush(Qt.BrushStyle.NoBrush)
+                for trafo, (point, ori, hands) in self.trafos.items():
+                    if self.highLightedPoint == point or self.highLightedPoint in hands:
+                        # Set the fill color with 20% transparency
+                        painter.setBrush(color)
+                        painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
+                        painter.drawRect(point.x() - self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
+                    else: 
+                        painter.setBrush(Qt.BrushStyle.NoBrush)
 
         # Drawing all the busbars here
         for bus, (point, capacity, orient, points, _) in self.busses.items():
@@ -529,7 +508,7 @@ class Grid(QWidget):
             painter.setPen(symbolPen)
             if orient == '-90':
                 painter.drawLine(busX, busY - self.dist, busX,
-                                 busY + ( capacity * self.dist))
+                                 busY + (capacity * self.dist))
             elif orient == '0':
                 painter.drawLine(busX - self.dist, busY, busX + ( capacity * self.dist),
                                  busY)
@@ -716,14 +695,26 @@ class Grid(QWidget):
         print(self.trafos)
 
     def initEditBox(self, busName: str, point: QPoint) -> None:
-        csvPath = self.projectPath + '/Buses.csv'
         self.editBusDialog = EditBusDialog(self)
         self.editBusDialog.projectPath = self.projectPath
-        with open(csvPath) as csvfile:
+        self.busCsvPath = self.projectPath + '/Buses.csv'
+        with open(self.busCsvPath) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 if busName == row['name']:
-                    self.editBusDialog.busPos = point
+                    print(busName)
+                    print(row['name'])
+                    posList = json.loads(row['pos'].strip())
+                    x, y = map(int, posList)
+                    pos = QPoint(x, y)
+                    pointsList = []
+                    pointsArray = json.loads(row['points'].strip())
+                    for px, py in pointsArray:
+                        print(px, py)
+                        point = QPoint(int(px), int(py))
+                        pointsList.append(point)
+                    print(pointsList)
+                    self.editBusDialog.busPos = pos 
                     self.editBusDialog.busId = row['id']
                     self.editBusDialog.nameInput.setText(row['name'])
                     self.editBusDialog.previousName = row['name']
@@ -731,7 +722,12 @@ class Grid(QWidget):
                     self.editBusDialog.vAngInput.setText(row['vAng'])
                     self.editBusDialog.pInput.setText(row['P'])
                     self.editBusDialog.qInput.setText(row['Q'])
+                    self.editBusDialog.capacity = row['capacity'],
+                    self.editBusDialog.orient = row['orient'],
+                    self.editBusDialog.points = pointsList,
                     self.editBusDialog.exec()
+                    self.updateBusCSVGuiParams()
+                    self.update()
 
     def editedBusses(self, editedBus: str, bigTuple: tuple) -> None:
         if self.editBusDialog is not None:
@@ -749,6 +745,96 @@ class Grid(QWidget):
         else:
             self.busses[editedBus] = bigTuple
         return editedBus
+
+    def updateBusCSVGuiParams(self) -> None:
+        self.busCsvPath = self.projectPath + '/Buses.csv'
+        if os.path.exists(self.busCsvPath):
+            newBusList = []
+            with open(self.busCsvPath) as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    for bus, (point, capacity, orient, points, id) in self.busses.items():
+                        if row['name'] == bus:
+                            row['pos'] = json.dumps((point.x(), point.y()))
+                            row['capacity'] = capacity 
+                            row['orient'] = orient
+                            pointsList = []
+                            for p in points:
+                                tup = (p.x(), p.y())
+                                pointsList.append(tup)
+                            row['points'] = json.dumps(pointsList)
+                    newBusList.append(row)
+
+            with open(self.busCsvPath, 'w', newline = '') as file:
+                writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'vAng',
+                                                         'P', 'Q', 'name', 'pos',
+                                                         'capacity', 'orient', 'points'])
+                writer.writeheader()
+                writer.writerows(newBusList)
+                print(f'-> Bus Data edited to {self.busCsvPath} successfuly.')
+
+    def updateGuiElementsCSV(self) -> None:
+        self.guiCsvPath = self.projectPath + '/GUI.csv'
+        if os.path.exists(self.guiCsvPath):
+            newPaths = []
+            for p in self.paths:
+                connection1, connection2, fp, i, tempPath = p
+                newTp = []
+                for tp in tempPath:
+                    tp = (tp.x(), tp.y())
+                    newTp.append(tp)
+                bigTuple = connection1, connection2, fp, i, newTp 
+                newPaths.append(bigTuple)
+            data = {
+                'dist': self.dist,
+                'paths': json.dumps(newPaths)
+            }
+            with open(self.guiCsvPath, 'w', newline = '') as file:
+                writer = csv.DictWriter(file, fieldnames=['dist','paths'])
+                writer.writeheader()
+                writer.writerow(data)
+                print(f'-> GUI Data edited to {self.guiCsvPath} successfuly.')
+
+    def loadGUI(self) -> None:
+        self.busCsvPath = self.projectPath + '/Buses.csv'
+        self.guiCsvPath = self.projectPath + '/GUI.csv'
+        with open(self.busCsvPath) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                try:
+                    posList = json.loads(row['pos'].strip())
+                    x, y = map(int, posList)
+                    pos = QPoint(x, y)
+                except Exception as e:
+                    raise ValueError(f"Error parsing position {row['pos']}: {e}")
+                pointsList = []
+                try:
+                    pointsArray = json.loads(row['points'].strip())
+                    for px, py in pointsArray:
+                        pointsList.append(QPoint(int(px), int(py)))
+                except Exception as e:
+                    raise ValueError(f"Error parsing points {row['points']}: {e}")
+                bigTuple = (pos, int(row['capacity']), row['orient'],
+                            pointsList, int(row['id']))
+                self.busses[row['name']] = bigTuple
+                self.update()
+
+        with open(self.guiCsvPath) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                self.dist = int(row['dist'])
+                pathArray = json.loads(row['paths'].strip())
+                paths = []
+                for p in pathArray:
+                    connection1, connection2, fp, i, tempPath = p
+                    newTp = []
+                    for tpx, tpy in tempPath:
+                        tp = QPoint(tpx, tpy)
+                        newTp.append(tp)
+                        bigTuple = connection1, connection2, fp, i, newTp 
+                        paths.append(bigTuple)
+                self.paths = paths
+            self.update()
 
     def openRunDialog(self) -> None:
         self.runSimDialog = RunSimDialog(self, self.freq, self.sBase)
