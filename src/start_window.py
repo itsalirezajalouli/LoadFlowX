@@ -17,6 +17,7 @@ class StartUp(QDialog):
         self.busCSV = None
         self.guiCSV = None
         self.lineCSV = None
+        self.trafoCSV = None
         self.loaded = False
 
         # Making the necessary folders if not there
@@ -202,6 +203,7 @@ class StartUp(QDialog):
             self.busCSV = self.usrPath + self.projectName + '/Buses.csv'
             self.lineCSV = self.usrPath + self.projectName + '/Lines.csv'
             self.guiCSV = self.usrPath + self.projectName + '/GUI.csv'
+            self.trafoCSV = self.usrPath + self.projectName + '/Trafos.csv'
             with open(self.guiCSV, 'a', newline = '') as file:
                 writer = csv.DictWriter(file,fieldnames=['dist','paths'])
                 writer.writeheader()
