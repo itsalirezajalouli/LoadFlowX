@@ -32,7 +32,7 @@ class Grid(QWidget):
         self.yellow = theme.toQtColor(theme.yellow) 
         self.offSet = QPoint(0, 0)
         self.highLightedPoint = None
-        self.currentMousePos = None
+        self.currentMousePos = QPoint(400, 400)
         self.insertingOrient = '-90'
         self.handActivatedPos = None
 
@@ -67,8 +67,10 @@ class Grid(QWidget):
         self.tokenTrafoHands = []
         self.xDists = []
         self.tempPath = []
-        self.orientations = ['-90', '0', '90', '180']
+        self.busOris = ['-90', '0', '90', '180']
+        self.trafoOris = ['-90', '0', '90', '180']
         self.trafoCenters = []
+        self.firstType = None
 
         # Defaults
         self.freq = 50
@@ -102,7 +104,6 @@ class Grid(QWidget):
         if self.handMode and self.handActivatedPos is not None:
             xDiff = (self.highLightedPoint.x() - self.handActivatedPos.x())
             yDiff = (self.highLightedPoint.y() - self.handActivatedPos.y())
-            print(xDiff, yDiff)
             for bus, (point, capacity, orient, points, id) in self.busses.items():
                 newOriginX = point.x() + xDiff 
                 newOriginY = point.y() + yDiff 
@@ -116,12 +117,12 @@ class Grid(QWidget):
                 edited = self.editedBusses(bus, bigTuple)
             newPaths = []
             for p in self.paths:
-                connection1, connection2, fp, i, tempPath = p
+                connection1, connection2, fp, i, tempPath, typeShit = p
                 newTp = []
                 for tp in tempPath:
                     tp = self.snap(QPoint(tp.x() + xDiff, tp.y() + yDiff))
                     newTp.append(tp)
-                p = connection1, connection2, fp, i, newTp
+                p = connection1, connection2, fp, i, newTp, typeShit
                 newPaths.append(p)
             self.paths = newPaths
             self.updateBusCSVGuiParams()
@@ -179,13 +180,16 @@ class Grid(QWidget):
             # Placing a Transformator 
             if self.insertTrafoMode:
                 pos = self.snap(event.pos())
+                self.trafoCounter += 1
+                ori = self.insertingOrient
+                id = self.trafoCounter
                 self.addTrafoDialog = AddTrafoDialog(self)
                 self.addTrafoDialogyprojectPath = self.projectPath
                 self.addTrafoDialog.trafoBus = pos
                 self.addTrafoDialog.trafoId = self.trafoCounter
                 self.addTrafoDialog.exec()
                 # busName = self.addBusDialog.nameInput.text()
-                self.setTrafoDict(pos)
+                self.setTrafoDict(pos, ori, id)
                 self.update()
             
             # Placing Line: First Connection
@@ -196,34 +200,35 @@ class Grid(QWidget):
                         if points[i] == self.firstPointPos:
                             if points[i] not in self.tokenBusPorts:
                                 self.correctNodeSelect = True
-                                self.firstNode = (id, i)
+                                self.firstNode = (id, i, 'bus')
                                 # self.tokenBusPorts.append(points[i])
                 for trafo, (point, ori, hands) in self.trafos.items():
                     for i in range(len(hands)):
                         if hands[i] == self.firstPointPos:
                             if hands[i] not in self.tokenTrafoHands:
                                 self.correctNodeSelect = True
-                                self.firstNode = (trafo, i)
+                                self.firstNode = (trafo, i, 'trafo')
                                 self.tokenTrafoHands.append(hands[i])
 
             # Placing second Connection
             elif self.insertLineMode and self.firstNode is not None:
                 self.secondPointPos = self.snap(event.pos())
-                print('firstNode', self.paths)
-                connection1, firstPoint = self.firstNode
+                connection1, firstPoint, _ = self.firstNode
                 self.tempPath.append(self.secondPointPos)
                 # print(self.tempPath)
-                # print('Point added: ', self.tempPath)
+                print('Point added: ', self.secondPointPos)
                 for bus, (point, capacity, orient, points, id) in self.busses.items():
                     connection2 = id 
                     for i in range(len(points)):
+                        print('Point i: ', points[i])
                         if points[i] == self.secondPointPos and points[i] not in self.tokenBusPorts:
-                            if connection1 != connection2 :
+                            print('YAAAY!!!!')
+                            if (self.firstType == 'bus' and connection1 != connection2) or self.firstType == 'trafo' :
                                 # Direct Line
                                 self.tempPath.pop() 
                                 tempPath = deepcopy(self.tempPath)
-                                line = (connection1, connection2, firstPoint, i, tempPath) 
-                                revLine = (connection2, connection1, firstPoint, i, tempPath)
+                                line = (connection1, connection2, firstPoint, i, tempPath, 'bus') 
+                                revLine = (connection2, connection1, firstPoint, i, tempPath, 'bus')
                                 if line not in self.paths and revLine not in self.paths:
                                     self.paths.append(line)
                                     self.firstNode = None
@@ -238,11 +243,11 @@ class Grid(QWidget):
                     connection2 = trafo
                     for i in range(len(hands)):
                         if hands[i] == self.secondPointPos and self.secondPointPos not in self.tokenTrafoHands:
-                            if connection1 != connection2 and self.firstPointPos not in self.tokenTrafoHands:
+                            if (self.firstType == 'trafo' and connection1 != connection2) or self.firstType == 'bus' :
                                 self.tempPath.pop() 
                                 tempPath = deepcopy(self.tempPath)
-                                line = (connection1, connection2, firstPoint, i, tempPath) 
-                                revLine = (connection2, connection1, firstPoints, i, tempPath)
+                                line = (connection1, connection2, firstPoint, i, tempPath, 'trafo') 
+                                revLine = (connection2, connection1, firstPoint, i, tempPath, 'trafo')
                                 if line not in self.paths and revLine not in self.paths:
                                     self.tokenTrafoHands.append(hands[i])
                                     self.paths.append(line)
@@ -270,7 +275,7 @@ class Grid(QWidget):
                     editedBus = bus
                     editedTuple = bigTuple
             if editedBus is not None:
-                print('paths: ',self.paths)
+                # print('paths: ',self.paths)
                 editedBus = self.editedBusses(editedBus, editedTuple)
                 del self.busses[editedBus]
                 editedBus = None
@@ -310,10 +315,12 @@ class Grid(QWidget):
             self.updateBusCSVGuiParams()
 
     def withinBounds(self, x, y, busX, busY, dist, capacity, orient):
-        if orient == '-90':
+        if x == busX and y == busY:
+            return True
+        elif orient == '-90':
             return busX - dist <= x < busX + dist and busY - dist <= y < busY + capacity * dist
         elif orient == '0':
-            return busX - dist <= x < busX + capacity * dist and busY - dist <= y < busY + dist
+            return busX - dist <= x < busX + capacity + dist and busY - dist <= y < busY + dist
         elif orient == '90':
             return busX - dist <= x < busX + dist and busY - capacity * dist <= y < busY + dist
         elif orient == '180':
@@ -326,19 +333,34 @@ class Grid(QWidget):
         y = pos.y()
         for bus, (point, capacity, orient, points, id) in self.busses.items():
             busX, busY = point.x(), point.y()
-            if event.angleDelta().y() > 0:  # Scroll up
-                nextOrient = self.orientations[(self.orientations.index(orient) + 1) % len(self.orientations)]
-            elif event.angleDelta().y() < 0:  # Scroll down
-                nextOrient = self.orientations[(self.orientations.index(orient) - 1) % len(self.orientations)]
-            else:
-                continue
-
             if self.withinBounds(x, y, busX, busY, self.dist, capacity, orient):
+                if event.angleDelta().y() > 0:  # Scroll up
+                    nextOrient = self.busOris[(self.busOris.index(orient) + 1) % len(self.busOris)]
+                elif event.angleDelta().y() < 0:  # Scroll down
+                    nextOrient = self.busOris[(self.busOris.index(orient) - 1) % len(self.busOris)]
+                else:
+                    continue
+
                 orient = nextOrient  # Update orientation
 
                 self.setBusDict(bus, point, capacity, orient, id)
                 self.update()
-        self.updateBusCSVGuiParams()
+                self.updateBusCSVGuiParams()
+
+        for trafo, (point, ori, hands) in self.trafos.items():
+            trafX, trafY = point.x(), point.y()
+            if x == trafX and y == trafY:
+                if event.angleDelta().y() > 0:  # Scroll up
+                    nextOrient = self.trafoOris[(self.trafoOris.index(ori) + 1) % len(self.trafoOris)]
+                elif event.angleDelta().y() < 0:  # Scroll down
+                    nextOrient = self.trafoOris[(self.trafoOris.index(ori) - 1) % len(self.trafoOris)]
+                else:
+                    continue
+
+                ori = nextOrient  # Update orientation
+
+                self.setTrafoDict(pos, ori, trafo)
+                self.update()
 
         if self.insertTrafoMode or self.insertBusMode:
             if self.insertingOrient == '-90':
@@ -466,35 +488,34 @@ class Grid(QWidget):
                 painter.setPen(dotPen)
                 painter.drawEllipse(xHigh - 1, yHigh - 1, 2, 2)
 
-            if self.selectMode:
-                for bus, (point, capacity, orient, points, _) in self.busses.items():
-                    if self.highLightedPoint == point or self.highLightedPoint in points:
-                        # Set the fill color with 20% transparency
-                        painter.setBrush(color)
-                        painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
-                        if orient == '-90':
-                            painter.drawRect(point.x() - self.dist, point.y() - self.dist,
-                                             2 * self.dist, (capacity + 1) * self.dist)
-                        elif orient == '0':
-                            painter.drawRect(point.x() - self.dist, point.y() - self.dist,
-                                             (capacity + 1) * self.dist, 2 * self.dist)
-                        elif orient == '90':
-                            painter.drawRect(point.x() - self.dist, point.y() - (capacity) * self.dist,
-                                             2 * self.dist, (capacity + 1) * self.dist)
-                        elif orient == '180':
-                            painter.drawRect(point.x() - capacity * self.dist, point.y() - self.dist,
-                                             (capacity + 1) * self.dist, 2 * self.dist)
-                    else:
-                        painter.setBrush(Qt.BrushStyle.NoBrush)
+            for bus, (point, capacity, orient, points, _) in self.busses.items():
+                if self.highLightedPoint == point or self.highLightedPoint in points:
+                    # Set the fill color with 20% transparency
+                    painter.setBrush(color)
+                    painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
+                    if orient == '-90':
+                        painter.drawRect(point.x() - self.dist, point.y() - self.dist,
+                                         2 * self.dist, (capacity + 1) * self.dist)
+                    elif orient == '0':
+                        painter.drawRect(point.x() - self.dist, point.y() - self.dist,
+                                         (capacity + 1) * self.dist, 2 * self.dist)
+                    elif orient == '90':
+                        painter.drawRect(point.x() - self.dist, point.y() - (capacity) * self.dist,
+                                         2 * self.dist, (capacity + 1) * self.dist)
+                    elif orient == '180':
+                        painter.drawRect(point.x() - capacity * self.dist, point.y() - self.dist,
+                                         (capacity + 1) * self.dist, 2 * self.dist)
+                else:
+                    painter.setBrush(Qt.BrushStyle.NoBrush)
 
-                for trafo, (point, ori, hands) in self.trafos.items():
-                    if self.highLightedPoint == point or self.highLightedPoint in hands:
-                        # Set the fill color with 20% transparency
-                        painter.setBrush(color)
-                        painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
-                        painter.drawRect(point.x() - self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
-                    else: 
-                        painter.setBrush(Qt.BrushStyle.NoBrush)
+            for trafo, (point, ori, hands) in self.trafos.items():
+                if self.highLightedPoint == point or self.highLightedPoint in hands:
+                    # Set the fill color with 20% transparency
+                    painter.setBrush(color)
+                    painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
+                    painter.drawRect(point.x() - self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
+                else: 
+                    painter.setBrush(Qt.BrushStyle.NoBrush)
 
         # Drawing all the busbars here
         for bus, (point, capacity, orient, points, _) in self.busses.items():
@@ -577,7 +598,7 @@ class Grid(QWidget):
             traY = point.y()
             gridPen.setColor(self.yellow)
             painter.setPen(gridPen)
-            if ori == '-90':
+            if ori == '-90' or ori == '90':
                 painter.drawLine(traX, traY - self.dist, traX, traY - 20)
                 painter.drawLine(traX, traY + self.dist, traX, traY + 20)
                 symbolPen.setColor(self.yellow)
@@ -587,7 +608,7 @@ class Grid(QWidget):
                 painter.setPen(dotPen)
                 painter.drawEllipse(traX - 1, traY - self.dist, 2, 2)
                 painter.drawEllipse(traX - 1, traY + self.dist, 2, 2)
-            else:
+            elif ori == '0' or ori == '180':
                 painter.drawLine(traX - self.dist, traY, traX - 20, traY)
                 painter.drawLine(traX + self.dist, traY, traX + 20, traY)
                 symbolPen.setColor(self.yellow)
@@ -606,17 +627,20 @@ class Grid(QWidget):
 
         if len(self.paths) > 0:
             for line in self.paths:
-                connection1, connection2, i1, i2, pathList = line
+                connection1, connection2, i1, i2, pathList, typeShit = line
+                # print('line', line)
+                # print('paths: ', self.paths)
                 firstNode, secondNode = None, None
                 for bus, (point, capacity, orient, points, id) in self.busses.items():
-                    if connection1 == id:
+                    if self.firstType == 'bus' and connection1 == id:
                         firstNode = points[i1]
-                    elif connection2 == id:
+                    if typeShit == 'bus' and connection2 == id:
                         secondNode = points[i2]
+
                 for trafo, (point, ori, hands) in self.trafos.items():
-                    if connection1 == trafo:
+                    if self.firstType == 'trafo' and connection1 == trafo:
                         firstNode = hands[i1]
-                    elif connection2 == trafo:
+                    if typeShit == 'trafo' and connection2 == trafo:
                         secondNode = hands[i2]
 
                 if firstNode is not None and secondNode is not None:
@@ -632,14 +656,16 @@ class Grid(QWidget):
         # Doesn't matter to path finding
         if self.insertLineMode and self.correctNodeSelect:
             if self.firstNode is not None:
-                connection, i = self.firstNode
-                print(self.firstNode)
-                for bus, (point, capacity, orient, points, id) in self.busses.items():
-                    if connection == id:
-                        firstNode = points[i]
-                for trafo, (point, ori, hands) in self.trafos.items():
-                    if connection == trafo:
-                        firstNode = hands[i]
+                connection, i, self.firstType = self.firstNode
+                # print(self.firstNode)
+                if self.firstType == 'bus':
+                    for bus, (point, capacity, orient, points, id) in self.busses.items():
+                        if connection == id:
+                            firstNode = points[i]
+                if self.firstType == 'trafo':
+                    for trafo, (point, ori, hands) in self.trafos.items():
+                        if connection == trafo:
+                            firstNode = hands[i]
                 mousePos = self.snap(self.currentMousePos)
                 pathList = self.tempPath
                 if len(pathList) == 0:
@@ -679,20 +705,21 @@ class Grid(QWidget):
         busTuple = (pos, cap, ori, points, id)
         self.busses[name] = busTuple
 
-    def setTrafoDict(self, pos: QPoint) -> None:
+    def setTrafoDict(self, pos: QPoint, ori: str, id: int) -> None:
         self.trafoCenters.append(pos)
         x = pos.x()
         y = pos.y()
-        self.trafoCounter += 1
-        id = self.trafoCounter
-        ori = self.insertingOrient
         if ori == '0':
             hands = (QPoint(x - self.dist, y), QPoint(x + self.dist, y))
-        else:
+        elif ori == '180':
+            hands = (QPoint(x + self.dist, y), QPoint(x - self.dist, y))
+        elif ori == '-90':
             hands = (QPoint(x, y - self.dist), QPoint(x, y + self.dist))
+        elif ori == '90':
+            hands = (QPoint(x, y + self.dist), QPoint(x, y - self.dist))
         trafoTuple = (pos, ori, hands)
         self.trafos[id] = trafoTuple
-        print(self.trafos)
+        # print(self.trafos)
 
     def initEditBox(self, busName: str, point: QPoint) -> None:
         self.editBusDialog = EditBusDialog(self)
@@ -734,12 +761,12 @@ class Grid(QWidget):
             self.busses[self.editBusDialog.nameInput.text()] = bigTuple
             newPaths = []
             for line in self.paths:
-                bus1Name, bus2Name, i1, i2, pathList = line
+                bus1Name, bus2Name, i1, i2, pathList, typeShit = line
                 if bus1Name == editedBus:
                     bus1Name = self.editBusDialog.nameInput.text()
                 elif bus2Name == editedBus:
                     bus2Name = self.editBusDialog.nameInput.text()
-                line = bus1Name, bus2Name, i1, i2, pathList
+                line = bus1Name, bus2Name, i1, i2, pathList, typeShit
                 newPaths.append(line)
             self.paths = newPaths
         else:
@@ -778,7 +805,7 @@ class Grid(QWidget):
         if os.path.exists(self.guiCsvPath):
             newPaths = []
             for p in self.paths:
-                connection1, connection2, fp, i, tempPath = p
+                connection1, connection2, fp, i, tempPath, typeShit = p
                 newTp = []
                 for tp in tempPath:
                     tp = (tp.x(), tp.y())
@@ -826,12 +853,12 @@ class Grid(QWidget):
                 pathArray = json.loads(row['paths'].strip())
                 paths = []
                 for p in pathArray:
-                    connection1, connection2, fp, i, tempPath = p
+                    connection1, connection2, fp, i, tempPath, typeShit = p
                     newTp = []
                     for tpx, tpy in tempPath:
                         tp = QPoint(tpx, tpy)
                         newTp.append(tp)
-                        bigTuple = connection1, connection2, fp, i, newTp 
+                        bigTuple = connection1, connection2, fp, i, newTp, typeShit
                         paths.append(bigTuple)
                 self.paths = paths
             self.update()
