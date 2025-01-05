@@ -30,6 +30,14 @@ def add_trans(transes_data,net):
         for trans in reader:
             pp.create_transformer(net,hv_bus= int(trans['hv_bus']), lv_bus=int(trans['lv_bus']), name=trans['name'], std_type= trans['std_type'],index=int(trans['index']))
 
+
+def add_trans_from_param(transes_data,net):
+    with open(transes_data,"r") as file:
+        reader = csv.DictReader(file,fieldnames=['hv_bus', 'lv_bus','sn_mva','vn_hv_kv','vn_lv_kv','vkr_percent','vk_percent','pfe_kw','i0_percent'])
+
+        for trans in reader:
+            pp.create_transformer_from_parameters(net,hv_bus=int(trans['hv_bus']),lv_bus=int(trans['lv_bus']),sn_mva=float(trans['sn_mva']),vn_hv_kv=float(trans['vn_hv_kv']),vn_lv_kv=float(trans['vn_lv_kv']),vkr_percent=float(trans['vkr_percent']),vk_percent=float(trans['vk_percent']),pfe_kw=float(trans['pfe_kw']),i0_percent=float(trans['i0_percent']))
+
         
 def add_line(lines_data, net):
     with open(lines_data,"r") as file:
