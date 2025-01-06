@@ -629,7 +629,6 @@ class Grid(QWidget):
             for line in self.paths:
                 connection1, connection2, i1, i2, pathList, typeShit = line
                 # print('line', line)
-                # print('paths: ', self.paths)
                 firstNode, secondNode = None, None
                 for bus, (point, capacity, orient, points, id) in self.busses.items():
                     if self.firstType == 'bus' and connection1 == id:
@@ -644,7 +643,6 @@ class Grid(QWidget):
                         secondNode = hands[i2]
 
                 if firstNode is not None and secondNode is not None:
-                    self.update()
                     if len(pathList) == 0:
                         painter.drawLine(firstNode.x(), firstNode.y(), secondNode.x(), secondNode.y())
                     else:
@@ -810,7 +808,7 @@ class Grid(QWidget):
                 for tp in tempPath:
                     tp = (tp.x(), tp.y())
                     newTp.append(tp)
-                bigTuple = connection1, connection2, fp, i, newTp 
+                bigTuple = connection1, connection2, fp, i, newTp, typeShit 
                 newPaths.append(bigTuple)
             data = {
                 'dist': self.dist,
@@ -828,23 +826,19 @@ class Grid(QWidget):
         with open(self.busCsvPath) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                try:
-                    posList = json.loads(row['pos'].strip())
-                    x, y = map(int, posList)
-                    pos = QPoint(x, y)
-                except Exception as e:
-                    raise ValueError(f"Error parsing position {row['pos']}: {e}")
+                posList = json.loads(row['pos'].strip())
+                x, y = map(int, posList)
+                pos = QPoint(x, y)
                 pointsList = []
-                try:
-                    pointsArray = json.loads(row['points'].strip())
-                    for px, py in pointsArray:
-                        pointsList.append(QPoint(int(px), int(py)))
-                except Exception as e:
-                    raise ValueError(f"Error parsing points {row['points']}: {e}")
+                pointsArray = json.loads(row['points'].strip())
+                for px, py in pointsArray:
+                    pointsList.append(QPoint(int(px), int(py)))
                 bigTuple = (pos, int(row['capacity']), row['orient'],
                             pointsList, int(row['id']))
                 self.busses[row['name']] = bigTuple
-                self.update()
+                print('pa', pointsArray)
+            print('-> busses: ',self.busses)
+            self.update()
 
         with open(self.guiCsvPath) as csvfile:
             reader = csv.DictReader(csvfile)
@@ -858,8 +852,8 @@ class Grid(QWidget):
                     for tpx, tpy in tempPath:
                         tp = QPoint(tpx, tpy)
                         newTp.append(tp)
-                        bigTuple = connection1, connection2, fp, i, newTp, typeShit
-                        paths.append(bigTuple)
+                    bigTuple = connection1, connection2, fp, i, newTp, typeShit
+                    paths.append(bigTuple)
                 self.paths = paths
             self.update()
 
