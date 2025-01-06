@@ -2,6 +2,7 @@
 import os
 import csv
 import json
+import math
 from copy import deepcopy
 from PyQt6.QtCore import QPoint, Qt, QEvent
 from bus_dialogs import AddBusDialog, EditBusDialog
@@ -42,6 +43,7 @@ class Grid(QWidget):
         self.insertBusMode = False
         self.insertLineMode = False
         self.insertTrafoMode = False
+        self.insertGenMode = False
 
         self.correctNodeSelect = False 
         self.spacePressed = False  # Track the state of the Space key
@@ -59,9 +61,11 @@ class Grid(QWidget):
         self.guiCsvPath = None
         self.busCounter = 0
         self.trafoCounter = 0
+        self.genCounter = 0
         self.firstNode = None
         self.busses = {}
         self.trafos = {}
+        self.gens = {}
         self.paths = []
         self.tokenBusPorts = []
         self.tokenTrafoHands = []
@@ -71,6 +75,7 @@ class Grid(QWidget):
         self.trafoOris = ['-90', '0', '90', '180']
         self.trafoCenters = []
         self.firstType = None
+        self.drawingParams = None
 
         # Defaults
         self.freq = 50
@@ -190,6 +195,15 @@ class Grid(QWidget):
                 self.addTrafoDialog.exec()
                 # busName = self.addBusDialog.nameInput.text()
                 self.setTrafoDict(pos, ori, id)
+                self.update()
+
+            # Placing a Genrator
+            if self.insertGenMode:
+                pos = self.snap(event.pos())
+                self.genCounter += 1
+                ori = self.insertingOrient
+                id = self.trafoCounter
+                self.setGenDict(pos, ori, id)
                 self.update()
             
             # Placing Line: First Connection
@@ -365,7 +379,11 @@ class Grid(QWidget):
         if self.insertTrafoMode or self.insertBusMode:
             if self.insertingOrient == '-90':
                 self.insertingOrient = '0'
-            else:
+            elif self.insertingOrient == '0':
+                self.insertingOrient = '90'
+            elif self.insertingOrient == '90':
+                self.insertingOrient = '180'
+            elif self.insertingOrient == '180':
                 self.insertingOrient = '-90'
 
         self.update()
@@ -377,12 +395,12 @@ class Grid(QWidget):
 
     def paintEvent(self, event: QPaintEvent) -> None:
         # Set Pen for Grid painting
-        gridPen = QPen()
-        gridPen.setWidth(self.gridWidth)
-        gridPen.setColor(self.lineColor)
+        self.gridPen = QPen()
+        self.gridPen.setWidth(self.gridWidth)
+        self.gridPen.setColor(self.lineColor)
         painter = QPainter()
         painter.begin(self)
-        painter.setPen(gridPen)
+        painter.setPen(self.gridPen)
 
         # Horizontal lines
         startH = QPoint(0, int(self.offSet.y()))
@@ -412,9 +430,9 @@ class Grid(QWidget):
         y = 0
         while y < self.height():
             while x < self.width():
-                dotPen = QPen()
-                dotPen.setColor(self.dotColor)
-                painter.setPen(dotPen)
+                self.dotPen = QPen()
+                self.dotPen.setColor(self.dotColor)
+                painter.setPen(self.dotPen)
                 painter.drawEllipse(x - 1, y - 1, 2, 2)
                 x += self.dist
             y += self.dist
@@ -423,30 +441,31 @@ class Grid(QWidget):
         # Drawing where the mouse is pointing to drop the item
         highLightedPoint = self.highLightedPoint
         color = QColor(255, 255, 255, int(255 * 0.1))  # with 10% transparency
-        symbolPen = QPen()
-        symbolPen.setWidth(self.lineWidth)
-        symbolPen.setColor(self.blue)
-        dotPen = QPen()
-        dotPen.setColor(self.highLightWhite)
-        dotPen.setWidth(self.txtWidth)
-        txtPen = QPen()
-        txtPen.setWidth(self.txtWidth)
-        txtPen.setColor(color)
+        self.symbolPen = QPen()
+        self.symbolPen.setWidth(self.lineWidth)
+        self.symbolPen.setColor(self.blue)
+        self.dotPen = QPen()
+        self.dotPen.setColor(self.highLightWhite)
+        self.dotPen.setWidth(self.txtWidth)
+        self.txtPen = QPen()
+        self.txtPen.setWidth(self.txtWidth)
+        self.txtPen.setColor(color)
 
         if highLightedPoint is not None:
             xHigh = highLightedPoint.x()
             yHigh = highLightedPoint.y()
-            if self.insertBusMode or self.insertTrafoMode:
+            if self.insertBusMode or self.insertTrafoMode or self.insertGenMode:
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
                 # Set the fill color with 20% transparency
                 painter.setBrush(color)
                 painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
                 painter.drawRect(xHigh - self.dist, yHigh - self.dist, 2 * self.dist, 2 * self.dist)
-                painter.setPen(symbolPen)
+                painter.setPen(self.symbolPen)
 
+                # Before Placing Bus
                 if self.insertBusMode:
-                    painter.setPen(symbolPen)
+                    painter.setPen(self.symbolPen)
                     painter.drawLine(xHigh, yHigh - self.dist, xHigh, yHigh + self.dist)
 
                     txt = 'Left Click to Drop Bus'
@@ -456,36 +475,87 @@ class Grid(QWidget):
                     txtPointX = xHigh - (textWidth // 2)
                     txtPointY = yHigh + (self.dist) + (textHeight)
                     txtPoint = QPoint(xHigh, yHigh - self.dist)
-                    painter.setPen(txtPen)
+                    painter.setPen(self.txtPen)
                     txtPoint = QPoint(txtPointX, txtPointY)
                     painter.drawText(txtPoint, txt)
 
+                # Before Placing Transformator 
                 if self.insertTrafoMode:
-                    gridPen.setColor(self.yellow)
-                    painter.setPen(gridPen)
-                    if self.insertingOrient == '-90':
-                        painter.drawLine(xHigh, yHigh - self.dist, xHigh, yHigh - 20)
-                        painter.drawLine(xHigh, yHigh + self.dist, xHigh, yHigh + 20)
-                        symbolPen.setColor(self.yellow)
-                        painter.setPen(symbolPen)
-                        painter.drawEllipse(xHigh - 12, yHigh - 12 - 7, 24, 24)
-                        painter.drawEllipse(xHigh - 12, yHigh - 12 + 7, 24, 24)
-                        painter.setPen(dotPen)
-                        painter.drawEllipse(xHigh - 1, yHigh - self.dist, 2, 2)
-                        painter.drawEllipse(xHigh - 1, yHigh + self.dist, 2, 2)
-                    else:
-                        painter.drawLine(xHigh - self.dist, yHigh, xHigh - 20, yHigh)
-                        painter.drawLine(xHigh + self.dist, yHigh, xHigh + 20, yHigh)
-                        symbolPen.setColor(self.yellow)
-                        painter.setPen(symbolPen)
-                        painter.drawEllipse(xHigh - 12 - 7, yHigh - 12, 24, 24)
-                        painter.drawEllipse(xHigh - 12 + 7, yHigh - 12, 24, 24)
-                        painter.setPen(dotPen)
-                        painter.drawEllipse(xHigh - self.dist, yHigh - 1, 2, 2)
-                        painter.drawEllipse(xHigh + self.dist, yHigh - 1, 2, 2)
+                    self.gridPen.setColor(self.yellow)
+                    painter.setPen(self.gridPen)
+                    txt = 'Left Click to Drop Transformer'
+                    textRect = painter.fontMetrics().boundingRect(txt)
+                    textWidth = textRect.width()
+                    textHeight = textRect.height()
+                    txtPointX = xHigh - (textWidth // 2)
+                    txtPointY = yHigh + (self.dist) + (textHeight)
+                    txtPoint = QPoint(xHigh, yHigh - self.dist)
+                    painter.setPen(self.txtPen)
+                    txtPoint = QPoint(txtPointX, txtPointY)
+                    painter.drawText(txtPoint, txt)
 
-            if not self.insertTrafoMode:
-                painter.setPen(dotPen)
+                    if self.insertingOrient == '-90' or self.insertingOrient == '90':
+                        self.symbolPen.setColor(self.yellow)
+                        painter.setPen(self.symbolPen)
+                        painter.drawLine(xHigh, yHigh - self.dist, xHigh, yHigh - self.drawingParams[0])
+                        painter.drawLine(xHigh, yHigh + self.dist, xHigh, yHigh + self.drawingParams[0])
+                        painter.drawEllipse(
+                            xHigh - self.drawingParams[1], yHigh - self.drawingParams[1] - self.drawingParams[2], 
+                            self.drawingParams[3], self.drawingParams[3]
+                        )
+                        painter.drawEllipse(
+                            xHigh - self.drawingParams[1], yHigh - self.drawingParams[1] + self.drawingParams[2], 
+                            self.drawingParams[3], self.drawingParams[3]
+                        )
+                        painter.setPen(self.dotPen)
+                        painter.drawEllipse(
+                            xHigh - self.drawingParams[4], yHigh - self.dist, 
+                            self.drawingParams[5], self.drawingParams[5]
+                        )
+                        painter.drawEllipse(
+                            xHigh - self.drawingParams[4], yHigh + self.dist, 
+                            self.drawingParams[5], self.drawingParams[5]
+                        )
+                    elif self.insertingOrient == '0' or self.insertingOrient == '180':
+                        self.symbolPen.setColor(self.yellow)
+                        painter.setPen(self.symbolPen)
+                        painter.drawLine(xHigh - self.dist, yHigh, xHigh - self.drawingParams[0], yHigh)
+                        painter.drawLine(xHigh + self.dist, yHigh, xHigh + self.drawingParams[0], yHigh)
+                        painter.drawEllipse(
+                            xHigh - self.drawingParams[1] - self.drawingParams[2], yHigh - self.drawingParams[1], 
+                            self.drawingParams[3], self.drawingParams[3]
+                        )
+                        painter.drawEllipse(
+                            xHigh - self.drawingParams[1] + self.drawingParams[2], yHigh - self.drawingParams[1], 
+                            self.drawingParams[3], self.drawingParams[3]
+                        )
+                        painter.setPen(self.dotPen)
+                        painter.drawEllipse(
+                            xHigh - self.dist, yHigh - self.drawingParams[4], 
+                            self.drawingParams[5], self.drawingParams[5]
+                        )
+                        painter.drawEllipse(
+                            xHigh + self.dist, yHigh - self.drawingParams[4], 
+                            self.drawingParams[5], self.drawingParams[5]
+                        )
+                    
+                if self.insertGenMode:
+                    self.gridPen.setColor(self.blue)
+                    painter.setPen(self.gridPen)
+                    txt = 'Left Click to Drop Generator'
+                    textRect = painter.fontMetrics().boundingRect(txt)
+                    textWidth = textRect.width()
+                    textHeight = textRect.height()
+                    txtPointX = xHigh - (textWidth // 2)
+                    txtPointY = yHigh + (self.dist) + (textHeight)
+                    txtPoint = QPoint(xHigh, yHigh - self.dist)
+                    painter.setPen(self.txtPen)
+                    txtPoint = QPoint(txtPointX, txtPointY)
+                    painter.drawText(txtPoint, txt)
+                    self.drawGenerator(painter, xHigh, yHigh)
+
+            if not self.insertTrafoMode and not self.insertGenMode:
+                painter.setPen(self.dotPen)
                 painter.drawEllipse(xHigh - 1, yHigh - 1, 2, 2)
 
             for bus, (point, capacity, orient, points, _) in self.busses.items():
@@ -523,10 +593,10 @@ class Grid(QWidget):
             busX = point.x()
             busY = point.y()
             # Create Symbol
-            symbolPen = QPen()
-            symbolPen.setWidth(self.lineWidth)
-            symbolPen.setColor(self.blue)
-            painter.setPen(symbolPen)
+            self.symbolPen = QPen()
+            self.symbolPen.setWidth(self.lineWidth)
+            self.symbolPen.setColor(self.blue)
+            painter.setPen(self.symbolPen)
             if orient == '-90':
                 painter.drawLine(busX, busY - self.dist, busX,
                                  busY + (capacity * self.dist))
@@ -540,9 +610,9 @@ class Grid(QWidget):
                 painter.drawLine(busX + self.dist, busY, busX - ( capacity * self.dist),
                                  busY)
             # Create Text
-            txtPen = QPen()
-            txtPen.setWidth(self.txtWidth)
-            txtPen.setColor(self.yellow)
+            self.txtPen = QPen()
+            self.txtPen.setWidth(self.txtWidth)
+            self.txtPen.setColor(self.yellow)
             # Calculate text dimensions
             textRect = painter.fontMetrics().boundingRect(bus)
             textWidth = textRect.width()
@@ -563,14 +633,14 @@ class Grid(QWidget):
                 txtPointX = busX - (((capacity - 1) * self.dist) // 2) - textWidth // 2
                 txtPointY = busY - (self.dist) - (textHeight // 2) 
             txtPoint = QPoint(txtPointX, txtPointY)
-            painter.setPen(txtPen)
+            painter.setPen(self.txtPen)
             txtPoint = QPoint(txtPointX, txtPointY)
             painter.drawText(txtPoint, bus)
             # Create the Connection Capacities
-            dotPen = QPen()
-            dotPen.setColor(self.highLightWhite)
-            dotPen.setWidth(self.txtWidth)
-            painter.setPen(dotPen)
+            self.dotPen = QPen()
+            self.dotPen.setColor(self.highLightWhite)
+            self.dotPen.setWidth(self.txtWidth)
+            painter.setPen(self.dotPen)
             if orient == '-90':
                 for _ in range(0, capacity):
                     painter.drawEllipse(busX - 1, busY - 1, 2, 2)
@@ -592,30 +662,30 @@ class Grid(QWidget):
         # Drawing all the transfos here
         for trafo, (point, ori, hands) in self.trafos.items():
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            gridPen.setColor(self.yellow)
-            painter.setPen(gridPen)
+            self.gridPen.setColor(self.yellow)
+            painter.setPen(self.gridPen)
             traX = point.x()
             traY = point.y()
-            gridPen.setColor(self.yellow)
-            painter.setPen(gridPen)
+            self.gridPen.setColor(self.yellow)
+            painter.setPen(self.gridPen)
             if ori == '-90' or ori == '90':
                 painter.drawLine(traX, traY - self.dist, traX, traY - 20)
                 painter.drawLine(traX, traY + self.dist, traX, traY + 20)
-                symbolPen.setColor(self.yellow)
-                painter.setPen(symbolPen)
+                self.symbolPen.setColor(self.yellow)
+                painter.setPen(self.symbolPen)
                 painter.drawEllipse(traX - 12, traY - 12 - 7, 24, 24)
                 painter.drawEllipse(traX - 12, traY - 12 + 7, 24, 24)
-                painter.setPen(dotPen)
+                painter.setPen(self.dotPen)
                 painter.drawEllipse(traX - 1, traY - self.dist, 2, 2)
                 painter.drawEllipse(traX - 1, traY + self.dist, 2, 2)
             elif ori == '0' or ori == '180':
                 painter.drawLine(traX - self.dist, traY, traX - 20, traY)
                 painter.drawLine(traX + self.dist, traY, traX + 20, traY)
-                symbolPen.setColor(self.yellow)
-                painter.setPen(symbolPen)
+                self.symbolPen.setColor(self.yellow)
+                painter.setPen(self.symbolPen)
                 painter.drawEllipse(traX - 12 - 7, traY - 12, 24, 24)
                 painter.drawEllipse(traX - 12 + 7, traY - 12, 24, 24)
-                painter.setPen(dotPen)
+                painter.setPen(self.dotPen)
                 painter.drawEllipse(traX - self.dist, traY - 1, 2, 2)
                 painter.drawEllipse(traX + self.dist, traY - 1, 2, 2)
 
@@ -719,6 +789,21 @@ class Grid(QWidget):
         self.trafos[id] = trafoTuple
         # print(self.trafos)
 
+    def setGenDict(self, pos: QPoint, ori: str, id: int) -> None:
+        self.trafoCenters.append(pos)
+        x = pos.x()
+        y = pos.y()
+        if ori == '0':
+            hand = QPoint(x + self.dist, y) 
+        elif ori == '180':
+            hand = QPoint(x - self.dist, y)
+        elif ori == '-90':
+            hand = QPoint(x, y + self.dist)
+        elif ori == '90':
+            hand = QPoint(x, y - self.dist)
+        genTuple = (pos, ori, hand)
+        self.gens[id] = genTuple
+
     def initEditBox(self, busName: str, point: QPoint) -> None:
         self.editBusDialog = EditBusDialog(self)
         self.editBusDialog.projectPath = self.projectPath
@@ -819,6 +904,8 @@ class Grid(QWidget):
                 writer.writeheader()
                 writer.writerow(data)
                 print(f'-> GUI Data edited to {self.guiCsvPath} successfuly.')
+            self.setDrawingParams()
+
 
     def loadGUI(self) -> None:
         self.busCsvPath = self.projectPath + '/Buses.csv'
@@ -855,9 +942,69 @@ class Grid(QWidget):
                     bigTuple = connection1, connection2, fp, i, newTp, typeShit
                     paths.append(bigTuple)
                 self.paths = paths
+            self.setDrawingParams()
             self.update()
 
     def openRunDialog(self) -> None:
         self.runSimDialog = RunSimDialog(self, self.freq, self.sBase)
         self.runSimDialog.projectPath = self.projectPath
         self.runSimDialog.exec()
+
+    def setDrawingParams(self) -> None:
+        if self.dist == 16:
+            self.drawingParams = [10, 6, 3, 12, 1, 1]
+        elif self.dist == 32:
+            self.drawingParams = [20, 12, 7, 24, 1, 2]
+        elif self.dist == 64:
+            self.drawingParams = [40, 24, 14, 48, 2, 4]
+        elif self.dist == 128:
+            self.drawingParams = [80, 48, 28, 96, 4, 8]
+        elif self.dist == 256:
+            self.drawingParams = [160, 96, 56, 192, 8, 16]
+
+    def drawGenerator(self, painter, x, y):
+        self.symbolPen.setWidth(2)
+        self.symbolPen.setColor(self.blue)
+        painter.setPen(self.symbolPen)
+        lineOffset = self.drawingParams[0]
+        ellipseRadius = self.drawingParams[1]
+        ellipseYOffset = self.drawingParams[2]
+        ellipseSize = self.drawingParams[3]
+        dotRadius = self.drawingParams[4]
+        dotSize = self.drawingParams[5]
+
+        painter.drawEllipse(x - ellipseSize, y - ellipseSize , 2 * ellipseSize, 2 * ellipseSize)
+
+        # The sine wave 
+        self.gridPen.setColor(self.yellow)
+        self.gridPen.setWidth(1)
+        painter.setPen(self.gridPen)
+        waveWidth = ellipseSize * 2
+        waveHeight = ellipseYOffset * 2
+        waveSteps = 660  # Increase for smoother sine wave
+        stepSize = waveWidth / waveSteps
+
+        sinePoints = []
+        for i in range(waveSteps + 1):
+            px = x - waveWidth // 2 + int(i * stepSize)
+            py = y + int(math.sin(- 2 * math.pi * i / waveSteps) * waveHeight)
+            sinePoints.append((px, py))
+        for i in range(len(sinePoints) - 1):
+            painter.drawLine(sinePoints[i][0], sinePoints[i][1], sinePoints[i + 1][0], sinePoints[i + 1][1])
+
+        # The line connection 
+        self.symbolPen.setColor(self.blue)
+        painter.setPen(self.symbolPen)
+        lineStartY = y + ellipseSize 
+        lineEndY = lineStartY + lineOffset // 2 - 4
+        painter.drawLine(x, lineStartY, x, lineEndY)
+
+        # The dot
+        self.dotPen.setWidth(4)
+        painter.setPen(self.dotPen)
+        dotX = x 
+        dotY = lineEndY - dotRadius
+        painter.drawEllipse(
+            x - self.drawingParams[4], y + self.dist - 1, 
+            self.drawingParams[5], self.drawingParams[5]
+        )

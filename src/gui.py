@@ -18,8 +18,8 @@ class MainWindow(QMainWindow):
         self.startUp = StartUp(self)
         self.buttSize = 26
         self.grid = None
-        self.minZoom = 8 
-        self.maxZoom = 512
+        self.minZoom = 16
+        self.maxZoom = 256
         if self.projectPath is None:
             self.startUp.exec()
             if not self.startUp.nameError:
@@ -262,11 +262,12 @@ class MainWindow(QMainWindow):
         self.toolBoxLayout.addWidget(self.addTrafoButton)
 
         #   Add Generator button
-        addGenButton = QToolButton()
-        addGenButton.setIcon(QIcon('../icons/generator.png'))
-        addGenButton.setIconSize(QSize(self.buttSize, self.buttSize))
-        addGenButton.setStyleSheet(self.normalStyle)
-        self.toolBoxLayout.addWidget(addGenButton)
+        self.addGenButton = QToolButton()
+        self.addGenButton.setIcon(QIcon('../icons/generator.png'))
+        self.addGenButton.setIconSize(QSize(self.buttSize, self.buttSize))
+        self.addGenButton.setStyleSheet(self.normalStyle)
+        self.addGenButton.clicked.connect(self.addGen)
+        self.toolBoxLayout.addWidget(self.addGenButton)
 
         #   Add Load button
         addLoadButton = QToolButton()
@@ -280,6 +281,8 @@ class MainWindow(QMainWindow):
         self.grid.projectPath = self.projectPath
         if self.startUp.loaded:
             self.grid.loadGUI()
+        else: 
+            self.grid.drawingParams = [20, 12, 7, 24, 1, 2]
         self.mainLayout.addWidget(self.grid, 12)
         self.mainLayout.addWidget(self.barWidget)
         
@@ -339,6 +342,7 @@ class MainWindow(QMainWindow):
         self.grid.insertTrafoMode = False
         self.grid.handMode = False
         self.grid.insertLineMode = False 
+        self.grid.insertGenMode = False
         self.grid.insertBusMode = not(self.grid.insertBusMode) 
         if not self.grid.insertBusMode:
             self.addBusButton.setStyleSheet(self.normalStyle)
@@ -354,6 +358,7 @@ class MainWindow(QMainWindow):
         self.grid.insertBusMode = False
         self.grid.selectMode = False
         self.grid.insertTrafoMode = False
+        self.grid.insertGenMode = False
         self.grid.handMode = False
         self.grid.insertLineMode = not(self.grid.insertLineMode) 
         if not self.grid.insertLineMode:
@@ -369,6 +374,7 @@ class MainWindow(QMainWindow):
     def addTrafo(self) -> None:
         self.grid.insertBusMode = False
         self.grid.insertLineMode = False 
+        self.grid.insertGenMode = False
         self.grid.selectMode = False
         self.grid.insertTrafoMode = not(self.grid.insertTrafoMode) 
         if not self.grid.insertTrafoMode:
@@ -380,6 +386,21 @@ class MainWindow(QMainWindow):
             self.editGridButton.setStyleSheet(self.normalStyle)
             self.moveButt.setStyleSheet(self.normalStyle)
         self.update()
+
+    def addGen(self) -> None:
+        self.grid.insertBusMode = False
+        self.grid.insertLineMode = False 
+        self.grid.selectMode = False
+        self.grid.insertTrafoMode = False
+        self.grid.insertGenMode = not(self.grid.insertGenMode) 
+        if not self.grid.insertTrafoMode:
+            self.addTrafoButton.setStyleSheet(self.normalStyle)
+        else:
+            self.addTrafoButton.setStyleSheet(self.toggledStyle)
+            self.addLineButton.setStyleSheet(self.normalStyle)
+            self.addBusButton.setStyleSheet(self.normalStyle)
+            self.editGridButton.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def setSelectMode(self) -> None:
@@ -389,6 +410,7 @@ class MainWindow(QMainWindow):
         self.grid.insertBusMode = False
         self.grid.insertLineMode = False
         self.grid.insertTrafoMode = False
+        self.grid.insertGenMode = False
         self.grid.handMode = False
         self.grid.selectMode = not(self.grid.selectMode) 
         if not self.grid.selectMode:
@@ -406,6 +428,7 @@ class MainWindow(QMainWindow):
         self.grid.insertLineMode = False
         self.grid.insertTrafoMode = False
         self.grid.selectMode = False
+        self.grid.insertGenMode = False
         self.grid.handMode = not(self.grid.handMode) 
         if not self.grid.handMode:
             self.moveButt.setStyleSheet(self.normalStyle)
@@ -442,6 +465,7 @@ class MainWindow(QMainWindow):
                     newTp.append(tp)
                 p = connection1, connection2, fp, i, newTp
                 newPaths.append(p)
+
             self.grid.paths = newPaths
             self.grid.update()
             self.grid.updateGuiElementsCSV()
@@ -472,6 +496,7 @@ class MainWindow(QMainWindow):
                     newTp.append(tp)
                 p = connection1, connection2, fp, i, newTp
                 newPaths.append(p)
+
             self.grid.paths = newPaths
             self.grid.update()
             self.grid.updateGuiElementsCSV()
