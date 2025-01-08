@@ -75,7 +75,11 @@ def lf(net):
     pp.runpp(net)
 
 def lf_res(net):
-    return net.res_bus
+    return dict(net.res_bus)
+
+def line_loss(lines_data,net):
+    with open(lines_data) as file:
+        reader = csv.DictReader(file,fieldnames=['from_bus','to_bus','length_km','r_ohm_per_km','x_ohm_per_km', 'c_nf_per_km','max_i_ka'])
 
 def main():
     net = create_net("network1")
