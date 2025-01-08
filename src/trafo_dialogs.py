@@ -41,44 +41,28 @@ class AddTrafoDialog(QDialog):
             border-radius: 5px;
             padding: 8px;
         ''')
-        
-        # Trafo Z Input Box
-        self.zLabel = QLabel('Impedances:')
-        self.zLabel.setStyleSheet('color: #ffffff;')
-        self.zWidget = QWidget()
-        self.zHBox = QHBoxLayout()
-        self.rInput = QLineEdit(self)
-        self.rInput.setPlaceholderText('R')
-        self.xInput = QLineEdit(self)
-        self.xInput.setPlaceholderText('X')
-        self.rUnitDropDown = QComboBox(self) 
-        self.rUnitDropDown.addItem('PU')
-        self.rUnitDropDown.addItem('Kohm')
-        self.xUnitDropDown = QComboBox(self) 
-        self.xUnitDropDown.addItem('PU')
-        self.xUnitDropDown.addItem('Kohm')
-        self.zHBox.addWidget(self.rInput)
-        self.zHBox.addWidget(self.rUnitDropDown)
-        self.zHBox.addWidget(self.xInput)
-        self.zHBox.addWidget(self.xUnitDropDown)
-        self.zWidget.setLayout(self.zHBox)
 
-        # A & V Base
-        self.vLabel = QLabel('Voltages:')
-        self.vLabel.setStyleSheet('color: #ffffff;')
-        self.aHBox = QHBoxLayout()
-        self.aInput = QLineEdit(self)
-        self.aInput.setPlaceholderText('a (N1 / N2 or V1 / V2)')
-        self.vBaseInput = QLineEdit(self)
-        self.vBaseInput.setPlaceholderText('V Base')
-        self.vbUnitDropDown = QComboBox(self) 
-        self.vbUnitDropDown.addItem('PU')
-        self.vbUnitDropDown.addItem('KV')
-        self.aHBox.addWidget(self.aInput)
-        self.aHBox.addWidget(self.vBaseInput)
-        self.aHBox.addWidget(self.vbUnitDropDown)
-        self.aWidget = QWidget()
-        self.aWidget.setLayout(self.aHBox)
+        # Trafo
+        self.trafoLabel = QLabel('Name:')
+        self.trafoLabel.setStyleSheet('color: #ffffff;')
+        self.trafoHBox = QHBoxLayout()
+        self.trafoInput = QLineEdit(self)
+        self.trafoInput.setPlaceholderText('Name')
+        # self.vBaseInput = QLineEdit(self)
+        # self.vBaseInput.setPlaceholderText('V Base')
+        # self.lenUnitDropDown = QComboBox(self) 
+        # self.lenUnitDropDown.addItem('KM')
+        # self.lenUnitDropDown.addItem('Miles (Not Implemented)')
+        # self.vbUnitDropDown = QComboBox(self) 
+        # self.vbUnitDropDown.addItem('PU')
+        # self.vbUnitDropDown.addItem('KV')
+        self.trafoHBox.addWidget(self.trafoLabel)
+        self.trafoHBox.addWidget(self.trafoInput)
+        # self.lenHBox.addWidget(self.lenUnitDropDown)
+        # self.lenHBox.addWidget(self.vBaseInput)
+        # self.lenHBox.addWidget(self.vbUnitDropDown)
+        self.trafoWidget = QWidget()
+        self.trafoWidget.setLayout(self.trafoHBox)
 
         # Button Box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -87,19 +71,25 @@ class AddTrafoDialog(QDialog):
 
         layout = QVBoxLayout()
         layout.addWidget(self.title)
-        layout.addWidget(self.zLabel)
-        layout.addWidget(self.zWidget)
-        layout.addWidget(self.vLabel)
-        layout.addWidget(self.aWidget)
+        # layout.addWidget(self.trafoHBox)
+        # layout.addWidget(self.nameInput)
+        # layout.addWidget(self.zWidget)
+        layout.addWidget(self.trafoWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
+        
+        # Button Box
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self.buttonBox.rejected.connect(self.reject)
+        self.buttonBox.accepted.connect(self.accept)
 
     def accept(self) -> None:
+        print(f'bus1:{self.bus1Id}, bus2:{self.bus2Id}')
         inputList = []
-        inputList.append(self.rInput.text())
-        inputList.append(self.xInput.text())
-        inputList.append(self.aInput.text())
-        inputList.append(self.vBaseInput.text())
+        # inputList.append(self.rInput.text())
+        # inputList.append(self.xInput.text())
+        # inputList.append(self.aInput.text())
+        inputList.append(self.trafoInput.text())
         if '' in inputList:
             self.inputError = True
             QMessageBox.warning(self, 'Fill all the fields.',
@@ -107,4 +97,15 @@ class AddTrafoDialog(QDialog):
             return
         else:
             self.inputError = False
+        # Creating the Trafo
+        trafo = Transformer(
+            name = self.trafoInput.text(),
+            id = self.trafoId,
+            hvBus = self.bus1Id,
+            lvBus = self.bus2Id,
+        )
+        # bus.log()
+        trafo.append2CSV(self.projectPath)
+        super().accept()
+
         super().accept()

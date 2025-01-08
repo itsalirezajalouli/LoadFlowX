@@ -1,10 +1,11 @@
 # Main GUI setup and window management
 
 # Imports
-from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtCore import QSize
 from grid import Grid
+from simulator import NetworkCreator
+from PyQt6.QtCore import QSize
 from start_window import StartUp
+from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QHBoxLayout, QMainWindow, QStatusBar, QVBoxLayout, QWidget, QToolButton
 
@@ -335,8 +336,20 @@ class MainWindow(QMainWindow):
         pass
 
     def run(self) -> None:
-        self.grid.openRunDialog()
+        method = self.grid.openRunDialog()
 
+        busCsvPath = self.projectPath + '/Buses.csv'
+        lineCSV = self.projectPath + '/Lines.csv'
+        trafoCSV = self.projectPath + '/Trafos.csv'
+        genCSV = self.projectPath + '/Gens.csv'
+
+        nMaker = NetworkCreator(busCsvPath, lineCSV, trafoCSV, genCSV)
+        nMaker.run(method)
+
+        # if method == 'Newton Raphson':
+        # elif method == 'Gauss Seidel':
+        # elif method == 'Fast Decoupled':
+        #
     def addBus(self) -> None:
         self.grid.selectMode = False
         self.grid.insertTrafoMode = False

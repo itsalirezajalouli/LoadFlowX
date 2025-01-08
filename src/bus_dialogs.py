@@ -55,66 +55,66 @@ class AddBusDialog(QDialog):
         self.nameInput.setPlaceholderText('Set Your Bus Name')
 
         # Bus Type Combo Box
-        self.typeInputLabel = QLabel('Bus Type:')
-        self.typeInputLabel.setStyleSheet('color: #ffffff;')
-        self.busTypeDropDown = QComboBox(self) 
-        self.busTypeDropDown.addItem('SLACK')
-        self.busTypeDropDown.addItem('PV')
-        self.busTypeDropDown.addItem('PQ')
-        self.busTypeDropDown.activated.connect(self.busTypeActivator)
-
+        # self.typeInputLabel = QLabel('Bus Type:')
+        # self.typeInputLabel.setStyleSheet('color: #ffffff;')
+        # self.busTypeDropDown = QComboBox(self) 
+        # self.busTypeDropDown.addItem('SLACK')
+        # self.busTypeDropDown.addItem('PV')
+        # self.busTypeDropDown.addItem('PQ')
+        # self.busTypeDropDown.activated.connect(self.busTypeActivator)
+        #
         # V Magnitude & Angle Input Box
-        self.vInputLabel = QLabel('Voltage ():')
+        self.vInputLabel = QLabel('Voltage:')
         self.vInputLabel.setStyleSheet('color: #ffffff;')
         self.vWidget = QWidget()
         self.vHBox = QHBoxLayout()
-        self.vMagLabel = QLabel('|V| : ')
+        self.vMagLabel = QLabel('Vn: ')
         self.vMagInput = QLineEdit(self)
-        self.vMagInput.setPlaceholderText('Magnitude')
-        self.vAngLabel = QLabel('∠δ : ')
-        self.vAngInput = QLineEdit(self)
-        self.vAngInput.setPlaceholderText('Angle')
+        self.vMagInput.setPlaceholderText('Nominal Voltage')
+        # self.vAngLabel = QLabel('∠δ : ')
+        # self.vAngInput = QLineEdit(self)
+        # self.vAngInput.setPlaceholderText('Angle')
         self.vUnitDropDown = QComboBox(self) 
-        self.vUnitDropDown.addItem('PU')
         self.vUnitDropDown.addItem('KV')
-        self.vUnitDropDown.addItem('V')
-        self.vUnitDropDown.activated.connect(self.vMagUnitActivator)
-        self.vDegreeTypeDropDown = QComboBox(self) 
-        self.vDegreeTypeDropDown.addItem('Deg')
-        self.vDegreeTypeDropDown.addItem('Rad')
+        self.vUnitDropDown.addItem('PU (Not Implemented)')
+        # self.vUnitDropDown.addItem('V')
+        # self.vUnitDropDown.activated.connect(self.vMagUnitActivator)
+        # self.vDegreeTypeDropDown = QComboBox(self) 
+        # self.vDegreeTypeDropDown.addItem('Deg')
+        # self.vDegreeTypeDropDown.addItem('Rad')
         self.vHBox.addWidget(self.vMagLabel)
         self.vHBox.addWidget(self.vMagInput)
         self.vHBox.addWidget(self.vUnitDropDown)
-        self.vHBox.addWidget(self.vAngLabel)
-        self.vHBox.addWidget(self.vAngInput)
-        self.vHBox.addWidget(self.vDegreeTypeDropDown)
+        # self.vHBox.addWidget(self.vAngLabel)
+        # self.vHBox.addWidget(self.vAngInput)
+        # self.vHBox.addWidget(self.vDegreeTypeDropDown)
         self.vWidget.setLayout(self.vHBox)
 
         # P & Q Input Box
-        self.pqInputLabel = QLabel('Active & Passive Power:')
-        self.pqInputLabel.setStyleSheet('color: #ffffff;')
-        self.pqWidget = QWidget()
-        self.pqHBox = QHBoxLayout()
-        self.pInput = QLineEdit(self)
-        self.pInput.setPlaceholderText('P')
-        self.qInput = QLineEdit(self)
-        self.qInput.setPlaceholderText('Q')
-        self.pUnitDropDown = QComboBox(self) 
-        self.pUnitDropDown.addItem('PU')
-        self.pUnitDropDown.addItem('KW')
-        self.qUnitDropDown = QComboBox(self) 
-        self.qUnitDropDown.addItem('PU')
-        self.qUnitDropDown.addItem('KVA')
-        self.pqHBox.addWidget(self.pInput)
-        self.pqHBox.addWidget(self.pUnitDropDown)
-        self.pqHBox.addWidget(self.qInput)
-        self.pqHBox.addWidget(self.qUnitDropDown)
-        self.pqWidget.setLayout(self.pqHBox)
+        # self.pqInputLabel = QLabel('Active & Passive Power:')
+        # self.pqInputLabel.setStyleSheet('color: #ffffff;')
+        # self.pqWidget = QWidget()
+        # self.pqHBox = QHBoxLayout()
+        # self.pInput = QLineEdit(self)
+        # self.pInput.setPlaceholderText('P')
+        # self.qInput = QLineEdit(self)
+        # self.qInput.setPlaceholderText('Q')
+        # self.pUnitDropDown = QComboBox(self) 
+        # self.pUnitDropDown.addItem('PU')
+        # self.pUnitDropDown.addItem('KW')
+        # self.qUnitDropDown = QComboBox(self) 
+        # self.qUnitDropDown.addItem('PU')
+        # self.qUnitDropDown.addItem('KVA')
+        # self.pqHBox.addWidget(self.pInput)
+        # self.pqHBox.addWidget(self.pUnitDropDown)
+        # self.pqHBox.addWidget(self.qInput)
+        # self.pqHBox.addWidget(self.qUnitDropDown)
+        # self.pqWidget.setLayout(self.pqHBox)
 
         self.vMagInput.setValidator(QDoubleValidator())
-        self.vAngInput.setValidator(QDoubleValidator())
-        self.qInput.setValidator(QDoubleValidator())
-        self.pInput.setValidator(QDoubleValidator())
+        # self.vAngInput.setValidator(QDoubleValidator())
+        # self.qInput.setValidator(QDoubleValidator())
+        # self.pInput.setValidator(QDoubleValidator())
 
         # Button Box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -125,12 +125,12 @@ class AddBusDialog(QDialog):
         layout.addWidget(self.title)
         layout.addWidget(self.nameInputLabel)
         layout.addWidget(self.nameInput)
-        layout.addWidget(self.typeInputLabel)
-        layout.addWidget(self.busTypeDropDown)
+        # layout.addWidget(self.typeInputLabel)
+        # layout.addWidget(self.busTypeDropDown)
         layout.addWidget(self.vInputLabel)
         layout.addWidget(self.vWidget)
-        layout.addWidget(self.pqInputLabel)
-        layout.addWidget(self.pqWidget)
+        # layout.addWidget(self.pqInputLabel)
+        # layout.addWidget(self.pqWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
 
@@ -163,9 +163,9 @@ class AddBusDialog(QDialog):
         inputList = []
         inputList.append(self.nameInput.text())
         inputList.append(self.vMagInput.text())
-        inputList.append(self.vAngInput.text())
-        inputList.append(self.pInput.text())
-        inputList.append(self.qInput.text())
+        # inputList.append(self.vAngInput.text())
+        # inputList.append(self.pInput.text())
+        # inputList.append(self.qInput.text())
         if '' in inputList:
             self.inputError = True
             QMessageBox.warning(self, 'Fill all the fields.',
@@ -179,10 +179,10 @@ class AddBusDialog(QDialog):
             pos = self.busPos,
             name = self.nameInput.text(),
             bType = self.busType, 
-            vAng = float(self.vAngInput.text()),
+            # vAng = float(self.vAngInput.text()),
             vMag = float(self.vMagInput.text()),
-            P = float(self.pInput.text()),
-            Q = float(self.qInput.text()),
+            # P = float(self.pInput.text()),
+            # Q = float(self.qInput.text()),
             capacity = self.capacity,
             orient = self.orient,
             points = self.points,

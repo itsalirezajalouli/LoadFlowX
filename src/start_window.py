@@ -18,6 +18,7 @@ class StartUp(QDialog):
         self.guiCSV = None
         self.lineCSV = None
         self.trafoCSV = None
+        self.genCSV = None
         self.loaded = False
 
         # Making the necessary folders if not there
@@ -203,6 +204,7 @@ class StartUp(QDialog):
             self.busCSV = self.usrPath + self.projectName + '/Buses.csv'
             self.lineCSV = self.usrPath + self.projectName + '/Lines.csv'
             self.guiCSV = self.usrPath + self.projectName + '/GUI.csv'
+            self.genCSV = self.usrPath + self.projectName + '/Gens.csv'
             self.trafoCSV = self.usrPath + self.projectName + '/Trafos.csv'
             with open(self.guiCSV, 'a', newline = '') as file:
                 writer = csv.DictWriter(file,fieldnames=['dist','paths'])
@@ -215,8 +217,16 @@ class StartUp(QDialog):
                 writer.writeheader()
             print(f'-> Bus header appended to {self.busCSV} successfuly.')
             with open(self.lineCSV, 'a', newline = '') as file:
-                writer = csv.DictWriter(file,fieldnames=['bus1id','bus2id','R','X','len',
-                                                         'vBase'])
+                writer = csv.DictWriter(file,fieldnames = ['name', 'bus1id','bus2id','R','X',
+                                                     'len', 'vBase'])
                 writer.writeheader()
             print(f'-> Line header appended to {self.lineCSV} successfuly.')
+            with open(self.genCSV, 'a', newline = '') as file:
+                writer = csv.DictWriter(file,fieldnames = ['name', 'bus', 'pMW'])
+                writer.writeheader()
+            print(f'-> Gen data appended to {self.genCSV} successfuly.')
+            with open(self.trafoCSV, 'a', newline = '') as file:
+                writer = csv.DictWriter(file,fieldnames = ['name', 'id', 'hvBus', 'lvBus'])
+                writer.writeheader()
+            print(f'-> Trafo data appended to {self.trafoCSV} successfuly.')
 

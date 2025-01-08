@@ -8,6 +8,7 @@ class RunSimDialog(QDialog):
         self.projectPath = None
         self.freq = freq
         self.sBase = sBase
+        self.activatedMethod = 'Newton Raphson'
         self.setWindowTitle('Run Simulation')
         self.setStyleSheet('''
         QDialog {
@@ -47,6 +48,7 @@ class RunSimDialog(QDialog):
         self.methDropDown.addItem('Newton Raphson')
         self.methDropDown.addItem('Gauss Seidel')
         self.methDropDown.addItem('Fast Decoupled')
+        self.methDropDown.activated.connect(self.method)
         self.methHBox.addWidget(self.methDropDown)
         self.methWidget.setLayout(self.methHBox)
 
@@ -89,8 +91,6 @@ class RunSimDialog(QDialog):
 
     def accept(self) -> None:
         inputList = []
-        inputList.append(self.rInput.text())
-        inputList.append(self.xInput.text())
         inputList.append(self.freqInput.text())
         inputList.append(self.sBaseInput.text())
         if '' in inputList:
@@ -101,3 +101,11 @@ class RunSimDialog(QDialog):
         else:
             self.inputError = False
         super().accept()
+
+    def method(self, index) -> None:
+        if index == 0: 
+            self.activatedMethod = 'nr'
+        elif index == 1: 
+            self.activatedMethod = 'gs'
+        elif index == 2:
+            self.activatedMethod = 'fd'
