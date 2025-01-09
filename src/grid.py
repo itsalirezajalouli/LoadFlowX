@@ -10,7 +10,7 @@ from line_dialogs import AddLineDialog
 from gen_dialogs import AddGenDialog
 from run_dialogs import RunSimDialog
 from theme import DiscordPalette as theme
-from PyQt6.QtGui import QColor, QPaintEvent, QPen, QPainter
+from PyQt6.QtGui import QColor, QPaintEvent, QPen, QPainter, QBrush, QPolygon
 from PyQt6.QtWidgets import QApplication, QWidget
 from trafo_dialogs import AddTrafoDialog
 
@@ -44,6 +44,7 @@ class Grid(QWidget):
         self.insertLineMode = False
         self.insertTrafoMode = False
         self.insertGenMode = False
+        self.insertLoadMode = False
 
         self.correctNodeSelect = False 
         self.spacePressed = False  # Track the state of the Space key
@@ -72,9 +73,6 @@ class Grid(QWidget):
         self.tokenGenHands = []
         self.xDists = []
         self.tempPath = []
-        self.busOris = ['-90', '0', '90', '180']
-        self.trafoOris = ['-90', '0', '90', '180']
-        self.trafoCenters = []
         self.firstType = None
         self.drawingParams = None
 
@@ -170,19 +168,18 @@ class Grid(QWidget):
             if self.insertBusMode:
                 pos = self.snap(event.pos())
                 defaultCapacity = 1
-                defaultOrientation = '-90'
                 self.addBusDialog = AddBusDialog(self)
                 self.addBusDialog.busPos = pos
                 self.busCounter += 1
                 self.addBusDialog.busId = self.busCounter
                 self.addBusDialog.projectPath = self.projectPath
-                self.addBusDialog.orient = defaultOrientation
+                self.addBusDialog.orient = self.insertingOrient 
                 self.addBusDialog.capacity = defaultCapacity 
                 self.addBusDialog.points = [] 
                 self.addBusDialog.exec()
                 busName = self.addBusDialog.nameInput.text()
                 id = self.busCounter
-                self.setBusDict(busName, pos, defaultCapacity, defaultOrientation, id)
+                self.setBusDict(busName, pos, defaultCapacity, self.insertingOrient, id)
 
             # Placing a Transformator 
             if self.insertTrafoMode:
@@ -193,13 +190,13 @@ class Grid(QWidget):
                 self.setTrafoDict(pos, ori, id, 0, 0)
                 self.update()
 
-            # Placing a Genrator
+            # Placing a gen 
             if self.insertGenMode:
                 pos = self.snap(event.pos())
                 self.genCounter += 1
                 ori = self.insertingOrient
                 id = self.genCounter
-                self.setGenDict(pos, ori, id)
+                self.setGenDict(id, pos, ori)
                 self.update()
             
             # Placing Line: First Connection
@@ -443,50 +440,59 @@ class Grid(QWidget):
         return False
 
     def wheelEvent(self, event) -> None:
+        '''
+        Handles mouse wheel events for rotating components (busbars, transformers, generators)
+        '''
+        # Define orientations once as a class constant if not already defined
+        ORIENTATIONS = ['-90', '0', '90', '180']
+        
         pos = self.snap(self.currentMousePos)
-        x = pos.x()
-        y = pos.y()
+        x, y = pos.x(), pos.y()
+        
+        # Helper function to get next orientation
+        def getNextOrientation(currentOrient: str, scrollUp: bool) -> str:
+            currentIndex = ORIENTATIONS.index(currentOrient)
+            if scrollUp:
+                return ORIENTATIONS[(currentIndex + 1) % len(ORIENTATIONS)]
+            return ORIENTATIONS[(currentIndex - 1) % len(ORIENTATIONS)]
+        
+        # Handle component rotation
+        componentUpdated = False
+        
+        # Check busbars
         for bus, (point, capacity, orient, points, id) in self.busses.items():
             busX, busY = point.x(), point.y()
             if self.withinBounds(x, y, busX, busY, self.dist, capacity, orient):
-                if event.angleDelta().y() > 0:  # Scroll up
-                    nextOrient = self.busOris[(self.busOris.index(orient) + 1) % len(self.busOris)]
-                elif event.angleDelta().y() < 0:  # Scroll down
-                    nextOrient = self.busOris[(self.busOris.index(orient) - 1) % len(self.busOris)]
-                else:
-                    continue
-
-                orient = nextOrient  # Update orientation
-
-                self.setBusDict(bus, point, capacity, orient, id)
-                self.update()
+                newOrient = getNextOrientation(orient, event.angleDelta().y() > 0)
+                self.setBusDict(bus, point, capacity, newOrient, id)
+                componentUpdated = True
                 self.updateBusCSVGuiParams()
-
-        for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
-            trafX, trafY = point.x(), point.y()
-            if x == trafX and y == trafY:
-                if event.angleDelta().y() > 0:  # Scroll up
-                    nextOrient = self.trafoOris[(self.trafoOris.index(ori) + 1) % len(self.trafoOris)]
-                elif event.angleDelta().y() < 0:  # Scroll down
-                    nextOrient = self.trafoOris[(self.trafoOris.index(ori) - 1) % len(self.trafoOris)]
-                else:
-                    continue
-
-                ori = nextOrient  # Update orientation
-
-                self.setTrafoDict(pos, ori, trafo, bus1, bus2)
-                self.update()
-
-        if self.insertTrafoMode or self.insertBusMode:
-            if self.insertingOrient == '-90':
-                self.insertingOrient = '0'
-            elif self.insertingOrient == '0':
-                self.insertingOrient = '90'
-            elif self.insertingOrient == '90':
-                self.insertingOrient = '180'
-            elif self.insertingOrient == '180':
-                self.insertingOrient = '-90'
-
+                break
+        
+        # Check transformers
+        if not componentUpdated:
+            for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
+                trafX, trafY = point.x(), point.y()
+                if x == trafX and y == trafY:
+                    newOrient = getNextOrientation(ori, event.angleDelta().y() > 0)
+                    self.setTrafoDict(pos, newOrient, trafo, bus1, bus2)
+                    componentUpdated = True
+                    break
+        
+        # Check generators
+        if not componentUpdated:
+            for gen, (point, orient, hand) in self.gens.items():
+                genX, genY = point.x(), point.y()
+                if x == genX and y == genY:
+                    newOrient = getNextOrientation(orient, event.angleDelta().y() > 0)
+                    self.setGenDict(gen, pos, newOrient)
+                    componentUpdated = True
+                    break
+        
+        # Handle insertion mode orientation changes
+        if self.insertTrafoMode or self.insertBusMode or self.insertGenMode:
+            self.insertingOrient = getNextOrientation(self.insertingOrient, True)
+        
         self.update()
 
     def setOffset(self, offset: QPoint):
@@ -555,7 +561,7 @@ class Grid(QWidget):
         if highLightedPoint is not None:
             xHigh = highLightedPoint.x()
             yHigh = highLightedPoint.y()
-            if self.insertBusMode or self.insertTrafoMode or self.insertGenMode:
+            if self.insertBusMode or self.insertTrafoMode or self.insertGenMode or self.insertLoadMode:
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
                 # Set the fill color with 20% transparency
@@ -567,7 +573,8 @@ class Grid(QWidget):
                 # Before Placing Bus
                 if self.insertBusMode:
                     painter.setPen(self.symbolPen)
-                    painter.drawLine(xHigh, yHigh - self.dist, xHigh, yHigh + self.dist)
+                    self.drawBusbar(painter, '', xHigh, yHigh, 1, self.insertingOrient)
+                    # painter.drawLine(xHigh, yHigh - self.dist, xHigh, yHigh + self.dist)
 
                     txt = 'Left Click to Drop Bus'
                     textRect = painter.fontMetrics().boundingRect(txt)
@@ -654,7 +661,24 @@ class Grid(QWidget):
                     painter.setPen(self.txtPen)
                     txtPoint = QPoint(txtPointX, txtPointY)
                     painter.drawText(txtPoint, txt)
-                    self.drawGenerator(painter, xHigh, yHigh)
+                    print('here')
+                    self.drawGenerator(painter, xHigh, yHigh, self.insertingOrient)
+
+                # before inserting load
+                if self.insertLoadMode:
+                    self.gridPen.setColor(self.blue)
+                    painter.setPen(self.gridPen)
+                    txt = 'Left Click to Drop Load'
+                    textRect = painter.fontMetrics().boundingRect(txt)
+                    textWidth = textRect.width()
+                    textHeight = textRect.height()
+                    txtPointX = xHigh - (textWidth // 2)
+                    txtPointY = yHigh + (self.dist) + (textHeight)
+                    txtPoint = QPoint(xHigh, yHigh - self.dist)
+                    painter.setPen(self.txtPen)
+                    txtPoint = QPoint(txtPointX, txtPointY)
+                    painter.drawText(txtPoint, txt)
+                    self.drawLoad(painter, xHigh, yHigh, self.insertingOrient)
 
             if not self.insertTrafoMode and not self.insertGenMode:
                 painter.setPen(self.dotPen)
@@ -691,74 +715,7 @@ class Grid(QWidget):
 
         # Drawing all the busbars here
         for bus, (point, capacity, orient, points, _) in self.busses.items():
-            # Get the points
-            busX = point.x()
-            busY = point.y()
-            # Create Symbol
-            self.symbolPen = QPen()
-            self.symbolPen.setWidth(self.lineWidth)
-            self.symbolPen.setColor(self.blue)
-            painter.setPen(self.symbolPen)
-            if orient == '-90':
-                painter.drawLine(busX, busY - self.dist, busX,
-                                 busY + (capacity * self.dist))
-            elif orient == '0':
-                painter.drawLine(busX - self.dist, busY, busX + ( capacity * self.dist),
-                                 busY)
-            elif orient == '90':
-                painter.drawLine(busX, busY + self.dist, busX,
-                                 busY - ( capacity * self.dist))
-            elif orient == '180':
-                painter.drawLine(busX + self.dist, busY, busX - ( capacity * self.dist),
-                                 busY)
-            # Create Text
-            self.txtPen = QPen()
-            self.txtPen.setWidth(self.txtWidth)
-            self.txtPen.setColor(self.yellow)
-            # Calculate text dimensions
-            textRect = painter.fontMetrics().boundingRect(bus)
-            textWidth = textRect.width()
-            textHeight = textRect.height()
-            # Center text horizontally and vertically relative to the bus line
-            txtPointX = busX - (textWidth // 2)
-            txtPointY = busY - (self.dist) - (textHeight // 2)
-            if orient == '-90':
-                txtPointX = busX - (textWidth // 2)
-                txtPointY = busY - (self.dist) - (textHeight)
-            elif orient == '90':
-                txtPointX = busX - (textWidth // 2)
-                txtPointY = busY + (self.dist) + (textHeight)
-            elif orient == '0':
-                txtPointX = busX + (((capacity - 1) * self.dist) // 2) - textWidth // 2
-                txtPointY = busY + (self.dist) + (textHeight // 2)
-            elif orient == '180':
-                txtPointX = busX - (((capacity - 1) * self.dist) // 2) - textWidth // 2
-                txtPointY = busY - (self.dist) - (textHeight // 2) 
-            txtPoint = QPoint(txtPointX, txtPointY)
-            painter.setPen(self.txtPen)
-            txtPoint = QPoint(txtPointX, txtPointY)
-            painter.drawText(txtPoint, bus)
-            # Create the Connection Capacities
-            self.dotPen = QPen()
-            self.dotPen.setColor(self.highLightWhite)
-            self.dotPen.setWidth(self.txtWidth)
-            painter.setPen(self.dotPen)
-            if orient == '-90':
-                for _ in range(0, capacity):
-                    painter.drawEllipse(busX - 1, busY - 1, 2, 2)
-                    busY += self.dist
-            elif orient == '0':
-                for _ in range(0, capacity):
-                    painter.drawEllipse(busX - 1, busY - 1, 2, 2)
-                    busX += self.dist
-            elif orient == '90':
-                for _ in range(0, capacity):
-                    painter.drawEllipse(busX - 1, busY - 1, 2, 2)
-                    busY -= self.dist
-            elif orient == '180':
-                for _ in range(0, capacity):
-                    painter.drawEllipse(busX - 1, busY - 1, 2, 2)
-                    busX -= self.dist
+            self.drawBusbar(painter, bus, point.x(), point.y(), capacity, orient)
             self.update()
 
         # Drawing all the transfos here
@@ -795,7 +752,7 @@ class Grid(QWidget):
         for generator, (pos, ori, hand) in self.gens.items():
             x = pos.x()
             y = pos.y()
-            self.drawGenerator(painter, x, y)
+            self.drawGenerator(painter, x, y, ori)
 
         # Drawing all the lines
         linePen = QPen()
@@ -914,7 +871,6 @@ class Grid(QWidget):
         self.busses[name] = busTuple
 
     def setTrafoDict(self, pos: QPoint, ori: str, id: int, bus1: int, bus2: int) -> None:
-        self.trafoCenters.append(pos)
         x = pos.x()
         y = pos.y()
         if ori == '0':
@@ -929,8 +885,7 @@ class Grid(QWidget):
         self.trafos[id] = trafoTuple
         # print(self.trafos)
 
-    def setGenDict(self, pos: QPoint, ori: str, id: int) -> None:
-        self.trafoCenters.append(pos)
+    def setGenDict(self, id: int, pos: QPoint, ori: str) -> None:
         x = pos.x()
         y = pos.y()
         if ori == '0':
@@ -942,8 +897,8 @@ class Grid(QWidget):
         elif ori == '90':
             hand = QPoint(x, y - self.dist)
         genTuple = (pos, ori, hand)
+        print(genTuple)
         self.gens[id] = genTuple
-        print('-> Generators:', '\n', self.gens)
 
     def initEditBox(self, busName: str, point: QPoint) -> None:
         self.editBusDialog = EditBusDialog(self)
@@ -1104,10 +1059,77 @@ class Grid(QWidget):
         elif self.dist == 256:
             self.drawingParams = [160, 96, 56, 192, 8, 16]
 
-    def drawGenerator(self, painter, x, y):
-        self.symbolPen.setWidth(2)
+    def drawBusbar(self, painter, bus, x, y, capacity, orient):
+
+        # Draw the main bus line
+        self.symbolPen = QPen()
+        self.symbolPen.setWidth(self.lineWidth)
         self.symbolPen.setColor(self.blue)
         painter.setPen(self.symbolPen)
+        
+        # Draw lines based on orientation
+        if orient == '-90':
+            painter.drawLine(x, y - self.dist, x, y + (capacity * self.dist))
+        elif orient == '0':
+            painter.drawLine(x - self.dist, y, x + (capacity * self.dist), y)
+        elif orient == '90':
+            painter.drawLine(x, y + self.dist, x, y - (capacity * self.dist))
+        elif orient == '180':
+            painter.drawLine(x + self.dist, y, x - (capacity * self.dist), y)
+
+        # Draw the bus text label
+        self.txtPen = QPen()
+        self.txtPen.setWidth(self.txtWidth)
+        self.txtPen.setColor(self.yellow)
+        painter.setPen(self.txtPen)
+        
+        # Calculate text dimensions
+        textRect = painter.fontMetrics().boundingRect(bus)
+        textWidth = textRect.width()
+        textHeight = textRect.height()
+        
+        # Position text based on orientation
+        txtPointX = x - (textWidth // 2)
+        txtPointY = y - self.dist - (textHeight // 2)
+        
+        if orient == '-90':
+            txtPointY = y - self.dist - textHeight
+        elif orient == '90':
+            txtPointY = y + self.dist + textHeight
+        elif orient == '0':
+            txtPointX = x + ((capacity - 1) * self.dist // 2) - textWidth // 2
+            txtPointY = y + self.dist + (textHeight // 2)
+        elif orient == '180':
+            txtPointX = x - ((capacity - 1) * self.dist // 2) - textWidth // 2
+            txtPointY = y - self.dist - (textHeight // 2)
+        
+        txtPoint = QPoint(txtPointX, txtPointY)
+        painter.drawText(txtPoint, bus)
+        
+        # Draw connection points
+        self.dotPen = QPen()
+        self.dotPen.setColor(self.highLightWhite)
+        self.dotPen.setWidth(self.txtWidth)
+        painter.setPen(self.dotPen)
+        
+        currentX, currentY = x, y
+        
+        # Draw dots based on orientation
+        for _ in range(capacity):
+            painter.drawEllipse(currentX - 1, currentY - 1, 2, 2)
+            if orient == '-90':
+                currentY += self.dist
+            elif orient == '0':
+                currentX += self.dist
+            elif orient == '90':
+                currentY -= self.dist
+            elif orient == '180':
+                currentX -= self.dist
+
+    def drawGenerator(self, painter, x, y, orient):
+
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        # Get drawing parameters
         lineOffset = self.drawingParams[0]
         ellipseRadius = self.drawingParams[1]
         ellipseYOffset = self.drawingParams[2]
@@ -1115,38 +1137,151 @@ class Grid(QWidget):
         dotRadius = self.drawingParams[4]
         dotSize = self.drawingParams[5]
 
-        painter.drawEllipse(x - ellipseSize, y - ellipseSize , 2 * ellipseSize, 2 * ellipseSize)
+        # Draw main ellipse
+        self.symbolPen.setWidth(2)
+        self.symbolPen.setColor(self.blue)
+        painter.setPen(self.symbolPen)
+        painter.drawEllipse(x - ellipseSize, y - ellipseSize, 2 * ellipseSize, 2 * ellipseSize)
 
-        # The sine wave 
+        # Draw sine wave
         self.gridPen.setColor(self.yellow)
         self.gridPen.setWidth(1)
         painter.setPen(self.gridPen)
-        waveWidth = ellipseSize #* 2
-        waveHeight = ellipseYOffset #* 2
-        waveSteps = 660  # Increase for smoother sine wave
+        waveWidth = ellipseSize
+        waveHeight = ellipseYOffset
+        waveSteps = 660
         stepSize = waveWidth / waveSteps
-
         sinePoints = []
+        
         for i in range(waveSteps + 1):
             px = x - waveWidth // 2 + int(i * stepSize)
             py = y + int(math.sin(- 2 * math.pi * i / waveSteps) * waveHeight)
             sinePoints.append((px, py))
+        
         for i in range(len(sinePoints) - 1):
-            painter.drawLine(sinePoints[i][0], sinePoints[i][1], sinePoints[i + 1][0], sinePoints[i + 1][1])
+            painter.drawLine(sinePoints[i][0], sinePoints[i][1], 
+                            sinePoints[i + 1][0], sinePoints[i + 1][1])
 
-        # The line connection 
+        # Draw connection line and dot based on orientation
         self.symbolPen.setColor(self.blue)
         painter.setPen(self.symbolPen)
-        lineStartY = y + ellipseSize 
-        lineEndY = lineStartY + lineOffset // 2 - 4
-        painter.drawLine(x, lineStartY, x, lineEndY)
+        
+        lineLength = lineOffset // 2 - 4
+        
+        # Calculate line and dot positions based on orientation
+        if orient == '-90':  # Bottom connection
+            lineStartX = x
+            lineStartY = y + ellipseSize
+            lineEndX = x
+            lineEndY = lineStartY + lineLength
+            dotX = x - dotRadius
+            dotY = lineEndY - dotRadius
+            
+        elif orient == '0':  # Right connection
+            lineStartX = x + ellipseSize
+            lineStartY = y
+            lineEndX = lineStartX + lineLength
+            lineEndY = y
+            dotX = lineEndX - dotRadius
+            dotY = y - dotRadius
+            
+        elif orient == '90':  # Top connection
+            lineStartX = x
+            lineStartY = y - ellipseSize
+            lineEndX = x
+            lineEndY = lineStartY - lineLength
+            dotX = x - dotRadius
+            dotY = lineEndY - dotRadius
+            
+        elif orient == '180':  # Left connection
+            lineStartX = x - ellipseSize
+            lineStartY = y
+            lineEndX = lineStartX - lineLength
+            lineEndY = y
+            dotX = lineEndX - dotRadius
+            dotY = y - dotRadius
 
-        # The dot
+        # Draw the connection line
+        painter.drawLine(lineStartX, lineStartY, lineEndX, lineEndY)
+
+        # Draw the connection dot
         self.dotPen.setWidth(4)
         painter.setPen(self.dotPen)
-        dotX = x 
-        dotY = lineEndY - dotRadius
-        painter.drawEllipse(
-            x - self.drawingParams[4], y + self.dist - 1, 
-            self.drawingParams[5], self.drawingParams[5]
-        )
+        painter.drawEllipse(dotX, dotY, dotSize, dotSize)
+    def drawLoad(self, painter, x, y, orient):
+        '''
+        Draws a load symbol with specified orientation, where the dot is at the main coordinate
+        and the triangle is drawn at an offset connected by a line
+        
+        Args:
+            painter: QPainter object
+            x: int, x coordinate of connection point (dot center)
+            y: int, y coordinate of connection point (dot center)
+            orient: str, orientation angle ('-90', '0', '90', '180')
+        '''
+        # Get drawing parameters
+        triangleSize = self.drawingParams[3]  # Using same size as generator ellipse
+        lineLength = self.drawingParams[0] // 2 - 4  # Using same offset as generator
+        dotSize = self.drawingParams[5]
+        dotRadius = self.drawingParams[4]
+
+        # Draw the connection dot first (at the main x,y point)
+        self.dotPen.setWidth(4)
+        painter.setPen(self.dotPen)
+        dotX = x - dotRadius
+        dotY = y - dotRadius
+        painter.drawEllipse(dotX, dotY, dotSize, dotSize)
+
+        # Set up triangle brush and pen
+        triangleBrush = QBrush(self.yellow)
+        self.symbolPen.setWidth(2)
+        self.symbolPen.setColor(self.blue)
+        painter.setPen(self.symbolPen)
+        painter.setBrush(triangleBrush)
+
+        # Calculate positions based on orientation
+        if orient == '-90':  # Triangle below dot
+            lineStartX, lineStartY = x, y
+            lineEndX, lineEndY = x, y + lineLength
+            trianglePoints = [
+                QPoint(x, lineEndY + triangleSize),  # Bottom point
+                QPoint(x - triangleSize, lineEndY),  # Top left
+                QPoint(x + triangleSize, lineEndY)   # Top right
+            ]
+            
+        elif orient == '0':  # Triangle right of dot
+            lineStartX, lineStartY = x, y
+            lineEndX, lineEndY = x + lineLength, y
+            trianglePoints = [
+                QPoint(lineEndX + triangleSize, y),  # Right point
+                QPoint(lineEndX, y - triangleSize),  # Top left
+                QPoint(lineEndX, y + triangleSize)   # Bottom left
+            ]
+            
+        elif orient == '90':  # Triangle above dot
+            lineStartX, lineStartY = x, y
+            lineEndX, lineEndY = x, y - lineLength
+            trianglePoints = [
+                QPoint(x, lineEndY - triangleSize),  # Top point
+                QPoint(x - triangleSize, lineEndY),  # Bottom left
+                QPoint(x + triangleSize, lineEndY)   # Bottom right
+            ]
+            
+        elif orient == '180':  # Triangle left of dot
+            lineStartX, lineStartY = x, y
+            lineEndX, lineEndY = x - lineLength, y
+            trianglePoints = [
+                QPoint(lineEndX - triangleSize, y),  # Left point
+                QPoint(lineEndX, y - triangleSize),  # Top right
+                QPoint(lineEndX, y + triangleSize)   # Bottom right
+            ]
+
+        # Draw the connection line
+        painter.drawLine(lineStartX, lineStartY, lineEndX, lineEndY)
+
+        # Draw the triangle
+        triangle = QPolygon(trianglePoints)
+        painter.drawPolygon(triangle)
+
+        # Reset the brush
+        painter.setBrush(Qt.BrushStyle.NoBrush)

@@ -271,11 +271,12 @@ class MainWindow(QMainWindow):
         self.toolBoxLayout.addWidget(self.addGenButton)
 
         #   Add Load button
-        addLoadButton = QToolButton()
-        addLoadButton.setIcon(QIcon('../icons/load.png'))
-        addLoadButton.setIconSize(QSize(self.buttSize, self.buttSize))
-        addLoadButton.setStyleSheet(self.normalStyle)
-        self.toolBoxLayout.addWidget(addLoadButton)
+        self.addLoadButton = QToolButton()
+        self.addLoadButton.setIcon(QIcon('../icons/load.png'))
+        self.addLoadButton.setIconSize(QSize(self.buttSize, self.buttSize))
+        self.addLoadButton.setStyleSheet(self.normalStyle)
+        self.addLoadButton.clicked.connect(self.addLoad)
+        self.toolBoxLayout.addWidget(self.addLoadButton)
 
         # Grid Layout
         self.grid = Grid(32)
@@ -356,11 +357,13 @@ class MainWindow(QMainWindow):
         self.grid.handMode = False
         self.grid.insertLineMode = False 
         self.grid.insertGenMode = False
+        self.grid.insertLoadMode = False
         self.grid.insertBusMode = not(self.grid.insertBusMode) 
         if not self.grid.insertBusMode:
             self.addBusButton.setStyleSheet(self.normalStyle)
         else:
             self.addBusButton.setStyleSheet(self.toggledStyle)
+            self.addLoadButton.setStyleSheet(self.normalStyle)
             self.addTrafoButton.setStyleSheet(self.normalStyle)
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
@@ -373,11 +376,13 @@ class MainWindow(QMainWindow):
         self.grid.insertTrafoMode = False
         self.grid.insertGenMode = False
         self.grid.handMode = False
+        self.grid.insertLoadMode = False
         self.grid.insertLineMode = not(self.grid.insertLineMode) 
         if not self.grid.insertLineMode:
             self.addLineButton.setStyleSheet(self.normalStyle)
         else:
             self.addLineButton.setStyleSheet(self.toggledStyle)
+            self.addLoadButton.setStyleSheet(self.normalStyle)
             self.addTrafoButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
@@ -389,11 +394,13 @@ class MainWindow(QMainWindow):
         self.grid.insertLineMode = False 
         self.grid.insertGenMode = False
         self.grid.selectMode = False
+        self.grid.insertLoadMode = False
         self.grid.insertTrafoMode = not(self.grid.insertTrafoMode) 
         if not self.grid.insertTrafoMode:
             self.addTrafoButton.setStyleSheet(self.normalStyle)
         else:
             self.addTrafoButton.setStyleSheet(self.toggledStyle)
+            self.addLoadButton.setStyleSheet(self.normalStyle)
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
@@ -405,11 +412,31 @@ class MainWindow(QMainWindow):
         self.grid.insertLineMode = False 
         self.grid.selectMode = False
         self.grid.insertTrafoMode = False
+        self.grid.insertLoadMode = False
         self.grid.insertGenMode = not(self.grid.insertGenMode) 
-        if not self.grid.insertTrafoMode:
-            self.addTrafoButton.setStyleSheet(self.normalStyle)
+        if not self.grid.insertGenMode:
+            self.addGenButton.setStyleSheet(self.normalStyle)
         else:
-            self.addTrafoButton.setStyleSheet(self.toggledStyle)
+            self.addGenButton.setStyleSheet(self.toggledStyle)
+            self.addLoadButton.setStyleSheet(self.normalStyle)
+            self.addLineButton.setStyleSheet(self.normalStyle)
+            self.addBusButton.setStyleSheet(self.normalStyle)
+            self.editGridButton.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
+        self.update()
+
+    def addLoad(self) -> None:
+        self.grid.insertBusMode = False
+        self.grid.insertLineMode = False 
+        self.grid.selectMode = False
+        self.grid.insertTrafoMode = False
+        self.grid.insertGenMode = False
+        self.grid.insertLoadMode = not(self.grid.insertLoadMode) 
+        if not self.grid.insertLoadMode:
+            self.addLoadButton.setStyleSheet(self.normalStyle)
+        else:
+            self.addLoadButton.setStyleSheet(self.toggledStyle)
+            self.addTrafoButton.setStyleSheet(self.normalStyle)
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
