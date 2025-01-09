@@ -2,13 +2,14 @@
 
 # Imports
 import csv
+import pandas as pd
 import pandapower as pp 
 from termcolor import colored
 
 # Creates the network
 class NetworkCreator():
 
-    def __init__(self, busCsv: str, lineCsv: str, trafoCsv: str, genCsv: str,
+    def __init__(self, proPth: str, busCsv: str, lineCsv: str, trafoCsv: str, genCsv: str,
                  loadCsv: str, slacksCsv: str) -> None:
         self.net = pp.create_empty_network()
         self.buses = {}
@@ -24,6 +25,7 @@ class NetworkCreator():
         self.genCounter = 0
         self.loadCounter = 0
         self.slackCounter = 0
+        self.proPth = proPth 
         self.busCsv = busCsv
         self.lineCsv = lineCsv
         self.trafoCsv = trafoCsv
@@ -105,14 +107,10 @@ class NetworkCreator():
         self.loadTrafos()
         self.loadLoads()
         self.loadSlacks()
-        print(self.net.bus)
-        print(self.net.line)
-        print(self.net.trafo)
-        print(self.net.gen)
-        print(self.net.load)
-        print(self.net.ext_grid)
         pp.runpp(self.net, algorithm = method)
-        print(self.net.res_bus)
+        resBusDf = self.net.res_bus
+        resAddress = self.proPth + '/results.csv'
+        resBusDf.to_csv(resAddress, index = True)
 
     def loadBusBars(self) -> None:
         with open(self.busCsv) as csvfile:

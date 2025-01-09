@@ -45,7 +45,7 @@ class StartUp(QDialog):
             padding: 2px;
         }
         ''')
-        self.title = QLabel('Welcome to BADSILENT (Biblically Accurate DigSilent!)')
+        self.title = QLabel('Welcome to PSA II Project')
         self.title.setStyleSheet('''
             color: #ffffff;
             border: 2px solid #7289da;

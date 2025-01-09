@@ -15,6 +15,7 @@ from theme import DiscordPalette as theme
 from PyQt6.QtGui import QColor, QPaintEvent, QPen, QPainter, QBrush, QPolygon
 from PyQt6.QtWidgets import QApplication, QWidget
 from trafo_dialogs import AddTrafoDialog
+from csv_viewer import CsvViewer
 
 # Grid Gui Handler 
 class Grid(QWidget):
@@ -59,6 +60,7 @@ class Grid(QWidget):
         self.addLineDialog = None
         self.addTrafoDialog = None
         self.runSimDialog = None
+        self.csvViewer = None
         
         # Data Properties
         self.projectPath = None
@@ -1467,3 +1469,7 @@ class Grid(QWidget):
                 x + self.dist, y - self.drawingParams[4], 
                 self.drawingParams[5], self.drawingParams[5]
             )
+
+    def viewResultCsv(self, path: str) -> None:
+        self.csvViewer = CsvViewer(self, path)
+        self.csvViewer.exec()

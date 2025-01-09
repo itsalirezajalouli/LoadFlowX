@@ -8,12 +8,13 @@ from start_window import StartUp
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QHBoxLayout, QMainWindow, QStatusBar, QVBoxLayout, QWidget, QToolButton
+from csv_viewer import CsvViewer
 
 # Main Window Object
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle('DickSilent!')
+        self.setWindowTitle('PSA II Project')
         self.setMinimumSize(800, 700)
         self.projectPath = None
         self.startUp = StartUp(self)
@@ -354,8 +355,11 @@ class MainWindow(QMainWindow):
         loadCSV = self.projectPath + '/Loads.csv'
         slacksCSV = self.projectPath + '/Slacks.csv'
 
-        nMaker = NetworkCreator(busCsvPath, lineCSV, trafoCSV, genCSV, loadCSV, slacksCSV)
+        nMaker = NetworkCreator(self.projectPath,
+                                busCsvPath, lineCSV, trafoCSV, genCSV, loadCSV, slacksCSV)
         nMaker.run(method)
+        path = self.projectPath + '/results.csv'
+        self.grid.viewResultCsv(path) 
 
         # if method == 'Newton Raphson':
         # elif method == 'Gauss Seidel':
