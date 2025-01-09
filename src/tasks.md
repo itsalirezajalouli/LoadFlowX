@@ -3,8 +3,9 @@ Tasks:
 - [x] Refactoring bus and gen drawing (Frontend)
 - [x] Adding load to GUI (Frontend)
 - [x] Adding load to the simulation (Backend)
-- [ ] Adding slack to GUI (Frontend)
+- [x] Adding slack to GUI (Frontend)
 - [x] Adding slack to the simulation (Backend)
+- [ ] Simulator is not simualting correctly i think
 - [ ] Adding results window (Frontend)
 - [ ] Adding more optional parameters to dialogs (Frontend)
 - [ ] Refactoring transformer drawing (Frontend)
