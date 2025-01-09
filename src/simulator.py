@@ -8,25 +8,33 @@ from termcolor import colored
 # Creates the network
 class NetworkCreator():
 
-    def __init__(self, busCsv: str, lineCsv: str, trafoCsv: str, genCsv: str) -> None:
+    def __init__(self, busCsv: str, lineCsv: str, trafoCsv: str, genCsv: str,
+                 loadCsv: str, slacksCsv: str) -> None:
         self.net = pp.create_empty_network()
         self.buses = {}
         self.tBuses = {}
         self.trafos = {}
         self.lines = {}
         self.gens = {}
+        self.loads = {}
         self.busCounter = 0
         self.trafoBusCounter = 0
         self.trafoCounter = 0
         self.lineCounter = 0
         self.genCounter = 0
+        self.loadCounter = 0
+        self.slackCounter = 0
         self.busCsv = busCsv
         self.lineCsv = lineCsv
         self.trafoCsv = trafoCsv
         self.genCsv = genCsv
+        self.loadCsv = loadCsv
+        self.slacksCsv = slacksCsv 
 
-    def addSlack(self, key: str, vmPu: float, vaDeg: float) -> None:
-        pp.create_ext_grid(self.net, self.buses[key], vm_pu = vmPu, va_degree = vaDeg)
+    def addSlack(self, bus: int, vmPu: float) -> None:
+        self.slackCounter += 1
+        key = f'Slack{self.slackCounter}'
+        self.buses[key] = pp.create_ext_grid(self.net, bus = bus, vm_pu = vmPu)
 
     def addBusBar(self, vnKv: float, name: str, id: int) -> None:
         self.busCounter += 1
@@ -63,6 +71,13 @@ class NetworkCreator():
         print('-> Trafo added to simulation:')
         print(f'Bus1: {busOne}, bus2: {busTwo}, id: {id}')
 
+    def addLoad(self, bus: int, pMW: float, qMVAR: float):
+        self.loadCounter += 1
+        key = f'load{self.loadCounter}'
+        self.loads[key] = pp.create_load(self.net, bus = bus, p_mw = pMW, q_mvar = qMVAR)
+        print('-> Load added to simulation:')
+        print(f'Bus: {bus}, pMW: {pMW}, qMW: {qMVAR}')
+
     def log(self):
         print(colored(
         '''
@@ -88,13 +103,16 @@ class NetworkCreator():
         self.loadLines()
         self.loadGens()
         self.loadTrafos()
+        self.loadLoads()
+        self.loadSlacks()
         print(self.net.bus)
         print(self.net.line)
         print(self.net.trafo)
         print(self.net.gen)
-        # print(self.net.load)
-        # pp.runpp(self.net, algorithm = method)
-        # print(self.net.res_bus)
+        print(self.net.load)
+        print(self.net.ext_grid)
+        pp.runpp(self.net, algorithm = method)
+        print(self.net.res_bus)
 
     def loadBusBars(self) -> None:
         with open(self.busCsv) as csvfile:
@@ -129,6 +147,27 @@ class NetworkCreator():
                 b2id = int(row['lvBus'])
                 b2 = str(f'Bus{b2id}')
                 self.addTrafo(row['name'], int(row['id']), b1, b2)
+
+    def loadLoads(self) -> None:
+        with open(self.loadCsv) as csvfile:
+            reader = csv.DictReader(csvfile)
+
+            for row in reader:
+                bus = int(row['bus'])
+                pMW = float(row['pMW'])
+                qMW = float(row['qMW'])
+                self.addLoad(bus, pMW, qMW)
+
+    def loadSlacks(self) -> None:
+        with open(self.slacksCsv) as csvfile:
+            reader = csv.DictReader(csvfile)
+
+            for row in reader:
+                bus = int(row['bus'])
+                vmPu = float(row['vmPU'])
+                print(100 * '-')
+                print(bus, vmPu)
+                self.addSlack(bus, vmPu)
 
 # nMaker = NetworkCreator()
 # nMaker.addBusBar(110, 'Bus1')

@@ -221,3 +221,44 @@ class Generator():
             writer = csv.DictWriter(file,fieldnames = ['name', 'bus', 'pMW'])
             writer.writerow(data)
         print(f'-> Gen data appended to {csvPath} successfuly.')
+
+class Load():
+    def __init__(self,
+                 bus: int,
+                 pMW: float,
+                 qMW: float,
+                 ) -> None:
+        self.bus = bus
+        self.pMW = pMW
+        self.qMW = qMW
+
+    def append2CSV(self, path: str) -> None:
+        data = {
+            'bus': self.bus,
+            'pMW': self.pMW,
+            'qMW': self.qMW,
+        }
+        csvPath = path + '/Loads.csv'
+        with open(csvPath, 'a', newline = '') as file:
+            writer = csv.DictWriter(file,fieldnames = ['bus', 'pMW', 'qMW'])
+            writer.writerow(data)
+        print(f'-> Load data appended to {csvPath} successfuly.')
+
+class Slack():
+    def __init__(self,
+                 bus: int,
+                 vmPU: float,
+                 ) -> None:
+        self.bus = bus
+        self.vmPU = vmPU
+
+    def append2CSV(self, path: str) -> None:
+        data = {
+            'bus': self.bus,
+             'vmPU': self.vmPU,
+        }
+        csvPath = path + '/Slacks.csv'
+        with open(csvPath, 'a', newline = '') as file:
+            writer = csv.DictWriter(file,fieldnames = ['bus', 'vmPU'])
+            writer.writerow(data)
+        print(f'-> Slack data appended to {csvPath} successfuly.')

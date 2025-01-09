@@ -147,7 +147,7 @@ class MainWindow(QMainWindow):
             border-radius: 15px;
         ''')
         self.symbolsToolbox.setFixedWidth(52)
-        self.symbolsToolbox.setFixedHeight(210)
+        self.symbolsToolbox.setFixedHeight(260)
         self.toolBoxLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.normalStyle = '''
                 QToolButton {
@@ -278,6 +278,14 @@ class MainWindow(QMainWindow):
         self.addLoadButton.clicked.connect(self.addLoad)
         self.toolBoxLayout.addWidget(self.addLoadButton)
 
+        #   Add slack button
+        self.addSlackButton = QToolButton()
+        self.addSlackButton.setIcon(QIcon('../icons/slack.png'))
+        self.addSlackButton.setIconSize(QSize(self.buttSize, self.buttSize))
+        self.addSlackButton.setStyleSheet(self.normalStyle)
+        self.addSlackButton.clicked.connect(self.addSlack)
+        self.toolBoxLayout.addWidget(self.addSlackButton)
+
         # Grid Layout
         self.grid = Grid(32)
         self.grid.projectPath = self.projectPath
@@ -343,8 +351,10 @@ class MainWindow(QMainWindow):
         lineCSV = self.projectPath + '/Lines.csv'
         trafoCSV = self.projectPath + '/Trafos.csv'
         genCSV = self.projectPath + '/Gens.csv'
+        loadCSV = self.projectPath + '/Loads.csv'
+        slacksCSV = self.projectPath + '/Slacks.csv'
 
-        nMaker = NetworkCreator(busCsvPath, lineCSV, trafoCSV, genCSV)
+        nMaker = NetworkCreator(busCsvPath, lineCSV, trafoCSV, genCSV, loadCSV, slacksCSV)
         nMaker.run(method)
 
         # if method == 'Newton Raphson':
@@ -358,14 +368,17 @@ class MainWindow(QMainWindow):
         self.grid.insertLineMode = False 
         self.grid.insertGenMode = False
         self.grid.insertLoadMode = False
+        self.grid.insertSlackMode = False
         self.grid.insertBusMode = not(self.grid.insertBusMode) 
         if not self.grid.insertBusMode:
             self.addBusButton.setStyleSheet(self.normalStyle)
         else:
             self.addBusButton.setStyleSheet(self.toggledStyle)
             self.addLoadButton.setStyleSheet(self.normalStyle)
+            self.addSlackButton.setStyleSheet(self.normalStyle)
             self.addTrafoButton.setStyleSheet(self.normalStyle)
             self.addLineButton.setStyleSheet(self.normalStyle)
+            self.addGenButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
             self.moveButt.setStyleSheet(self.normalStyle)
         self.update()
@@ -377,13 +390,16 @@ class MainWindow(QMainWindow):
         self.grid.insertGenMode = False
         self.grid.handMode = False
         self.grid.insertLoadMode = False
+        self.grid.insertSlackMode = False
         self.grid.insertLineMode = not(self.grid.insertLineMode) 
         if not self.grid.insertLineMode:
             self.addLineButton.setStyleSheet(self.normalStyle)
         else:
             self.addLineButton.setStyleSheet(self.toggledStyle)
             self.addLoadButton.setStyleSheet(self.normalStyle)
+            self.addSlackButton.setStyleSheet(self.normalStyle)
             self.addTrafoButton.setStyleSheet(self.normalStyle)
+            self.addGenButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
             self.moveButt.setStyleSheet(self.normalStyle)
@@ -395,14 +411,17 @@ class MainWindow(QMainWindow):
         self.grid.insertGenMode = False
         self.grid.selectMode = False
         self.grid.insertLoadMode = False
+        self.grid.insertSlackMode = False
         self.grid.insertTrafoMode = not(self.grid.insertTrafoMode) 
         if not self.grid.insertTrafoMode:
             self.addTrafoButton.setStyleSheet(self.normalStyle)
         else:
             self.addTrafoButton.setStyleSheet(self.toggledStyle)
+            self.addSlackButton.setStyleSheet(self.normalStyle)
             self.addLoadButton.setStyleSheet(self.normalStyle)
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
+            self.addGenButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
             self.moveButt.setStyleSheet(self.normalStyle)
         self.update()
@@ -413,12 +432,15 @@ class MainWindow(QMainWindow):
         self.grid.selectMode = False
         self.grid.insertTrafoMode = False
         self.grid.insertLoadMode = False
+        self.grid.insertSlackMode = False
         self.grid.insertGenMode = not(self.grid.insertGenMode) 
         if not self.grid.insertGenMode:
             self.addGenButton.setStyleSheet(self.normalStyle)
         else:
             self.addGenButton.setStyleSheet(self.toggledStyle)
+            self.addSlackButton.setStyleSheet(self.normalStyle)
             self.addLoadButton.setStyleSheet(self.normalStyle)
+            self.addTrafoButton.setStyleSheet(self.normalStyle)
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
@@ -431,11 +453,33 @@ class MainWindow(QMainWindow):
         self.grid.selectMode = False
         self.grid.insertTrafoMode = False
         self.grid.insertGenMode = False
+        self.grid.insertSlackMode = False
         self.grid.insertLoadMode = not(self.grid.insertLoadMode) 
         if not self.grid.insertLoadMode:
             self.addLoadButton.setStyleSheet(self.normalStyle)
         else:
             self.addLoadButton.setStyleSheet(self.toggledStyle)
+            self.addSlackButton.setStyleSheet(self.normalStyle)
+            self.addTrafoButton.setStyleSheet(self.normalStyle)
+            self.addLineButton.setStyleSheet(self.normalStyle)
+            self.addBusButton.setStyleSheet(self.normalStyle)
+            self.editGridButton.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
+        self.update()
+
+    def addSlack(self) -> None:
+        self.grid.insertBusMode = False
+        self.grid.insertLineMode = False 
+        self.grid.selectMode = False
+        self.grid.insertTrafoMode = False
+        self.grid.insertGenMode = False
+        self.grid.insertLoadMode = False
+        self.grid.insertSlackMode = not(self.grid.insertSlackMode) 
+        if not self.grid.insertSlackMode:
+            self.addSlackButton.setStyleSheet(self.normalStyle)
+        else:
+            self.addSlackButton.setStyleSheet(self.toggledStyle)
+            self.addLoadButton.setStyleSheet(self.normalStyle)
             self.addTrafoButton.setStyleSheet(self.normalStyle)
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
@@ -444,6 +488,7 @@ class MainWindow(QMainWindow):
         self.update()
 
     def setSelectMode(self) -> None:
+        self.grid.insertLoadMode = False
         self.grid.firstNode = None
         if self.grid.insertLineMode:
             self.grid.tempPath = []
@@ -451,6 +496,8 @@ class MainWindow(QMainWindow):
         self.grid.insertLineMode = False
         self.grid.insertTrafoMode = False
         self.grid.insertGenMode = False
+        self.grid.insertSlackMode = False
+        self.grid.insertLoadMode = False
         self.grid.handMode = False
         self.grid.selectMode = not(self.grid.selectMode) 
         if not self.grid.selectMode:
@@ -460,15 +507,21 @@ class MainWindow(QMainWindow):
             self.editGridButton.setStyleSheet(self.toggledStyle)
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
+            self.addGenButton.setStyleSheet(self.normalStyle)
+            self.addSlackButton.setStyleSheet(self.normalStyle)
+            self.addLoadButton.setStyleSheet(self.normalStyle)
             self.moveButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def hand(self) -> None:
+        self.grid.insertLoadMode = False
         self.grid.insertBusMode = False
         self.grid.insertLineMode = False
         self.grid.insertTrafoMode = False
         self.grid.selectMode = False
         self.grid.insertGenMode = False
+        self.grid.insertSlackMode = False
+        self.grid.insertLoadMode = False
         self.grid.handMode = not(self.grid.handMode) 
         if not self.grid.handMode:
             self.moveButt.setStyleSheet(self.normalStyle)
@@ -477,6 +530,9 @@ class MainWindow(QMainWindow):
             self.addTrafoButton.setStyleSheet(self.normalStyle)
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
+            self.addGenButton.setStyleSheet(self.normalStyle)
+            self.addSlackButton.setStyleSheet(self.normalStyle)
+            self.addLoadButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
         self.update()
 

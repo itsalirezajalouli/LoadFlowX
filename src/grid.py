@@ -8,6 +8,8 @@ from PyQt6.QtCore import QPoint, Qt, QEvent
 from bus_dialogs import AddBusDialog, EditBusDialog
 from line_dialogs import AddLineDialog
 from gen_dialogs import AddGenDialog
+from load_dialogs import AddLoadDialog
+from slack_dialogs import AddSlackDialog
 from run_dialogs import RunSimDialog
 from theme import DiscordPalette as theme
 from PyQt6.QtGui import QColor, QPaintEvent, QPen, QPainter, QBrush, QPolygon
@@ -40,11 +42,13 @@ class Grid(QWidget):
         # State Properties
         self.selectMode = False
         self.handMode = False
+
         self.insertBusMode = False
         self.insertLineMode = False
         self.insertTrafoMode = False
         self.insertGenMode = False
         self.insertLoadMode = False
+        self.insertSlackMode = False 
 
         self.correctNodeSelect = False 
         self.spacePressed = False  # Track the state of the Space key
@@ -63,14 +67,20 @@ class Grid(QWidget):
         self.busCounter = 0
         self.trafoCounter = 0
         self.genCounter = 0
+        self.loadCounter = 0
+        self.slackCounter = 0
         self.firstNode = None
         self.busses = {}
         self.trafos = {}
         self.gens = {}
+        self.loads = {}
+        self.slacks = {}
         self.paths = []
         self.tokenBusPorts = []
         self.tokenTrafoHands = []
         self.tokenGenHands = []
+        self.tokenLoadHands = []
+        self.tokenSlackHands = []
         self.xDists = []
         self.tempPath = []
         self.firstType = None
@@ -157,11 +167,6 @@ class Grid(QWidget):
     #         # print('Space + Left Mouse Button pressed!')
 
     def mousePressEvent(self, event) -> None:
-        print('T:', self.trafos)
-        self.leftMouseHold = True
-        if not self.insertLineMode:
-            self.firstNode = None
-
         if event.button() == Qt.MouseButton.LeftButton:
             self.leftMouseHold = True
             # Placing a bus
@@ -198,6 +203,24 @@ class Grid(QWidget):
                 id = self.genCounter
                 self.setGenDict(id, pos, ori)
                 self.update()
+
+            # Placing a load 
+            if self.insertLoadMode:
+                pos = self.snap(event.pos())
+                self.loadCounter += 1
+                ori = self.insertingOrient
+                id = self.loadCounter
+                self.setLoadDict(id, pos, ori)
+                self.update()
+
+            # Placing a slack 
+            if self.insertSlackMode:
+                pos = self.snap(event.pos())
+                self.slackCounter += 1
+                ori = self.insertingOrient
+                id = self.slackCounter
+                self.setSlackDict(id, pos, ori)
+                self.update()
             
             # Placing Line: First Connection
             if self.insertLineMode and self.firstNode is None:
@@ -227,6 +250,22 @@ class Grid(QWidget):
                             self.correctNodeSelect = True
                             self.firstNode = (gen, 0, 'gen')
                             self.tokenGenHands.append(hand)
+
+                # from a load 
+                for load, (point, ori, hand) in self.loads.items():
+                    if hand == self.firstPointPos:
+                        if hand not in self.tokenLoadHands:
+                            self.correctNodeSelect = True
+                            self.firstNode = (load, 0, 'load')
+                            self.tokenLoadHands.append(hand)
+
+                # from a slack 
+                for slack, (point, ori, hand) in self.slacks.items():
+                    if hand == self.firstPointPos:
+                        if hand not in self.tokenSlackHands:
+                            self.correctNodeSelect = True
+                            self.firstNode = (slack, 0, 'slack')
+                            self.tokenSlackHands.append(hand)
 
             # Placing second Connection
             elif self.insertLineMode and self.firstNode is not None:
@@ -265,7 +304,7 @@ class Grid(QWidget):
                                         if connection1 == trafo:
                                             self.paths.append(line)
                                             self.firstNode = None
-                                            self.tokenBusPorts.append(points[i])
+                                            # self.tokenBusPorts.append(points[i])
                                             trafoTuple = (point, ori, hands, connection2, 0)
                                             self.trafos.update({connection1: trafoTuple})
                                             self.update()
@@ -273,7 +312,7 @@ class Grid(QWidget):
                                         if connection1 == trafo:
                                             self.paths.append(line)
                                             self.firstNode = None
-                                            self.tokenBusPorts.append(points[i])
+                                            # self.tokenBusPorts.append(points[i])
                                             trafoTuple = (point, ori, hands, bus1, connection2)
                                             self.trafos.update({connection1: trafoTuple})
                                             self.update()
@@ -295,6 +334,28 @@ class Grid(QWidget):
                                 self.addGenDialog = AddGenDialog(self, connection1)
                                 self.addGenDialog.projectPath = self.projectPath
                                 self.addGenDialog.exec()
+                                self.updateGuiElementsCSV()
+                                self.tempPath.clear() 
+
+                            if firstNodeType == 'load':
+                                self.tokenLoadHands.append(self.firstPointPos)
+                                self.paths.append(line)
+                                self.firstNode = None
+                                self.update()
+                                self.addLoadDialog = AddLoadDialog(self, connection1)
+                                self.addLoadDialog.projectPath = self.projectPath
+                                self.addLoadDialog.exec()
+                                self.updateGuiElementsCSV()
+                                self.tempPath.clear() 
+
+                            if firstNodeType == 'slack':
+                                self.tokenSlackHands.append(self.firstPointPos)
+                                self.paths.append(line)
+                                self.firstNode = None
+                                self.update()
+                                self.addSlackDialog = AddSlackDialog(self, connection1)
+                                self.addSlackDialog.projectPath = self.projectPath
+                                self.addSlackDialog.exec()
                                 self.updateGuiElementsCSV()
                                 self.tempPath.clear() 
 
@@ -329,7 +390,7 @@ class Grid(QWidget):
                                         if connection2 == trafo:
                                             self.paths.append(line)
                                             self.firstNode = None
-                                            self.tokenBusPorts.append(hands[i])
+                                            # self.tokenBusPorts.append(hands[i])
                                             trafoTuple = (point, ori, hands, bus1, connection1)
                                             updates.append((trafo, trafoTuple))  # Add to updates
                                             self.update()
@@ -488,10 +549,32 @@ class Grid(QWidget):
                     self.setGenDict(gen, pos, newOrient)
                     componentUpdated = True
                     break
+
+        # Check loads
+        if not componentUpdated:
+            for load, (point, orient, hand) in self.loads.items():
+                ldX, ldY = point.x(), point.y()
+                if x == ldX and y == ldY:
+                    newOrient = getNextOrientation(orient, event.angleDelta().y() > 0)
+                    self.setLoadDict(load, pos, newOrient)
+                    componentUpdated = True
+                    break
+
+        # Check slacks 
+        if not componentUpdated:
+            for slack, (point, orient, hand) in self.slacks.items():
+                slX, slY = point.x(), point.y()
+                if x == slX and y == slY:
+                    newOrient = getNextOrientation(orient, event.angleDelta().y() > 0)
+                    self.setLoadDict(slack, pos, newOrient)
+                    componentUpdated = True
+                    break
         
         # Handle insertion mode orientation changes
-        if self.insertTrafoMode or self.insertBusMode or self.insertGenMode:
-            self.insertingOrient = getNextOrientation(self.insertingOrient, True)
+        if self.insertTrafoMode or self.insertBusMode or self.insertGenMode or self.insertLoadMode \
+            or self.insertSlackMode:
+            self.insertingOrient = getNextOrientation(self.insertingOrient, event.angleDelta().y() > 0)
+            print(self.insertingOrient)
         
         self.update()
 
@@ -561,7 +644,8 @@ class Grid(QWidget):
         if highLightedPoint is not None:
             xHigh = highLightedPoint.x()
             yHigh = highLightedPoint.y()
-            if self.insertBusMode or self.insertTrafoMode or self.insertGenMode or self.insertLoadMode:
+            if self.insertBusMode or self.insertTrafoMode or self.insertGenMode or self.insertLoadMode \
+                or self.insertSlackMode:
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
                 # Set the fill color with 20% transparency
@@ -602,50 +686,7 @@ class Grid(QWidget):
                     txtPoint = QPoint(txtPointX, txtPointY)
                     painter.drawText(txtPoint, txt)
 
-                    if self.insertingOrient == '-90' or self.insertingOrient == '90':
-                        self.symbolPen.setColor(self.yellow)
-                        painter.setPen(self.symbolPen)
-                        painter.drawLine(xHigh, yHigh - self.dist, xHigh, yHigh - self.drawingParams[0])
-                        painter.drawLine(xHigh, yHigh + self.dist, xHigh, yHigh + self.drawingParams[0])
-                        painter.drawEllipse(
-                            xHigh - self.drawingParams[1], yHigh - self.drawingParams[1] - self.drawingParams[2], 
-                            self.drawingParams[3], self.drawingParams[3]
-                        )
-                        painter.drawEllipse(
-                            xHigh - self.drawingParams[1], yHigh - self.drawingParams[1] + self.drawingParams[2], 
-                            self.drawingParams[3], self.drawingParams[3]
-                        )
-                        painter.setPen(self.dotPen)
-                        painter.drawEllipse(
-                            xHigh - self.drawingParams[4], yHigh - self.dist, 
-                            self.drawingParams[5], self.drawingParams[5]
-                        )
-                        painter.drawEllipse(
-                            xHigh - self.drawingParams[4], yHigh + self.dist, 
-                            self.drawingParams[5], self.drawingParams[5]
-                        )
-                    elif self.insertingOrient == '0' or self.insertingOrient == '180':
-                        self.symbolPen.setColor(self.yellow)
-                        painter.setPen(self.symbolPen)
-                        painter.drawLine(xHigh - self.dist, yHigh, xHigh - self.drawingParams[0], yHigh)
-                        painter.drawLine(xHigh + self.dist, yHigh, xHigh + self.drawingParams[0], yHigh)
-                        painter.drawEllipse(
-                            xHigh - self.drawingParams[1] - self.drawingParams[2], yHigh - self.drawingParams[1], 
-                            self.drawingParams[3], self.drawingParams[3]
-                        )
-                        painter.drawEllipse(
-                            xHigh - self.drawingParams[1] + self.drawingParams[2], yHigh - self.drawingParams[1], 
-                            self.drawingParams[3], self.drawingParams[3]
-                        )
-                        painter.setPen(self.dotPen)
-                        painter.drawEllipse(
-                            xHigh - self.dist, yHigh - self.drawingParams[4], 
-                            self.drawingParams[5], self.drawingParams[5]
-                        )
-                        painter.drawEllipse(
-                            xHigh + self.dist, yHigh - self.drawingParams[4], 
-                            self.drawingParams[5], self.drawingParams[5]
-                        )
+                    self.drawTrafo(painter, xHigh, yHigh, self.insertingOrient)
                     
                 # before inserting generator
                 if self.insertGenMode:
@@ -656,12 +697,11 @@ class Grid(QWidget):
                     textWidth = textRect.width()
                     textHeight = textRect.height()
                     txtPointX = xHigh - (textWidth // 2)
-                    txtPointY = yHigh + (self.dist) + (textHeight)
+                    txtPointY = yHigh - (self.dist) - (textHeight)
                     txtPoint = QPoint(xHigh, yHigh - self.dist)
                     painter.setPen(self.txtPen)
                     txtPoint = QPoint(txtPointX, txtPointY)
                     painter.drawText(txtPoint, txt)
-                    print('here')
                     self.drawGenerator(painter, xHigh, yHigh, self.insertingOrient)
 
                 # before inserting load
@@ -673,12 +713,29 @@ class Grid(QWidget):
                     textWidth = textRect.width()
                     textHeight = textRect.height()
                     txtPointX = xHigh - (textWidth // 2)
-                    txtPointY = yHigh + (self.dist) + (textHeight)
+                    txtPointY = yHigh - (self.dist) - (textHeight)
                     txtPoint = QPoint(xHigh, yHigh - self.dist)
                     painter.setPen(self.txtPen)
                     txtPoint = QPoint(txtPointX, txtPointY)
                     painter.drawText(txtPoint, txt)
                     self.drawLoad(painter, xHigh, yHigh, self.insertingOrient)
+
+                # before inserting slack
+                if self.insertSlackMode:
+                    self.gridPen.setColor(self.blue)
+                    painter.setPen(self.gridPen)
+                    txt = 'Left Click to Drop Slack'
+                    textRect = painter.fontMetrics().boundingRect(txt)
+                    textWidth = textRect.width()
+                    textHeight = textRect.height()
+                    txtPointX = xHigh - (textWidth // 2)
+                    txtPointY = yHigh + (self.dist) + (textHeight)
+                    txtPoint = QPoint(xHigh, yHigh - self.dist)
+                    painter.setPen(self.txtPen)
+                    txtPoint = QPoint(txtPointX, txtPointY)
+                    painter.drawText(txtPoint, txt)
+
+                    self.drawSlack(painter, xHigh, yHigh, self.insertingOrient)
 
             if not self.insertTrafoMode and not self.insertGenMode:
                 painter.setPen(self.dotPen)
@@ -721,38 +778,19 @@ class Grid(QWidget):
         # Drawing all the transfos here
         for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            self.gridPen.setColor(self.yellow)
-            painter.setPen(self.gridPen)
-            traX = point.x()
-            traY = point.y()
-            self.gridPen.setColor(self.yellow)
-            painter.setPen(self.gridPen)
-            if ori == '-90' or ori == '90':
-                painter.drawLine(traX, traY - self.dist, traX, traY - 20)
-                painter.drawLine(traX, traY + self.dist, traX, traY + 20)
-                self.symbolPen.setColor(self.yellow)
-                painter.setPen(self.symbolPen)
-                painter.drawEllipse(traX - 12, traY - 12 - 7, 24, 24)
-                painter.drawEllipse(traX - 12, traY - 12 + 7, 24, 24)
-                painter.setPen(self.dotPen)
-                painter.drawEllipse(traX - 1, traY - self.dist, 2, 2)
-                painter.drawEllipse(traX - 1, traY + self.dist, 2, 2)
-            elif ori == '0' or ori == '180':
-                painter.drawLine(traX - self.dist, traY, traX - 20, traY)
-                painter.drawLine(traX + self.dist, traY, traX + 20, traY)
-                self.symbolPen.setColor(self.yellow)
-                painter.setPen(self.symbolPen)
-                painter.drawEllipse(traX - 12 - 7, traY - 12, 24, 24)
-                painter.drawEllipse(traX - 12 + 7, traY - 12, 24, 24)
-                painter.setPen(self.dotPen)
-                painter.drawEllipse(traX - self.dist, traY - 1, 2, 2)
-                painter.drawEllipse(traX + self.dist, traY - 1, 2, 2)
+            self.drawTrafo(painter, point.x(), point.y(), ori)
 
         # Drawing all the generators here
         for generator, (pos, ori, hand) in self.gens.items():
-            x = pos.x()
-            y = pos.y()
-            self.drawGenerator(painter, x, y, ori)
+            self.drawGenerator(painter, pos.x(), pos.y(), ori)
+
+        # Drawing all the loads here
+        for load, (pos, ori, hand) in self.loads.items():
+            self.drawLoad(painter, pos.x(), pos.y(), ori)
+
+        # Drawing all the loads here
+        for slack, (pos, ori, hand) in self.slacks.items():
+            self.drawSlack(painter, pos.x(), pos.y(), ori)
 
         # Drawing all the lines
         linePen = QPen()
@@ -795,6 +833,24 @@ class Grid(QWidget):
                     if secNodeType == 'gen' and connection2 == gen:
                         secondNode = hand
 
+                # from and to load 
+                for load, (point, ori, hand) in self.loads.items():
+                    # from load 
+                    if firstNodeType == 'load' and connection1 == load:
+                        firstNode = hand 
+                    # to load 
+                    if secNodeType == 'load' and connection2 == load:
+                        secondNode = hand
+
+                # from and to slack 
+                for slack, (point, ori, hand) in self.slacks.items():
+                    # from slack 
+                    if firstNodeType == 'slack' and connection1 == slack:
+                        firstNode = hand 
+                    # to slack 
+                    if secNodeType == 'slack' and connection2 == slack:
+                        secondNode = hand
+
                 # Now that we know what are the connections from and to
                 if firstNode is not None and secondNode is not None:
                     if len(pathList) == 0:
@@ -829,6 +885,18 @@ class Grid(QWidget):
                 if firstNodeType == 'gen':
                     for gen, (pos, ori, hand) in self.gens.items():
                         if connection == gen:
+                            firstNode = hand
+
+                # draw start connection from load
+                if firstNodeType == 'load':
+                    for load, (pos, ori, hand) in self.loads.items():
+                        if connection == load:
+                            firstNode = hand
+
+                # draw start connection from slack
+                if firstNodeType == 'slack':
+                    for slack, (pos, ori, hand) in self.slacks.items():
+                        if connection == slack:
                             firstNode = hand
 
                 mousePos = self.snap(self.currentMousePos)
@@ -899,6 +967,12 @@ class Grid(QWidget):
         genTuple = (pos, ori, hand)
         print(genTuple)
         self.gens[id] = genTuple
+
+    def setLoadDict(self, id, pos, orient):
+        self.loads[id] = (pos, orient, pos)
+
+    def setSlackDict(self, id, pos, orient):
+        self.slacks[id] = (pos, orient, pos)
 
     def initEditBox(self, busName: str, point: QPoint) -> None:
         self.editBusDialog = EditBusDialog(self)
@@ -1208,20 +1282,11 @@ class Grid(QWidget):
         self.dotPen.setWidth(4)
         painter.setPen(self.dotPen)
         painter.drawEllipse(dotX, dotY, dotSize, dotSize)
+
     def drawLoad(self, painter, x, y, orient):
-        '''
-        Draws a load symbol with specified orientation, where the dot is at the main coordinate
-        and the triangle is drawn at an offset connected by a line
-        
-        Args:
-            painter: QPainter object
-            x: int, x coordinate of connection point (dot center)
-            y: int, y coordinate of connection point (dot center)
-            orient: str, orientation angle ('-90', '0', '90', '180')
-        '''
         # Get drawing parameters
-        triangleSize = self.drawingParams[3]  # Using same size as generator ellipse
-        lineLength = self.drawingParams[0] // 2 - 4  # Using same offset as generator
+        triangleSize = self.drawingParams[3] # Using same size as generator ellipse
+        lineLength = self.drawingParams[0] * 2 # Using same offset as generator
         dotSize = self.drawingParams[5]
         dotRadius = self.drawingParams[4]
 
@@ -1233,11 +1298,11 @@ class Grid(QWidget):
         painter.drawEllipse(dotX, dotY, dotSize, dotSize)
 
         # Set up triangle brush and pen
-        triangleBrush = QBrush(self.yellow)
+        # triangleBrush = QBrush(self.yellow)
         self.symbolPen.setWidth(2)
-        self.symbolPen.setColor(self.blue)
+        self.symbolPen.setColor(self.yellow)
         painter.setPen(self.symbolPen)
-        painter.setBrush(triangleBrush)
+        # painter.setBrush(triangleBrush)
 
         # Calculate positions based on orientation
         if orient == '-90':  # Triangle below dot
@@ -1285,3 +1350,120 @@ class Grid(QWidget):
 
         # Reset the brush
         painter.setBrush(Qt.BrushStyle.NoBrush)
+
+    def drawSlack(self, painter, x, y, orient):
+
+        # Get drawing parameters
+        rectSize = self.drawingParams[3]  # Using same size as generator ellipse
+        lineLength = self.drawingParams[0] // 2 - 4  # Using same offset as generator
+        dotSize = self.drawingParams[5]
+        dotRadius = self.drawingParams[4]
+        # Set up rectangle pen and brush
+        self.symbolPen.setWidth(2)
+        self.symbolPen.setColor(self.blue)
+        painter.setPen(self.symbolPen)
+
+        # Create diagonal pattern brush
+        pattern = QBrush(self.yellow, Qt.BrushStyle.BDiagPattern)  # Diagonal pattern
+        painter.setBrush(pattern)
+
+        # Calculate positions based on orientation
+        if orient == '-90':  # Rectangle below dot
+            lineStartX, lineStartY = x, y
+            lineEndX, lineEndY = x, y + lineLength
+            rectX = x - rectSize
+            rectY = lineEndY
+            
+        elif orient == '0':  # Rectangle right of dot
+            lineStartX, lineStartY = x, y
+            lineEndX, lineEndY = x + lineLength, y
+            rectX = lineEndX
+            rectY = y - rectSize
+            
+        elif orient == '90':  # Rectangle above dot
+            lineStartX, lineStartY = x, y
+            lineEndX, lineEndY = x, y - lineLength
+            rectX = x - rectSize
+            rectY = lineEndY - 2 * rectSize
+            
+        elif orient == '180':  # Rectangle left of dot
+            lineStartX, lineStartY = x, y
+            lineEndX, lineEndY = x - lineLength, y
+            rectX = lineEndX - 2 * rectSize
+            rectY = y - rectSize
+
+        # Draw the connection line
+        painter.drawLine(lineStartX, lineStartY, lineEndX, lineEndY)
+
+        # Draw the rectangle
+        painter.drawRect(rectX, rectY, 2 * rectSize, 2 * rectSize)
+
+        # Draw the connection dot first (at the main x,y point)
+        self.dotPen.setWidth(4)
+        painter.setPen(self.dotPen)
+        dotX = x - dotRadius
+        dotY = y - dotRadius
+        painter.drawEllipse(dotX, dotY, dotSize, dotSize)
+
+
+        # Reset the brush
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+
+    def drawTrafo(self, painter, x, y, orient):
+
+        # Draw transformer based on orientation
+        if orient in ['-90', '90']:
+            self.symbolPen.setColor(self.yellow)
+            painter.setPen(self.symbolPen)
+            # Vertical lines
+            painter.drawLine(x, y - self.dist, x, y - self.drawingParams[0])
+            painter.drawLine(x, y + self.dist, x, y + self.drawingParams[0])
+            
+            # Circles
+            painter.drawEllipse(
+                x - self.drawingParams[1], y - self.drawingParams[1] - self.drawingParams[2], 
+                self.drawingParams[3], self.drawingParams[3]
+            )
+            painter.drawEllipse(
+                x - self.drawingParams[1], y - self.drawingParams[1] + self.drawingParams[2], 
+                self.drawingParams[3], self.drawingParams[3]
+            )
+            
+            # Dots
+            painter.setPen(self.dotPen)
+            painter.drawEllipse(
+                x - self.drawingParams[4], y - self.dist, 
+                self.drawingParams[5], self.drawingParams[5]
+            )
+            painter.drawEllipse(
+                x - self.drawingParams[4], y + self.dist, 
+                self.drawingParams[5], self.drawingParams[5]
+            )
+        
+        elif orient in ['0', '180']:
+            self.symbolPen.setColor(self.yellow)
+            painter.setPen(self.symbolPen)
+            # Horizontal lines
+            painter.drawLine(x - self.dist, y, x - self.drawingParams[0], y)
+            painter.drawLine(x + self.dist, y, x + self.drawingParams[0], y)
+            
+            # Circles
+            painter.drawEllipse(
+                x - self.drawingParams[1] - self.drawingParams[2], y - self.drawingParams[1], 
+                self.drawingParams[3], self.drawingParams[3]
+            )
+            painter.drawEllipse(
+                x - self.drawingParams[1] + self.drawingParams[2], y - self.drawingParams[1], 
+                self.drawingParams[3], self.drawingParams[3]
+            )
+            
+            # Dots
+            painter.setPen(self.dotPen)
+            painter.drawEllipse(
+                x - self.dist, y - self.drawingParams[4], 
+                self.drawingParams[5], self.drawingParams[5]
+            )
+            painter.drawEllipse(
+                x + self.dist, y - self.drawingParams[4], 
+                self.drawingParams[5], self.drawingParams[5]
+            )

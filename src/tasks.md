@@ -1,9 +1,12 @@
 Tasks:
 - [X] Adding transformer to the simulation (Backend)
 - [x] Refactoring bus and gen drawing (Frontend)
-- [ ] Adding load to GUI (Frontend)
-- [ ] Refactoring transformer drawing (Frontend)
+- [x] Adding load to GUI (Frontend)
+- [x] Adding load to the simulation (Backend)
 - [ ] Adding slack to GUI (Frontend)
-- [ ] Adding load to the simulation (Backend)
-- [ ] Adding slack to the simulation (Backend)
+- [x] Adding slack to the simulation (Backend)
+- [ ] Adding results window (Frontend)
 - [ ] Adding more optional parameters to dialogs (Frontend)
+- [ ] Refactoring transformer drawing (Frontend)
+- [ ] Per unit conversion
+- [ ] Add erase functionality

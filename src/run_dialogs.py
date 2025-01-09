@@ -8,7 +8,7 @@ class RunSimDialog(QDialog):
         self.projectPath = None
         self.freq = freq
         self.sBase = sBase
-        self.activatedMethod = 'Newton Raphson'
+        self.activatedMethod = 'nr'
         self.setWindowTitle('Run Simulation')
         self.setStyleSheet('''
         QDialog {
