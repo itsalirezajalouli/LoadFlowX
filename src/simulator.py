@@ -41,7 +41,7 @@ class NetworkCreator():
         self.busCounter += 1
         key = f'Bus{self.busCounter}'
         self.buses[key] = pp.create_bus(self.net, vn_kv = float(vnKv),
-                            name = name, index = id, type = 'b')
+                            name = name, index = id)
 
     def addLine(self, fromBus: int, toBus: int, len: float, name: str) -> None:
         self.lineCounter += 1
@@ -51,13 +51,7 @@ class NetworkCreator():
         fromVn = self.net.bus.vn_kv.at[fromBus]
         toVn = self.net.bus.vn_kv.at[toBus]
         
-        # Select appropriate line type based on voltage level
-        if fromVn > 100:  # High voltage
-            stdType = "N2XS(FL)2Y 1x300 RM/35 64/110 kV"
-        elif fromVn > 50:  # Medium voltage
-            stdType = "NA2XS2Y 1x240 RM/25 12/20 kV"
-        else:  # Low voltage
-            stdType = "NAYY 4x50 SE"
+        stdType = 'NAYY 4x50 SE'
             
         self.lines[key] = pp.create_line(
             self.net,
@@ -87,7 +81,7 @@ class NetworkCreator():
         busOneKey = self.buses[busOne]
         busTwoKey = self.buses[busTwo]
         self.trafos[key] = pp.create_transformer(self.net, busOneKey, busTwoKey,
-                                     name = name, std_type = '25 MVA 110/20 kV',
+                                     name = name, std_type = '0.4 MVA 20/0.4 kV',
                                                  index = id)
 
     def addLoad(self, bus: int, pMW: float, qMVAR: float):
@@ -127,7 +121,6 @@ class NetworkCreator():
             self.net,
             algorithm = method,
             init = 'flat',  # Start with flat voltage profile
-            max_iteration = 100,  
             enforce_q_lims = True,  # Enforce reactive power limits we set for gens
             numba = True  # Use numba for faster computation
         )
