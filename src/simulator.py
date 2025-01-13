@@ -9,7 +9,7 @@ from termcolor import colored
 # Creates the network
 class NetworkCreator():
 
-    def __init__(self, proPth: str, busCsv: str, lineCsv: str, trafoCsv: str, genCsv: str,
+    def __init__(self, projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str, genCsv: str,
                  loadCsv: str, slacksCsv: str) -> None:
         self.net = pp.create_empty_network()
         self.buses = {}
@@ -19,13 +19,12 @@ class NetworkCreator():
         self.gens = {}
         self.loads = {}
         self.busCounter = 0
-        self.trafoBusCounter = 0
         self.trafoCounter = 0
         self.lineCounter = 0
         self.genCounter = 0
         self.loadCounter = 0
         self.slackCounter = 0
-        self.proPth = proPth 
+        self.projectPath = projectPth 
         self.busCsv = busCsv
         self.lineCsv = lineCsv
         self.trafoCsv = trafoCsv
@@ -43,24 +42,44 @@ class NetworkCreator():
         key = f'Bus{self.busCounter}'
         self.buses[key] = pp.create_bus(self.net, vn_kv = float(vnKv),
                             name = name, index = id, type = 'b')
-        print('-> Bus added to simulation:')
-        print(f'V: {vnKv}, Name: {name}, Id: {id}')
 
     def addLine(self, fromBus: int, toBus: int, len: float, name: str) -> None:
         self.lineCounter += 1
         key = f'Line{self.lineCounter}'
-        self.lines[key] = pp.create_line(self.net, from_bus = fromBus, to_bus = toBus,
-                                         length_km = len, name = 'Line',
-                                         std_type = 'NAYY 4x50 SE')
-        print('-> Bus added to simulation:')
-        print(f'From Bus: {fromBus}, To Bus: {toBus}, Length(KM): {len}, name: {name}')
+        
+        # Get voltage levels of connected buses to determine line type
+        fromVn = self.net.bus.vn_kv.at[fromBus]
+        toVn = self.net.bus.vn_kv.at[toBus]
+        
+        # Select appropriate line type based on voltage level
+        if fromVn > 100:  # High voltage
+            stdType = "N2XS(FL)2Y 1x300 RM/35 64/110 kV"
+        elif fromVn > 50:  # Medium voltage
+            stdType = "NA2XS2Y 1x240 RM/25 12/20 kV"
+        else:  # Low voltage
+            stdType = "NAYY 4x50 SE"
+            
+        self.lines[key] = pp.create_line(
+            self.net,
+            from_bus = fromBus,
+            to_bus = toBus,
+            length_km = len,
+            name = name,
+            std_type = stdType
+        )
 
     def addGen(self, bus: int, name: str, pMW: float) -> None:
         self.genCounter += 1
         key = f'Gen{self.genCounter}'
-        self.gens[key] = pp.create_gen(self.net, bus = bus, name = name, p_mw = pMW)
-        print('-> Gen added to simulation:')
-        print(f'Bus: {bus}, Name: {name}, pMW: {pMW}')
+        self.gens[key] = pp.create_gen(
+            self.net,
+            bus = bus,
+            name = name,
+            p_mw = pMW,
+            vm_pu = 1.0,  # Voltage setpoint -> check from user
+            min_q_mvar = -50.0,  # Reactive power limits -> user
+            max_q_mvar = 50.0
+        )
 
     def addTrafo(self, name: str, id: int, busOne: str, busTwo: str):
         self.trafoCounter += 1
@@ -70,15 +89,11 @@ class NetworkCreator():
         self.trafos[key] = pp.create_transformer(self.net, busOneKey, busTwoKey,
                                      name = name, std_type = '25 MVA 110/20 kV',
                                                  index = id)
-        print('-> Trafo added to simulation:')
-        print(f'Bus1: {busOne}, bus2: {busTwo}, id: {id}')
 
     def addLoad(self, bus: int, pMW: float, qMVAR: float):
         self.loadCounter += 1
         key = f'load{self.loadCounter}'
         self.loads[key] = pp.create_load(self.net, bus = bus, p_mw = pMW, q_mvar = qMVAR)
-        print('-> Load added to simulation:')
-        print(f'Bus: {bus}, pMW: {pMW}, qMW: {qMVAR}')
 
     def log(self):
         print(colored(
@@ -107,10 +122,31 @@ class NetworkCreator():
         self.loadTrafos()
         self.loadLoads()
         self.loadSlacks()
-        pp.runpp(self.net, algorithm = method)
+
+        pp.runpp(
+            self.net,
+            algorithm = method,
+            init = 'flat',  # Start with flat voltage profile
+            max_iteration = 100,  
+            enforce_q_lims = True,  # Enforce reactive power limits we set for gens
+            numba = True  # Use numba for faster computation
+        )
+        # Check for convergence
+        if not self.net.converged:
+            print("WARNING: Power flow did not converge!")
+
+        # Save results
         resBusDf = self.net.res_bus
-        resAddress = self.proPth + '/results.csv'
-        resBusDf.to_csv(resAddress, index = True)
+        resLinesDf = self.net.res_line
+        resTrafosDf = self.net.res_trafo
+        resLoadsDf = self.net.res_load
+        
+        # Save all results
+        resultPath = self.projectPath + '/results'
+        resBusDf.to_csv(f"{resultPath}_buses.csv", index = True)
+        resLinesDf.to_csv(f"{resultPath}_lines.csv", index = True)
+        resTrafosDf.to_csv(f"{resultPath}_trafos.csv", index = True)
+        resTrafosDf.to_csv(f"{resultPath}_loads.csv", index = True)
 
     def loadBusBars(self) -> None:
         with open(self.busCsv) as csvfile:
@@ -166,15 +202,3 @@ class NetworkCreator():
                 print(100 * '-')
                 print(bus, vmPu)
                 self.addSlack(bus, vmPu)
-
-# nMaker = NetworkCreator()
-# nMaker.addBusBar(110, 'Bus1')
-# nMaker.addBusBar(20, 'Bus2')
-# nMaker.addBusBar(110, 'Bus3')
-# nMaker.addTransBus(110, 'TBus1')
-# nMaker.addTransBus(20, 'TBus2')
-# nMaker.addTransformer('TBus1', 'TBus2', '110kV/20kV transformer',
-#                       )
-# nMaker.addSlack('Bus1', 1.02, 50)
-# nMaker.log()
-# nMaker.run('gs')

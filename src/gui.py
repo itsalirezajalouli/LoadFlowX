@@ -8,7 +8,6 @@ from start_window import StartUp
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QHBoxLayout, QMainWindow, QStatusBar, QVBoxLayout, QWidget, QToolButton
-from csv_viewer import CsvViewer
 
 # Main Window Object
 class MainWindow(QMainWindow):
@@ -346,8 +345,10 @@ class MainWindow(QMainWindow):
         pass
 
     def run(self) -> None:
+        # Takes chosen method from dialog chosen by user
         method = self.grid.openRunDialog()
 
+        # Passing data csvs to the simulator
         busCsvPath = self.projectPath + '/Buses.csv'
         lineCSV = self.projectPath + '/Lines.csv'
         trafoCSV = self.projectPath + '/Trafos.csv'
@@ -355,16 +356,28 @@ class MainWindow(QMainWindow):
         loadCSV = self.projectPath + '/Loads.csv'
         slacksCSV = self.projectPath + '/Slacks.csv'
 
+        # Run load flow Simulation
         nMaker = NetworkCreator(self.projectPath,
                                 busCsvPath, lineCSV, trafoCSV, genCSV, loadCSV, slacksCSV)
-        nMaker.run(method)
-        path = self.projectPath + '/results.csv'
-        self.grid.viewResultCsv(path) 
 
-        # if method == 'Newton Raphson':
-        # elif method == 'Gauss Seidel':
-        # elif method == 'Fast Decoupled':
-        #
+        nMaker.run(method)
+
+        # Save results
+        busResultsPath = self.projectPath + '/results_buses.csv'
+        lineResultsPath = self.projectPath + '/results_lines.csv'
+        trafoResultsPath = self.projectPath + '/results_trafos.csv'
+        loadsResultsPath = self.projectPath + '/results_loads.csv'
+
+        # Show results
+        paths = {
+            'lines': lineResultsPath,
+            'buses': busResultsPath,
+            'transformers': trafoResultsPath,
+            'loads': loadsResultsPath,
+        }
+
+        self.grid.viewResultCsv(paths) 
+
     def addBus(self) -> None:
         self.grid.selectMode = False
         self.grid.insertTrafoMode = False

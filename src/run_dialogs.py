@@ -1,14 +1,16 @@
 # Import
 from PyQt6.QtWidgets import QDialog, QLabel, QWidget, QHBoxLayout, QLineEdit, QComboBox, QVBoxLayout, QDialogButtonBox, QMessageBox
 
-# Dialogs Related to Trafo 
+# Dialogs to handle user input for running load flow calculation
 class RunSimDialog(QDialog):
     def __init__(self, parent, freq, sBase) -> None:
         super().__init__(parent)
         self.projectPath = None
-        self.freq = freq
+        self.freq = freq # frequency of the network
         self.sBase = sBase
-        self.activatedMethod = 'nr'
+        self.activatedMethod = 'nr' # set default load flow method to newton-raphson
+
+        # Styling
         self.setWindowTitle('Run Simulation')
         self.setStyleSheet('''
         QDialog {
@@ -48,11 +50,12 @@ class RunSimDialog(QDialog):
         self.methDropDown.addItem('Newton Raphson')
         self.methDropDown.addItem('Gauss Seidel')
         self.methDropDown.addItem('Fast Decoupled')
+        self.methDropDown.addItem('Backward/Forward Sweep')
         self.methDropDown.activated.connect(self.method)
         self.methHBox.addWidget(self.methDropDown)
         self.methWidget.setLayout(self.methHBox)
 
-        # Frequency & S Base
+        # Frequency & S Base input box
         self.fsLabel = QLabel('Network Constant Parameters:')
         self.fsLabel.setStyleSheet('color: #ffffff;')
         self.fsHBox = QHBoxLayout()
@@ -93,6 +96,8 @@ class RunSimDialog(QDialog):
         inputList = []
         inputList.append(self.freqInput.text())
         inputList.append(self.sBaseInput.text())
+        self.freq = float(self.freqInput.text())
+        self.sBase = float(self.sBaseInput.text())
         if '' in inputList:
             self.inputError = True
             QMessageBox.warning(self, 'Fill all the fields.',
@@ -103,9 +108,12 @@ class RunSimDialog(QDialog):
         super().accept()
 
     def method(self, index) -> None:
+        # saves the user's choice for calculation of load flow
         if index == 0: 
             self.activatedMethod = 'nr'
         elif index == 1: 
             self.activatedMethod = 'gs'
         elif index == 2:
-            self.activatedMethod = 'fd'
+            self.activatedMethod = 'fdbx'
+        elif index == 3:
+            self.activatedMethod = 'bfsw'

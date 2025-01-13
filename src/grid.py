@@ -300,6 +300,7 @@ class Grid(QWidget):
                                     self.updateGuiElementsCSV()
                                     self.tempPath.clear() 
 
+                            # from a tranformer to a bus
                             if firstNodeType == 'trafo':
                                 for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
                                     if bus1 == 0:
@@ -809,7 +810,10 @@ class Grid(QWidget):
                 for bus, (point, capacity, orient, points, id) in self.busses.items():
                     # from bus
                     if firstNodeType == 'bus' and connection1 == id:
-                        firstNode = points[i1]
+                        if i1 == 0:
+                            firstNode = point
+                        else:
+                            firstNode = points[i1]
                     # to bus
                     if secNodeType == 'bus' and connection2 == id:
                         if i2 == 0:
@@ -1470,6 +1474,12 @@ class Grid(QWidget):
                 self.drawingParams[5], self.drawingParams[5]
             )
 
-    def viewResultCsv(self, path: str) -> None:
-        self.csvViewer = CsvViewer(self, path)
+    def viewResultCsv(self, paths):
+        csvPaths = {
+            'Buses': paths['buses'],
+            'Lines': paths['lines'],
+            'Transformers': paths['transformers'],
+            'Loads': paths['loads']
+        }
+        self.csvViewer = CsvViewer(self, csvPaths)
         self.csvViewer.exec()
