@@ -569,6 +569,20 @@ class MainWindow(QMainWindow):
                 bigTuple = (point, capacity, orient, newPoints, id)
                 edited = self.grid.editedBusses(bus, bigTuple)
 
+            for trafo, (point, ori, hands, bus1, bus2) in self.grid.trafos.items():
+                newOriginX = point.x() * 2
+                newOriginY = point.y() * 2
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.grid.snap(newOrigin)
+                newPoints = []
+                for h in hands:
+                    h = QPoint(h.x() * 2, h.y() * 2)
+                    newPoints.append(h)
+                bigTuple = (point, ori, hands, bus1, bus2)
+                self.grid.trafos.update({trafo: bigTuple})
+                self.grid.update()
+                self.update()
+
             newPaths = []
             for p in self.grid.paths:
                 connection1, connection2, fp, i, tempPath = p
@@ -599,6 +613,20 @@ class MainWindow(QMainWindow):
                     newPoints.append(p)
                 bigTuple = (point, capacity, orient, newPoints, id)
                 edited = self.grid.editedBusses(bus, bigTuple)
+
+            for trafo, (point, ori, hands, bus1, bus2) in self.grid.trafos.items():
+                newOriginX = point.x() // 2
+                newOriginY = point.y() // 2
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.grid.snap(newOrigin)
+                newPoints = []
+                for h in hands:
+                    h = QPoint(h.x() // 2, h.y() // 2)
+                    newPoints.append(h)
+                bigTuple = (point, ori, hands, bus1, bus2)
+                self.grid.trafos.update({trafo: bigTuple})
+                self.grid.update()
+                self.update()
 
             newPaths = []
             for p in self.grid.paths:
