@@ -334,7 +334,7 @@ class Grid(QWidget):
                                 self.paths.append(line)
                                 self.firstNode = None
                                 self.update()
-                                self.addGenDialog = AddGenDialog(self, connection1)
+                                self.addGenDialog = AddGenDialog(self, connection1) # <- i think it should be connection2
                                 self.addGenDialog.projectPath = self.projectPath
                                 self.addGenDialog.exec()
                                 self.updateGuiElementsCSV()
@@ -345,7 +345,7 @@ class Grid(QWidget):
                                 self.paths.append(line)
                                 self.firstNode = None
                                 self.update()
-                                self.addLoadDialog = AddLoadDialog(self, connection1)
+                                self.addLoadDialog = AddLoadDialog(self, connection2)
                                 self.addLoadDialog.projectPath = self.projectPath
                                 self.addLoadDialog.exec()
                                 self.updateGuiElementsCSV()

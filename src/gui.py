@@ -2,7 +2,7 @@
 
 # Imports
 from grid import Grid
-from simulator import NetworkCreator
+from simulator import runLoadFlow 
 from PyQt6.QtCore import QSize
 from start_window import StartUp
 from PyQt6.QtCore import Qt, QPoint
@@ -357,12 +357,11 @@ class MainWindow(QMainWindow):
         slacksCSV = self.projectPath + '/Slacks.csv'
 
         # Run load flow Simulation
-        nMaker = NetworkCreator(self.projectPath,
-                                busCsvPath, lineCSV, trafoCSV, genCSV, loadCSV, slacksCSV)
+        nMaker = runLoadFlow(self.projectPath,
+                            busCsvPath, lineCSV, trafoCSV, genCSV, loadCSV, slacksCSV,
+                            method)
 
-        nMaker.run(method)
-
-        # Save results
+        # Save the results
         busResultsPath = self.projectPath + '/results_buses.csv'
         lineResultsPath = self.projectPath + '/results_lines.csv'
         trafoResultsPath = self.projectPath + '/results_trafos.csv'
