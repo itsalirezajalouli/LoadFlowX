@@ -8,7 +8,8 @@ Tasks:
 - [x] Simulator is not simualting correctly i think
 - [x] Adding results window (Frontend)
 - [x] Fixing move event for all
-- [ ] Saving GUI info properly (gen, load, slack)
+- [x] Saving GUI info properly (gen, load, slack)
+- [ ] Fixing line gui system
 - [ ] Loading GUI properly
 - [ ] Adding more optional parameters to dialogs (Frontend)
 - [ ] Per unit conversion
