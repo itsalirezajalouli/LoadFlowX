@@ -5,9 +5,12 @@ Tasks:
 - [x] Adding load to the simulation (Backend)
 - [x] Adding slack to GUI (Frontend)
 - [x] Adding slack to the simulation (Backend)
-- [ ] Simulator is not simualting correctly i think
-- [ ] Adding results window (Frontend)
+- [x] Simulator is not simualting correctly i think
+- [x] Adding results window (Frontend)
+- [x] Fixing move event for all
+- [ ] Saving GUI info properly (gen, load, slack)
+- [ ] Loading GUI properly
 - [ ] Adding more optional parameters to dialogs (Frontend)
-- [ ] Refactoring transformer drawing (Frontend)
 - [ ] Per unit conversion
 - [ ] Add erase functionality
+- [ ] 39 Bus example and test

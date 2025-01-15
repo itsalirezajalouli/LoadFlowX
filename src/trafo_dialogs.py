@@ -8,6 +8,8 @@ class AddTrafoDialog(QDialog):
         super().__init__(parent)
         self.projectPath = None
         self.trafoPos = None
+        self.trafoOrient= None
+        self.trafoHands = None
         self.trafoId = None
         self.inputError = False
         self.bus1Id = None
@@ -103,8 +105,11 @@ class AddTrafoDialog(QDialog):
             id = self.trafoId,
             hvBus = self.bus1Id,
             lvBus = self.bus2Id,
+            pos = self.trafoPos,
+            orient = self.trafoOrient,
+            hands = self.trafoHands,
         )
-        # bus.log()
+        trafo.log()
         trafo.append2CSV(self.projectPath)
         super().accept()
 

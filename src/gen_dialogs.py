@@ -8,6 +8,9 @@ class AddGenDialog(QDialog):
         self.projectPath = None
         self.inputError = False
         self.bus = bus
+        self.genPos = None
+        self.genOri = None
+        self.genHand = None
         self.setWindowTitle('Add Generator')
         self.setStyleSheet('''
         QDialog {
@@ -88,6 +91,9 @@ class AddGenDialog(QDialog):
             bus = self.bus, 
             name = inputList[1],
             pMW = inputList[0],
+            pos = self.genPos,
+            orient = self.genOri, 
+            hand = self.genHand, 
         )
         generator.append2CSV(self.projectPath)
         super().accept()

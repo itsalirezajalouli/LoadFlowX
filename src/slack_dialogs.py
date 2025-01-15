@@ -8,6 +8,9 @@ class AddSlackDialog(QDialog):
         self.projectPath = None
         self.inputError = False
         self.bus = bus
+        self.slackPos = None
+        self.slackOri = None
+        self.slackHand = None
         self.setWindowTitle('Add Bus')
         self.setStyleSheet('''
         QDialog {
@@ -118,6 +121,9 @@ class AddSlackDialog(QDialog):
         slack = Slack(
             bus = self.bus,
             vmPU = float(self.lenInput.text()),
+            pos = self.slackPos,
+            orient = self.slackOri,
+            hand = self.slackHand,
         )
         slack.append2CSV(self.projectPath)
         super().accept()

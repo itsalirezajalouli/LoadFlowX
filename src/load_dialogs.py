@@ -41,6 +41,9 @@ class AddLoadDialog(QDialog):
         self.projectName = None
         self.inputError = False
         self.bus = bus 
+        self.loadPos = None
+        self.loadOri = None
+        self.loadHand = None
 
         # Bus Name Input Box
         # self.nameInputLabel = QLabel('Load Name:')
@@ -157,6 +160,9 @@ class AddLoadDialog(QDialog):
             bus = self.bus,
             pMW = float(self.pInput.text()),
             qMW = float(self.qInput.text()),
+            pos = self.loadPos,
+            orient = self.loadOri,
+            hand = self.loadHand,
         )
         load.append2CSV(self.projectPath)
         super().accept()

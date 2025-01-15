@@ -40,7 +40,7 @@ class BusBar():
         self.capacity = capacity
         self.orient = orient
         self.points = [] 
-        print(self.points)
+
         for p in points:
             for pp in p:
                 tup = (pp.x(), pp.y())
@@ -165,100 +165,166 @@ class Line():
 
 class Transformer():
     def __init__(self,
-                 # pos: tuple[float, float],
                  id: int,
                  name: str,
                  hvBus: int,
                  lvBus: int,
-                 # R: float,
-                 # X: float,
-                 # a: float,
-                 # vBase: float,
-                 # winding: Winding,
-                 ) -> None:
-        self.pos = 0 
+                 pos: QPoint,
+                 orient: str,
+                 hands: list) -> None:
+        self.pos = (pos.x(), pos.y())
         self.name = name # just for GUI display
         self.id = id
         self.hvBus = hvBus
         self.lvBus = lvBus
+        self.orient = orient
+        self.hands = [(h.x(), h.y()) for h in hands]
         self.R = 0 
         self.X = 0 
         self.a = 0
         self.vBase = 0
-        self.winding = 0 
+        self.winding = 0
+
+    def log(self) -> None:
+        print(colored(
+        '''
+                                █   █▀█ █▀▀ █▀
+                                █▄▄ █▄█ █▄█ ▄█
+        '''
+        , 'light_blue'))
+        print(colored('-' * 80, 'red'))
+        print(colored('-> ID:', 'light_blue'), self.id)
+        print(colored('-> Name:', 'light_blue'), self.name)
+        print(colored('-> Pos:', 'light_blue'), self.pos)
+        print(colored('-> HV Bus:', 'light_blue'), self.hvBus)
+        print(colored('-> LV Bus:', 'light_blue'), self.lvBus)
+        print(colored('-> Orientation:', 'light_blue'), self.orient)
+        print(colored('-> Hands:', 'light_blue'), self.hands)
 
     def append2CSV(self, path: str) -> None:
         data = {
-            'name': self.name,
             'id': self.id,
+            'name': self.name,
             'hvBus': self.hvBus,
             'lvBus': self.lvBus,
+            'pos': json.dumps(self.pos),
+            'orient': self.orient,
+            'hands': json.dumps(self.hands)
         }
         csvPath = path + '/Trafos.csv'
-        with open(csvPath, 'a', newline = '') as file:
-            writer = csv.DictWriter(file,fieldnames = ['name', 'id', 'hvBus', 'lvBus'])
+        with open(csvPath, 'a', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=['id', 'name', 'hvBus', 'lvBus', 'pos', 'orient', 'hands'])
             writer.writerow(data)
-        print(f'-> Gen data appended to {csvPath} successfuly.')
+        print(f'-> Transformer data appended to {path} successfully.')
+
+    def editCSV(self, path: str, prevName: str) -> None:
+        csvPath = path + '/Trafos.csv'
+        newTransformerList = []
+        with open(csvPath) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if row['name'] == prevName:
+                    row['id'] = self.id
+                    row['name'] = self.name
+                    row['hvBus'] = self.hvBus
+                    row['lvBus'] = self.lvBus
+                    row['pos'] = json.dumps(self.pos)
+                    row['orient'] = self.orient
+                    row['hands'] = json.dumps(self.hands)
+                newTransformerList.append(row)
+
+        with open(csvPath, 'w', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=['id', 'name', 'hvBus', 'lvBus', 'pos', 'orient', 'hands'])
+            writer.writeheader()
+            writer.writerows(newTransformerList)
+        print(f'-> Transformer data edited in {csvPath} successfully.')
 
 class Generator():
     def __init__(self,
                  bus: int,
                  name: str,
                  pMW: float,
+                 pos: QPoint,
+                 orient: str,
+                 hand: QPoint,
                  ) -> None:
         self.bus = bus
         self.name = name
         self.pMW = pMW
+        self.pos = (pos.x(), pos.y())
+        self.orient = orient
+        self.hand = (hand.x(), hand.y())
 
     def append2CSV(self, path: str) -> None:
         data = {
             'bus': self.bus,
             'name': self.name,
             'pMW': self.pMW,
+            'pos': json.dumps(self.pos),
+            'orient': self.orient,
+            'hand': json.dumps(self.hand),
         }
         csvPath = path + '/Gens.csv'
-        with open(csvPath, 'a', newline = '') as file:
-            writer = csv.DictWriter(file,fieldnames = ['name', 'bus', 'pMW'])
+        with open(csvPath, 'a', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=['bus', 'name', 'pMW', 'pos', 'orient', 'hand'])
             writer.writerow(data)
-        print(f'-> Gen data appended to {csvPath} successfuly.')
+        print(f'-> Gen data appended to {csvPath} successfully.')
 
 class Load():
     def __init__(self,
                  bus: int,
                  pMW: float,
                  qMW: float,
+                 pos: QPoint,
+                 orient: str,
+                 hand: QPoint,
                  ) -> None:
         self.bus = bus
         self.pMW = pMW
         self.qMW = qMW
+        self.pos = (pos.x(), pos.y())
+        self.orient = orient
+        self.hand = (hand.x(), hand.y())
 
     def append2CSV(self, path: str) -> None:
         data = {
             'bus': self.bus,
             'pMW': self.pMW,
             'qMW': self.qMW,
+            'pos': json.dumps(self.pos),
+            'orient': self.orient,
+            'hand': json.dumps(self.hand),
         }
         csvPath = path + '/Loads.csv'
-        with open(csvPath, 'a', newline = '') as file:
-            writer = csv.DictWriter(file,fieldnames = ['bus', 'pMW', 'qMW'])
+        with open(csvPath, 'a', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=['bus', 'pMW', 'qMW', 'pos', 'orient', 'hand'])
             writer.writerow(data)
-        print(f'-> Load data appended to {csvPath} successfuly.')
+        print(f'-> Load data appended to {csvPath} successfully.')
 
 class Slack():
     def __init__(self,
                  bus: int,
                  vmPU: float,
+                 pos: QPoint,
+                 orient: str,
+                 hand: QPoint,
                  ) -> None:
         self.bus = bus
         self.vmPU = vmPU
+        self.pos = (pos.x(), pos.y())
+        self.orient = orient
+        self.hand = (hand.x(), hand.y())
 
     def append2CSV(self, path: str) -> None:
         data = {
             'bus': self.bus,
-             'vmPU': self.vmPU,
+            'vmPU': self.vmPU,
+            'pos': json.dumps(self.pos),
+            'orient': self.orient,
+            'hand': json.dumps(self.hand),
         }
         csvPath = path + '/Slacks.csv'
-        with open(csvPath, 'a', newline = '') as file:
-            writer = csv.DictWriter(file,fieldnames = ['bus', 'vmPU'])
+        with open(csvPath, 'a', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'pos', 'orient', 'hand'])
             writer.writerow(data)
-        print(f'-> Slack data appended to {csvPath} successfuly.')
+        print(f'-> Slack data appended to {csvPath} successfully.')

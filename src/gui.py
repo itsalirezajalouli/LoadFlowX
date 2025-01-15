@@ -556,6 +556,8 @@ class MainWindow(QMainWindow):
         newSize = self.grid.dist * 2
         if newSize in range(self.minZoom, self.maxZoom):
             self.grid.dist = newSize
+
+            # Zoom in for buses
             for bus, (point, capacity, orient, points, id) in self.grid.busses.items():
                 newOriginX = point.x() * 2
                 newOriginY = point.y() * 2
@@ -568,6 +570,7 @@ class MainWindow(QMainWindow):
                 bigTuple = (point, capacity, orient, newPoints, id)
                 edited = self.grid.editedBusses(bus, bigTuple)
 
+            # Zoom in for transformers 
             for trafo, (point, ori, hands, bus1, bus2) in self.grid.trafos.items():
                 newOriginX = point.x() * 2
                 newOriginY = point.y() * 2
@@ -582,6 +585,43 @@ class MainWindow(QMainWindow):
                 self.grid.update()
                 self.update()
 
+            # Zoom in for generators 
+            for gen, (point, ori, hand) in self.grid.gens.items():
+                newOriginX = point.x() * 2
+                newOriginY = point.y() * 2
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.grid.snap(newOrigin)
+                hand = QPoint(hand.x() * 2, hand.y() * 2)
+                bigTuple = (point, ori, hand)
+                self.grid.gens.update({gen: bigTuple})
+                self.grid.update()
+                self.update()
+
+            # Zoom in for loads 
+            for load, (point, ori, hand) in self.grid.loads.items():
+                newOriginX = point.x() * 2
+                newOriginY = point.y() * 2
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.grid.snap(newOrigin)
+                hand = QPoint(hand.x() * 2, hand.y() * 2)
+                bigTuple = (point, ori, hand)
+                self.grid.loads.update({load: bigTuple})
+                self.grid.update()
+                self.update()
+
+            # Zoom in for slack 
+            for slack, (point, ori, hand) in self.grid.slacks.items():
+                newOriginX = point.x() * 2
+                newOriginY = point.y() * 2
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.grid.snap(newOrigin)
+                hand = QPoint(hand.x() * 2, hand.y() * 2)
+                bigTuple = (point, ori, hand)
+                self.grid.slacks.update({slack: bigTuple})
+                self.grid.update()
+                self.update()
+
+            # Zoom in for lines and Gui Paths
             newPaths = []
             for p in self.grid.paths:
                 connection1, connection2, fp, i, tempPath = p
@@ -596,11 +636,17 @@ class MainWindow(QMainWindow):
             self.grid.update()
             self.grid.updateGuiElementsCSV()
             self.grid.updateBusCSVGuiParams()
+            self.grid.updateTrafoGUICSVParams()
+            self.grid.updateGenGUICSVParams()
+            self.grid.updateLoadGUICSVParams()
+            self.grid.updateSlackGUICSVParams()
 
     def zoomOut(self) -> None:
         newSize = self.grid.dist // 2
         if newSize in range(self.minZoom, self.maxZoom):
             self.grid.dist = newSize
+
+            # Zoom out for buses 
             for bus, (point, capacity, orient, points, id) in self.grid.busses.items():
                 newOriginX = point.x() // 2
                 newOriginY = point.y() // 2
@@ -613,6 +659,7 @@ class MainWindow(QMainWindow):
                 bigTuple = (point, capacity, orient, newPoints, id)
                 edited = self.grid.editedBusses(bus, bigTuple)
 
+            # Zoom out for transformers 
             for trafo, (point, ori, hands, bus1, bus2) in self.grid.trafos.items():
                 newOriginX = point.x() // 2
                 newOriginY = point.y() // 2
@@ -627,6 +674,43 @@ class MainWindow(QMainWindow):
                 self.grid.update()
                 self.update()
 
+            # Zoom out for generators 
+            for gen, (point, ori, hand) in self.gens.items():
+                newOriginX = point.x() // 2
+                newOriginY = point.y() // 2
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.grid.snap(newOrigin)
+                hand = QPoint(hand.x() // 2, hand.y() // 2)
+                bigTuple = (point, ori, hand)
+                self.grid.gens.update({gen: bigTuple})
+                self.grid.update()
+                self.update()
+
+            # Zoom out for loads 
+            for load, (point, ori, hand) in self.grid.loads.items():
+                newOriginX = point.x() // 2
+                newOriginY = point.y() // 2
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.grid.snap(newOrigin)
+                hand = QPoint(hand.x() // 2, hand.y() // 2)
+                bigTuple = (point, ori, hand)
+                self.grid.loads.update({load: bigTuple})
+                self.grid.update()
+                self.update()
+
+            # Zoom out for slack 
+            for slack, (point, ori, hand) in self.grid.slacks.items():
+                newOriginX = point.x() // 2
+                newOriginY = point.y() // 2
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.grid.snap(newOrigin)
+                hand = QPoint(hand.x() // 2, hand.y() // 2)
+                bigTuple = (point, ori, hand)
+                self.grid.slacks.update({slack: bigTuple})
+                self.grid.update()
+                self.update()
+
+            # Zoom out for lines and Gui Paths
             newPaths = []
             for p in self.grid.paths:
                 connection1, connection2, fp, i, tempPath = p
@@ -641,3 +725,8 @@ class MainWindow(QMainWindow):
             self.grid.update()
             self.grid.updateGuiElementsCSV()
             self.grid.updateBusCSVGuiParams()
+            self.grid.updateTrafoGUICSVParams()
+            self.grid.updateGenGUICSVParams()
+            self.grid.updateLoadGUICSVParams()
+            self.grid.updateSlackGUICSVParams()
+
