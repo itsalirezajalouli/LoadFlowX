@@ -42,55 +42,45 @@ class AddLineDialog(QDialog):
         self.lineId = None
         self.R = None
         self.X = None
+        self.B = None
         self.Length = None
         self.vBase = None
 
-        # Bus Name Input Box
+        # Line Name Input Box
         self.nameInputLabel = QLabel('Line Name:')
         self.nameInputLabel.setStyleSheet('color: #ffffff;')
         self.nameInput = QLineEdit(self)
         self.nameInput.setPlaceholderText('Set a name for the line')
 
-        # Line Z Input Box
-        # self.zLabel = QLabel('Impedances:')
-        # self.zLabel.setStyleSheet('color: #ffffff;')
-        # self.zWidget = QWidget()
-        # self.zHBox = QHBoxLayout()
-        # self.rInput = QLineEdit(self)
-        # self.rInput.setPlaceholderText('R')
-        # self.xInput = QLineEdit(self)
-        # self.xInput.setPlaceholderText('X')
-        # self.rUnitDropDown = QComboBox(self) 
-        # self.rUnitDropDown.addItem('PU')
-        # self.rUnitDropDown.addItem('Kohm')
-        # self.xUnitDropDown = QComboBox(self) 
-        # self.xUnitDropDown.addItem('PU')
-        # self.xUnitDropDown.addItem('Kohm')
-        # self.zHBox.addWidget(self.rInput)
-        # self.zHBox.addWidget(self.rUnitDropDown)
-        # self.zHBox.addWidget(self.xInput)
-        # self.zHBox.addWidget(self.xUnitDropDown)
-        # self.zWidget.setLayout(self.zHBox)
+        # Impedance Inputs (R, X, B)
+        self.impedanceLabel = QLabel('Impedance (R, X, B):')
+        self.impedanceLabel.setStyleSheet('color: #ffffff;')
+        self.impedanceWidget = QWidget()
+        self.impedanceHBox = QHBoxLayout()
 
-        # Length & V Base
-        self.lenLabel = QLabel('Length:')
+        self.rInput = QLineEdit(self)
+        self.rInput.setPlaceholderText('R (Ohm/km)')
+        self.xInput = QLineEdit(self)
+        self.xInput.setPlaceholderText('X (Ohm/km)')
+        self.bInput = QLineEdit(self)
+        self.bInput.setPlaceholderText('B (S/km)')
+
+        self.impedanceHBox.addWidget(self.rInput)
+        self.impedanceHBox.addWidget(self.xInput)
+        self.impedanceHBox.addWidget(self.bInput)
+        self.impedanceWidget.setLayout(self.impedanceHBox)
+
+        # Length Input Box
+        self.lenLabel = QLabel('Length (km):')
         self.lenLabel.setStyleSheet('color: #ffffff;')
         self.lenHBox = QHBoxLayout()
         self.lenInput = QLineEdit(self)
-        self.lenInput.setPlaceholderText('Line Length')
-        # self.vBaseInput = QLineEdit(self)
-        # self.vBaseInput.setPlaceholderText('V Base')
+        self.lenInput.setPlaceholderText('Length of the line (km)')
         self.lenUnitDropDown = QComboBox(self) 
         self.lenUnitDropDown.addItem('KM')
-        self.lenUnitDropDown.addItem('Miles (Not Implemented)')
-        # self.vbUnitDropDown = QComboBox(self) 
-        # self.vbUnitDropDown.addItem('PU')
-        # self.vbUnitDropDown.addItem('KV')
         self.lenHBox.addWidget(self.lenLabel)
         self.lenHBox.addWidget(self.lenInput)
         self.lenHBox.addWidget(self.lenUnitDropDown)
-        # self.lenHBox.addWidget(self.vBaseInput)
-        # self.lenHBox.addWidget(self.vbUnitDropDown)
         self.lenWidget = QWidget()
         self.lenWidget.setLayout(self.lenHBox)
 
@@ -103,17 +93,20 @@ class AddLineDialog(QDialog):
         layout.addWidget(self.title)
         layout.addWidget(self.nameInputLabel)
         layout.addWidget(self.nameInput)
-        # layout.addWidget(self.zWidget)
+        layout.addWidget(self.impedanceWidget)
         layout.addWidget(self.lenWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
 
     def accept(self) -> None:
         inputList = []
-        # inputList.append(self.rInput.text())
-        # inputList.append(self.xInput.text())
+        inputList.append(self.rInput.text())
+        inputList.append(self.xInput.text())
+        inputList.append(self.bInput.text())
         inputList.append(self.lenInput.text())
         inputList.append(self.nameInput.text())
+
+        # Check if any input is empty
         if '' in inputList:
             self.inputError = True
             QMessageBox.warning(self, 'Fill all the fields.',
@@ -121,15 +114,18 @@ class AddLineDialog(QDialog):
             return
         else:
             self.inputError = False
+
+        # Create the line object with the provided inputs
         line = Line(
-            bus1id = self.bus1Id, 
-            bus2id = self.bus2Id, 
-            name = self.nameInput.text(),
-            # R = float(self.rInput.text()),
-            # X = float(self.xInput.text()),
-            len = float(self.lenInput.text()),
-            # vBase = float(self.vBaseInput.text())
+            bus1id=self.bus1Id,
+            bus2id=self.bus2Id,
+            name=self.nameInput.text(),
+            R=float(self.rInput.text()),
+            X=float(self.xInput.text()),
+            B=float(self.bInput.text()),
+            len=float(self.lenInput.text())
         )
+
         line.log()
         line.append2CSV(self.projectPath)
         super().accept()

@@ -5,7 +5,7 @@ from PyQt6.QtGui import QFont, QPalette, QColor
 import csv
 
 class CsvViewer(QDialog):
-    def __init__(self, parent: QWidget = None, csvPaths: dict = None, time):
+    def __init__(self, parent: QWidget = None, csvPaths: dict = None, time = 0):
         super(CsvViewer, self).__init__(parent)
         
         self.setWindowTitle('Simulation Results')

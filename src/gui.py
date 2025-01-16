@@ -1,6 +1,7 @@
 # Main GUI setup and window management
 
 # Imports
+import csv
 from time import perf_counter
 from grid import Grid
 from simulator import runLoadFlow 
@@ -209,6 +210,7 @@ class MainWindow(QMainWindow):
         eraseGridButt.setIcon(QIcon('../icons/eraseGrid.png'))
         eraseGridButt.setIconSize(QSize(self.buttSize, self.buttSize))
         eraseGridButt.setStyleSheet(self.normalStyle)
+        eraseGridButt.clicked.connect(self.clear)
         self.viewBar.addWidget(eraseGridButt)
 
         #   Zoom In button
@@ -734,3 +736,73 @@ class MainWindow(QMainWindow):
             self.grid.updateLoadGUICSVParams()
             self.grid.updateSlackGUICSVParams()
 
+    def clear(self) -> None:
+
+        # Clearing all the data
+        self.grid.busCounter = 0
+        self.grid.trafoCounter = 0
+        self.grid.genCounter = 0
+        self.grid.loadCounter = 0
+        self.grid.slackCounter = 0
+        self.grid.firstNode = None
+        self.grid.busses = {}
+        self.grid.trafos = {}
+        self.grid.gens = {}
+        self.grid.loads = {}
+        self.grid.slacks = {}
+        self.grid.paths = []
+        self.grid.tokenBusPorts = []
+        self.grid.tokenTrafoHands = []
+        self.grid.tokenGenHands = []
+        self.grid.tokenLoadHands = []
+        self.grid.tokenSlackHands = []
+        self.grid.xDists = []
+        self.grid.tempPath = []
+        self.grid.firstType = None
+        self.grid.update()
+
+        self.busCSV = self.projectPath + '/Buses.csv'
+        self.lineCSV = self.projectPath + '/Lines.csv'
+        self.guiCSV = self.projectPath + '/GUI.csv'
+        self.genCSV = self.projectPath + '/Gens.csv'
+        self.trafoCSV = self.projectPath + '/Trafos.csv'
+        self.loadCSV = self.projectPath + '/Loads.csv'
+        self.slackCSV = self.projectPath + '/Slacks.csv'
+
+        with open(self.guiCSV, 'w', newline = '') as file:
+            writer = csv.DictWriter(file,fieldnames=['dist','paths'])
+            writer.writeheader()
+        print(f'-> GUI header cleared to {self.lineCSV} successfuly.')
+
+        with open(self.busCSV, 'w', newline = '') as file:
+            writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'vAng',
+                                                     'P', 'Q', 'name', 'pos',
+                                                     'capacity', 'orient', 'points'])
+            writer.writeheader()
+        print(f'-> Bus header cleared to {self.busCSV} successfuly.')
+
+        with open(self.lineCSV, 'w', newline = '') as file:
+            writer = csv.DictWriter(file,fieldnames = ['name', 'bus1id','bus2id','R','X',
+                                                 'len', 'vBase'])
+            writer.writeheader()
+        print(f'-> Line header clear to {self.lineCSV} successfuly.')
+
+        with open(self.genCSV, 'w', newline = '') as file:
+            writer = csv.DictWriter(file, fieldnames=['bus', 'name', 'pMW', 'pos', 'orient', 'hand'])
+            writer.writeheader()
+        print(f'-> Gen header cleared to {self.genCSV} successfuly.')
+
+        with open(self.trafoCSV, 'w', newline = '') as file:
+            writer = csv.DictWriter(file, fieldnames=['id', 'name', 'hvBus', 'lvBus', 'pos', 'orient', 'hands'])
+            writer.writeheader()
+        print(f'-> Trafo header cleared to {self.trafoCSV} successfuly.')
+
+        with open(self.loadCSV, 'w', newline = '') as file:
+            writer = csv.DictWriter(file, fieldnames=['bus', 'pMW', 'qMW', 'pos', 'orient', 'hand'])
+            writer.writeheader()
+        print(f'-> Load header cleared to {self.loadCSV} successfuly.')
+
+        with open(self.slackCSV, 'w', newline = '') as file:
+            writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'pos', 'orient', 'hand'])
+            writer.writeheader()
+        print(f'-> Slack header cleared to {self.slackCSV} successfuly.')

@@ -12,7 +12,13 @@ Tasks:
 - [x] Adding timer
 - [x] Max iteration
 - [x] Convergence error handling
+- [x] Add erase functionality
 - [ ] Adding more optional parameters to dialogs (Frontend)
+    - front:
+    - [x] load
+    - [x] line
+    - [ ] slack 
+    - [ ] gen 
+    - [ ] trafo 
 - [ ] Per unit conversion
-- [ ] Add erase functionality
 - [ ] 39 Bus example and test

@@ -77,7 +77,7 @@ class AddLoadDialog(QDialog):
         self.qInput = QLineEdit(self)
         self.qInput.setPlaceholderText('i.e. 20 MVAR')
         self.qUnitDropDown = QComboBox(self) 
-        self.qUnitDropDown.addItem('MW')
+        self.qUnitDropDown.addItem('MVar')
         # self.qUnitDropDown.addItem('PU (Not Implemented)')
         # self.vUnitDropDown.addItem('V')
         # self.vUnitDropDown.activated.connect(self.vMagUnitActivator)
