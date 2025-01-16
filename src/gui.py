@@ -1,6 +1,7 @@
 # Main GUI setup and window management
 
 # Imports
+from time import perf_counter
 from grid import Grid
 from simulator import runLoadFlow 
 from PyQt6.QtCore import QSize
@@ -346,7 +347,7 @@ class MainWindow(QMainWindow):
 
     def run(self) -> None:
         # Takes chosen method from dialog chosen by user
-        method = self.grid.openRunDialog()
+        method, maxIter = self.grid.openRunDialog()
 
         # Passing data csvs to the simulator
         busCsvPath = self.projectPath + '/Buses.csv'
@@ -357,25 +358,28 @@ class MainWindow(QMainWindow):
         slacksCSV = self.projectPath + '/Slacks.csv'
 
         # Run load flow Simulation
-        nMaker = runLoadFlow(self.projectPath,
+        startTime = perf_counter()
+        loadFlow = runLoadFlow(self.projectPath,
                             busCsvPath, lineCSV, trafoCSV, genCSV, loadCSV, slacksCSV,
-                            method)
+                            method, maxIter)
+        executionTime = perf_counter() - startTime
+        print(f'Function took {executionTime:.4f} seconds')
 
-        # Save the results
+        # Show results
         busResultsPath = self.projectPath + '/results_buses.csv'
         lineResultsPath = self.projectPath + '/results_lines.csv'
         trafoResultsPath = self.projectPath + '/results_trafos.csv'
         loadsResultsPath = self.projectPath + '/results_loads.csv'
-
-        # Show results
         paths = {
             'lines': lineResultsPath,
             'buses': busResultsPath,
             'transformers': trafoResultsPath,
             'loads': loadsResultsPath,
         }
-
-        self.grid.viewResultCsv(paths) 
+        if loadFlow:
+            self.grid.viewResultCsv(paths, executionTime) 
+        else:
+            self.grid.showConvergenceError()
 
     def addBus(self) -> None:
         self.grid.selectMode = False
@@ -580,7 +584,7 @@ class MainWindow(QMainWindow):
                 for h in hands:
                     h = QPoint(h.x() * 2, h.y() * 2)
                     newPoints.append(h)
-                bigTuple = (point, ori, hands, bus1, bus2)
+                bigTuple = (point, ori, newPoints, bus1, bus2)
                 self.grid.trafos.update({trafo: bigTuple})
                 self.grid.update()
                 self.update()
@@ -624,12 +628,12 @@ class MainWindow(QMainWindow):
             # Zoom in for lines and Gui Paths
             newPaths = []
             for p in self.grid.paths:
-                connection1, connection2, fp, i, tempPath = p
-                newTp = []
-                for tp in tempPath:
+                connection1, connection2, i1, i2, pathList, firstNodeType, secNodeType = p
+                newPathList = []
+                for tp in pathList:
                     tp = QPoint(tp.x() * 2, tp.y() * 2)
-                    newTp.append(tp)
-                p = connection1, connection2, fp, i, newTp
+                    newPathList.append(tp)
+                p = connection1, connection2, i1, i2, newPathList, firstNodeType, secNodeType 
                 newPaths.append(p)
 
             self.grid.paths = newPaths
@@ -669,13 +673,13 @@ class MainWindow(QMainWindow):
                 for h in hands:
                     h = QPoint(h.x() // 2, h.y() // 2)
                     newPoints.append(h)
-                bigTuple = (point, ori, hands, bus1, bus2)
+                bigTuple = (point, ori, newPoints, bus1, bus2)
                 self.grid.trafos.update({trafo: bigTuple})
                 self.grid.update()
                 self.update()
 
             # Zoom out for generators 
-            for gen, (point, ori, hand) in self.gens.items():
+            for gen, (point, ori, hand) in self.grid.gens.items():
                 newOriginX = point.x() // 2
                 newOriginY = point.y() // 2
                 newOrigin = QPoint(newOriginX, newOriginY)
@@ -713,12 +717,12 @@ class MainWindow(QMainWindow):
             # Zoom out for lines and Gui Paths
             newPaths = []
             for p in self.grid.paths:
-                connection1, connection2, fp, i, tempPath = p
-                newTp = []
-                for tp in tempPath:
+                connection1, connection2, i1, i2, pathList, firstNodeType, secNodeType = p
+                newPathList = []
+                for tp in pathList:
                     tp = QPoint(tp.x() // 2, tp.y() // 2)
-                    newTp.append(tp)
-                p = connection1, connection2, fp, i, newTp
+                    newPathList.append(tp)
+                p = connection1, connection2, i1, i2, newPathList, firstNodeType, secNodeType 
                 newPaths.append(p)
 
             self.grid.paths = newPaths

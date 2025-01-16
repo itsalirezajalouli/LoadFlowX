@@ -9,8 +9,9 @@ Tasks:
 - [x] Adding results window (Frontend)
 - [x] Fixing move event for all
 - [x] Saving GUI info properly (gen, load, slack)
-- [ ] Fixing line gui system
-- [ ] Loading GUI properly
+- [x] Adding timer
+- [x] Max iteration
+- [x] Convergence error handling
 - [ ] Adding more optional parameters to dialogs (Frontend)
 - [ ] Per unit conversion
 - [ ] Add erase functionality

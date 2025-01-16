@@ -13,7 +13,7 @@ from slack_dialogs import AddSlackDialog
 from run_dialogs import RunSimDialog
 from theme import DiscordPalette as theme
 from PyQt6.QtGui import QColor, QPaintEvent, QPen, QPainter, QBrush, QPolygon
-from PyQt6.QtWidgets import QApplication, QWidget
+from PyQt6.QtWidgets import QApplication, QWidget, QMessageBox
 from trafo_dialogs import AddTrafoDialog
 from csv_viewer import CsvViewer
 
@@ -1296,7 +1296,7 @@ class Grid(QWidget):
         self.runSimDialog = RunSimDialog(self, self.freq, self.sBase)
         self.runSimDialog.projectPath = self.projectPath
         self.runSimDialog.exec()
-        return self.runSimDialog.activatedMethod
+        return self.runSimDialog.activatedMethod, self.runSimDialog.maxIter
 
     def setDrawingParams(self) -> None:
         if self.dist == 16:
@@ -1645,14 +1645,14 @@ class Grid(QWidget):
                 self.drawingParams[5], self.drawingParams[5]
             )
 
-    def viewResultCsv(self, paths):
+    def viewResultCsv(self, paths, time):
         csvPaths = {
             'Buses': paths['buses'],
             'Lines': paths['lines'],
             'Transformers': paths['transformers'],
             'Loads': paths['loads']
         }
-        self.csvViewer = CsvViewer(self, csvPaths)
+        self.csvViewer = CsvViewer(self, csvPaths, time)
         self.csvViewer.exec()
 
     def handleHandMode(self):
@@ -1758,3 +1758,11 @@ class Grid(QWidget):
         self.handActivatedPos = self.snap(newHAP)
 
         self.update()
+
+    def showConvergenceError(self):
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Warning)
+        msg.setText('Load Flow Calculation Failed')
+        msg.setInformativeText('The load flow calculation did not converge within the maximum number of iterations. Please check your network parameters and try again.')
+        msg.setWindowTitle('Convergence Error')
+        msg.exec()

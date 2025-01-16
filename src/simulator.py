@@ -4,7 +4,7 @@ import pandapower as pp
 
 # Methods of load flow calculations 
 def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str, 
-                           genCsv: str, loadCsv: str, slacksCsv: str, method: str) -> None:
+                genCsv: str, loadCsv: str, slacksCsv: str, method: str, maxIter) -> bool:
 
     # Create empty network from scratch
     net = pp.create_empty_network()
@@ -73,16 +73,18 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
     print(net.ext_grid)
     pp.runpp(
         net, algorithm = method, init = 'flat', enforce_q_lims = True, numba = True,
-        max_iteration = 1000
+        max_iteration = maxIter
     )
 
     # Check for convergence
     if not net.converged:
-        print('WARNING: Power flow did not converge!')
+        return False
 
     # Save results
-    resultPath = f'{projectPth}/results'
-    net.res_bus.to_csv(f'{resultPath}_buses.csv', index=True)
-    net.res_line.to_csv(f'{resultPath}_lines.csv', index=True)
-    net.res_trafo.to_csv(f'{resultPath}_trafos.csv', index=True)
-    net.res_load.to_csv(f'{resultPath}_loads.csv', index=True)
+    elif net.converged:
+        resultPath = f'{projectPth}/results'
+        net.res_bus.to_csv(f'{resultPath}_buses.csv', index=True)
+        net.res_line.to_csv(f'{resultPath}_lines.csv', index=True)
+        net.res_trafo.to_csv(f'{resultPath}_trafos.csv', index=True)
+        net.res_load.to_csv(f'{resultPath}_loads.csv', index=True)
+        return True

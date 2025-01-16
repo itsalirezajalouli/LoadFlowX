@@ -9,6 +9,7 @@ class RunSimDialog(QDialog):
         self.freq = freq # frequency of the network
         self.sBase = sBase
         self.activatedMethod = 'nr' # set default load flow method to newton-raphson
+        self.maxIter = 1000
 
         # Styling
         self.setWindowTitle('Run Simulation')
@@ -75,8 +76,20 @@ class RunSimDialog(QDialog):
         self.fsHBox.addWidget(self.sbLabel)
         self.fsHBox.addWidget(self.sBaseInput)
         self.fsHBox.addWidget(self.sbUnitDropDown)
-        self.aWidget = QWidget()
-        self.aWidget.setLayout(self.fsHBox)
+        self.fsWidget = QWidget()
+        self.fsWidget.setLayout(self.fsHBox)
+
+        # Max Iterations input box
+        self.maxIterLabel = QLabel('Maximum Iterations:')
+        self.maxIterLabel.setStyleSheet('color: #ffffff;')
+        self.maxIterHBox = QHBoxLayout()
+        self.maxIterInput = QLineEdit(self)
+        self.maxIterInput.setPlaceholderText('Max Iterations')
+        self.maxIterInput.setText('1000')  # Default value
+        self.maxIterHBox.addWidget(self.maxIterLabel)
+        self.maxIterHBox.addWidget(self.maxIterInput)
+        self.maxIterWidget = QWidget()
+        self.maxIterWidget.setLayout(self.maxIterHBox)
 
         # Button Box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -88,7 +101,8 @@ class RunSimDialog(QDialog):
         layout.addWidget(self.methLabel)
         layout.addWidget(self.methWidget)
         layout.addWidget(self.fsLabel)
-        layout.addWidget(self.aWidget)
+        layout.addWidget(self.fsWidget)
+        layout.addWidget(self.maxIterWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
 
@@ -96,8 +110,10 @@ class RunSimDialog(QDialog):
         inputList = []
         inputList.append(self.freqInput.text())
         inputList.append(self.sBaseInput.text())
+        inputList.append(self.maxIterInput.text())
         self.freq = float(self.freqInput.text())
         self.sBase = float(self.sBaseInput.text())
+        self.maxIter = int(self.maxIterInput.text())
         if '' in inputList:
             self.inputError = True
             QMessageBox.warning(self, 'Fill all the fields.',
