@@ -13,3 +13,7 @@ fixed?    bug
 -[] load data would not be written on Loads.csv.
 -[] slack bus id is wrong i guess.
 -[] the program after runnig power flow fast decouple method closed(test1 project).
+-[] connection betwen trans-bus exgrid-bus and gen-bus lost after closing and opennig again.
+-[] and it want gens, trans, exgrid data for reconnecting but these datas are exist in csv files.
+-[] i can draw line from bus to ex-grid and disable drawing but after enabling the tale an line at the same posiyion.
+-[] load has been disappeared from net nad data was not written as i said before.
