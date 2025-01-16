@@ -81,14 +81,31 @@ def line_loss(lines_data,net):
     with open(lines_data) as file:
         reader = csv.DictReader(file,fieldnames=['from_bus','to_bus','length_km','r_ohm_per_km','x_ohm_per_km', 'c_nf_per_km','max_i_ka'])
 
+
+def impedance_pu(Z_pu:float,Z_base:float)->float:
+    return Z_pu*Z_base
+
+
+def voltage_pu(V_pu:float,V_base:float)->float:
+    return V_pu*V_base
+
+
+def power_pu(P_pu:float,S_base:float)->float:
+    return P_pu*S_base
+
+# this function can do everything that is written above so all are ok:)
+def pu(pu:float,base:float)->float:
+    return pu*base
+
+
 def main():
-    net = create_net("network1")
-    add_bus(buses_data, net)
-    add_line(lines_data,net)
-    add_trans(tranfomers_data,net)
-    add_gen(gens_data,net)
-    add_load(loads_data,net)
-    print(net.bus)
+    # net = create_net("network1")
+    # add_bus(buses_data, net)
+    # add_line(lines_data,net)
+    # add_trans(tranfomers_data,net)
+    # add_gen(gens_data,net)
+    # add_load(loads_data,net)
+    # print(net.bus)
     # print(net.bus)
     # print(net.trafo)
     # print(net.line)
@@ -98,6 +115,10 @@ def main():
     # print(colored('the program runned succesfully!','green'))
     # lf(net)
     # print(lf_res)
+
+    q = float(input('q: '))
+    sbase = float(input('Sb: '))
+    print(pu(q,sbase))
 
 if __name__ == "__main__":
     main()
