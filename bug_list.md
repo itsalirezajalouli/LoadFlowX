@@ -17,3 +17,4 @@ fixed?    bug
 -[] and it want gens, trans, exgrid data for reconnecting but these datas are exist in csv files.
 -[] i can draw line from bus to ex-grid and disable drawing but after enabling the tale an line at the same posiyion.
 -[] load has been disappeared from net nad data was not written as i said before.
+-[] load data can't be written by gui and there in no implement for load datas.

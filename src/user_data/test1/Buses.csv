@@ -1,0 +1,7 @@
+id,bType,vMag,vAng,P,Q,name,pos,capacity,orient,points
+1,BusType.SLACK,20.0,NaN,NaN,NaN,Bus1,"[320, 192]",1,-90,"[[320, 192]]"
+2,BusType.SLACK,63.0,NaN,NaN,NaN,bus2,"[544, 192]",1,-90,"[[544, 192]]"
+3,BusType.SLACK,230.0,NaN,NaN,NaN,Bus3,"[736, 192]",1,90,"[[736, 192]]"
+4,BusType.SLACK,230.0,NaN,NaN,NaN,Bus4,"[768, 448]",1,180,"[[768, 448]]"
+5,BusType.SLACK,230.0,NaN,NaN,NaN,Slack bus,"[832, 64]",1,0,"[[832, 64]]"
+6,BusType.SLACK,230.0,NaN,NaN,NaN,Bus5,"[960, 192]",1,90,"[[960, 192]]"
