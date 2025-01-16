@@ -1,0 +1,12 @@
+fixed?    bug
+-[] Gens, Active power can get str! it should be float only.
+-[] Undo option does not work.
+-[] there is nothing for editing objects after dropping and giving data
+-[] gens has no option to be a slack gen
+-[] trans did not get any fucking data, exept name
+-[] any object has to be selected and dragged without dragging all objects of the network
+-[] lines can't connect load to buses in a broken line but it work with a direct line
+-[] after clicking on zoom out the program will be closed!
+-[] a spicific area should be selected by user for dragging, removing, editting and etc.
+-[] tranfo.csv has no field for ratio.
+-[] 
