@@ -38,7 +38,7 @@ class AddLoadDialog(QDialog):
             border-radius: 5px;
             padding: 8px;
         ''')
-        self.projectName = None
+        self.projectPath = None
         self.inputError = False
         self.bus = bus 
         self.loadPos = None

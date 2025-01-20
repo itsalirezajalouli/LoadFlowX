@@ -64,19 +64,19 @@ class AddBusDialog(QDialog):
         # self.busTypeDropDown.activated.connect(self.busTypeActivator)
         #
         # V Magnitude & Angle Input Box
-        self.vInputLabel = QLabel('Voltage:')
+        self.vInputLabel = QLabel('Nominal Voltage:')
         self.vInputLabel.setStyleSheet('color: #ffffff;')
         self.vWidget = QWidget()
         self.vHBox = QHBoxLayout()
         self.vMagLabel = QLabel('Vn: ')
         self.vMagInput = QLineEdit(self)
-        self.vMagInput.setPlaceholderText('Nominal Voltage')
-        # self.vAngLabel = QLabel('∠δ : ')
-        # self.vAngInput = QLineEdit(self)
-        # self.vAngInput.setPlaceholderText('Angle')
+        self.vMagInput.setPlaceholderText('i.e. 345 KV')
         self.vUnitDropDown = QComboBox(self) 
         self.vUnitDropDown.addItem('KV')
         self.vUnitDropDown.addItem('PU (Not Implemented)')
+        self.zoneLabel = QLabel('Zone: ')
+        self.zoneInput = QLineEdit(self)
+        self.zoneInput.setPlaceholderText('i.e. 1, 2, 3')
         # self.vUnitDropDown.addItem('V')
         # self.vUnitDropDown.activated.connect(self.vMagUnitActivator)
         # self.vDegreeTypeDropDown = QComboBox(self) 
@@ -85,6 +85,8 @@ class AddBusDialog(QDialog):
         self.vHBox.addWidget(self.vMagLabel)
         self.vHBox.addWidget(self.vMagInput)
         self.vHBox.addWidget(self.vUnitDropDown)
+        self.vHBox.addWidget(self.zoneLabel)
+        self.vHBox.addWidget(self.zoneInput)
         # self.vHBox.addWidget(self.vAngLabel)
         # self.vHBox.addWidget(self.vAngInput)
         # self.vHBox.addWidget(self.vDegreeTypeDropDown)
@@ -163,6 +165,7 @@ class AddBusDialog(QDialog):
         inputList = []
         inputList.append(self.nameInput.text())
         inputList.append(self.vMagInput.text())
+        inputList.append(self.zoneInput.text())
         # inputList.append(self.vAngInput.text())
         # inputList.append(self.pInput.text())
         # inputList.append(self.qInput.text())
@@ -179,7 +182,7 @@ class AddBusDialog(QDialog):
             pos = self.busPos,
             name = self.nameInput.text(),
             bType = self.busType, 
-            # vAng = float(self.vAngInput.text()),
+            zone = int(self.zoneInput.text()),
             vMag = float(self.vMagInput.text()),
             # P = float(self.pInput.text()),
             # Q = float(self.qInput.text()),

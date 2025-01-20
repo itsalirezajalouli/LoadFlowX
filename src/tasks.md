@@ -15,10 +15,21 @@ Tasks:
 - [x] Add erase functionality
 - [ ] Adding more optional parameters to dialogs (Frontend)
     - front:
-    - [x] load
     - [x] line
-    - [ ] slack 
-    - [ ] gen 
-    - [ ] trafo 
-- [ ] Per unit conversion
+    - [x] load
+    - [x] slack 
+    - [x] bus
+    - [x] gen 
+    - [x] trafo 
+- [x] error handling for run_dialog
+- [x] ok button for results
+- [x] to slack and load and gen?!
 - [ ] 39 Bus example and test
+- [ ] Per unit conversion
+
+# places where i should fix the csvs:
+- psa
+- startup
+- gui (clean) 
+- grid (update csv)
+- simulator 

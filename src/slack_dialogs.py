@@ -49,47 +49,27 @@ class AddSlackDialog(QDialog):
         self.nameInput = QLineEdit(self)
         self.nameInput.setPlaceholderText('Set a name for the grid')
 
-        # Line Z Input Box
-        # self.zLabel = QLabel('Impedances:')
-        # self.zLabel.setStyleSheet('color: #ffffff;')
-        # self.zWidget = QWidget()
-        # self.zHBox = QHBoxLayout()
-        # self.rInput = QLineEdit(self)
-        # self.rInput.setPlaceholderText('R')
-        # self.xInput = QLineEdit(self)
-        # self.xInput.setPlaceholderText('X')
-        # self.rUnitDropDown = QComboBox(self) 
-        # self.rUnitDropDown.addItem('PU')
-        # self.rUnitDropDown.addItem('Kohm')
-        # self.xUnitDropDown = QComboBox(self) 
-        # self.xUnitDropDown.addItem('PU')
-        # self.xUnitDropDown.addItem('Kohm')
-        # self.zHBox.addWidget(self.rInput)
-        # self.zHBox.addWidget(self.rUnitDropDown)
-        # self.zHBox.addWidget(self.xInput)
-        # self.zHBox.addWidget(self.xUnitDropDown)
-        # self.zWidget.setLayout(self.zHBox)
-
         # Length & V Base
-        self.lenLabel = QLabel('Voltage:')
-        self.lenLabel.setStyleSheet('color: #ffffff;')
-        self.lenHBox = QHBoxLayout()
-        self.lenInput = QLineEdit(self)
-        self.lenInput.setPlaceholderText('i.e. 1.02 p.u')
-       # self.vBaseInput = QLineEdit(self)
-        # self.vBaseInput.setPlaceholderText('V Base')
-        self.lenUnitDropDown = QComboBox(self) 
-        self.lenUnitDropDown.addItem('PU')
-        # self.vbUnitDropDown = QComboBox(self) 
-        # self.vbUnitDropDown.addItem('PU')
-        # self.vbUnitDropDown.addItem('KV')
-        self.lenHBox.addWidget(self.lenLabel)
-        self.lenHBox.addWidget(self.lenInput)
-        self.lenHBox.addWidget(self.lenUnitDropDown)
-        # self.lenHBox.addWidget(self.vBaseInput)
-        # self.lenHBox.addWidget(self.vbUnitDropDown)
+        self.vMagLabel = QLabel('|V|:')
+        self.vMagLabel.setStyleSheet('color: #ffffff;')
+        self.vHBox = QHBoxLayout()
+        self.vMagInput = QLineEdit(self)
+        self.vMagInput.setPlaceholderText('i.e. 1.02 p.u')
+        self.vangLabel = QLabel('δ:')
+        self.vangInput = QLineEdit(self)
+        self.vangInput.setPlaceholderText('i.e. 0')
+        self.vMagUnitDropDown = QComboBox(self) 
+        self.vMagUnitDropDown.addItem('PU')
+        self.vangUnitDropDown = QComboBox(self) 
+        self.vangUnitDropDown.addItem('deg')
+        self.vHBox.addWidget(self.vMagLabel)
+        self.vHBox.addWidget(self.vMagInput)
+        self.vHBox.addWidget(self.vMagUnitDropDown)
+        self.vHBox.addWidget(self.vangLabel)
+        self.vHBox.addWidget(self.vangInput)
+        self.vHBox.addWidget(self.vangUnitDropDown)
         self.lenWidget = QWidget()
-        self.lenWidget.setLayout(self.lenHBox)
+        self.lenWidget.setLayout(self.vHBox)
 
         # Button Box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -109,7 +89,7 @@ class AddSlackDialog(QDialog):
         inputList = []
         # inputList.append(self.rInput.text())
         # inputList.append(self.xInput.text())
-        inputList.append(self.lenInput.text())
+        inputList.append(self.vMagInput.text())
         inputList.append(self.nameInput.text())
         if '' in inputList:
             self.inputError = True
@@ -120,7 +100,8 @@ class AddSlackDialog(QDialog):
             self.inputError = False
         slack = Slack(
             bus = self.bus,
-            vmPU = float(self.lenInput.text()),
+            vmPU = float(self.vMagInput.text()),
+            vaD = float(self.vangInput.text()),
             pos = self.slackPos,
             orient = self.slackOri,
             hand = self.slackHand,

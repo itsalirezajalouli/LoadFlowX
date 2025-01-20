@@ -215,25 +215,33 @@ class StartUp(QDialog):
             print(f'-> GUI header appended to {self.lineCSV} successfuly.')
 
             with open(self.busCSV, 'a', newline = '') as file:
-                writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'vAng',
+                writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'zone', 'vAng',
                                                          'P', 'Q', 'name', 'pos',
                                                          'capacity', 'orient', 'points'])
                 writer.writeheader()
             print(f'-> Bus header appended to {self.busCSV} successfuly.')
 
-            with open(self.lineCSV, 'a', newline = '') as file:
-                writer = csv.DictWriter(file,fieldnames = ['name', 'bus1id','bus2id','R','X',
-                                                     'len', 'vBase'])
+            with open(self.lineCSV, 'a', newline='') as file:
+                writer = csv.DictWriter(file, fieldnames=[
+                    'name', 'bus1id', 'bus2id', 'R', 'X',
+                    'len', 'c_nf_per_km', 'max_i_ka'
+                ])
                 writer.writeheader()
-            print(f'-> Line header appended to {self.lineCSV} successfuly.')
+            print(f'-> Line header cleared to {self.lineCSV} successfuly.')
 
             with open(self.genCSV, 'a', newline = '') as file:
-                writer = csv.DictWriter(file, fieldnames=['bus', 'name', 'pMW', 'pos', 'orient', 'hand'])
+                writer = csv.DictWriter(file, fieldnames=[
+                    'bus', 'name', 'pMW', 'vmPU', 'minQMvar', 'maxQMvar', 
+                    'minPMW', 'maxPMW', 'pos', 'orient', 'hand'
+                ])
                 writer.writeheader()
             print(f'-> Gen header appended to {self.genCSV} successfuly.')
 
             with open(self.trafoCSV, 'a', newline = '') as file:
-                writer = csv.DictWriter(file, fieldnames=['id', 'name', 'hvBus', 'lvBus', 'pos', 'orient', 'hands'])
+                writer = csv.DictWriter(file, fieldnames=[
+                    'id', 'name', 'hvBus', 'lvBus', 'pos', 'orient', 'hands', 
+                    'sn_mva', 'vk_percent', 'vkr_percent', 'tap_step_percent'
+                ])
                 writer.writeheader()
             print(f'-> Trafo header appended to {self.trafoCSV} successfuly.')
 
@@ -242,7 +250,7 @@ class StartUp(QDialog):
                 writer.writeheader()
             print(f'-> Load header appended to {self.loadCSV} successfuly.')
 
-            with open(self.slackCSV, 'a', newline = '') as file:
-                writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'pos', 'orient', 'hand'])
+            with open(self.slackCSV, 'a', newline='') as file:
+                writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'vaD', 'pos', 'orient', 'hand'])
                 writer.writeheader()
             print(f'-> Slack header appended to {self.slackCSV} successfuly.')

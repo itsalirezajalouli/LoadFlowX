@@ -33,18 +33,11 @@ class AddLineDialog(QDialog):
         ''')
         self.title = QLabel('Add Line to Network')
         self.title.setStyleSheet('''
-            color: #ffffff;
             border: 2px solid #7289da;
+            color: #ffffff;
             border-radius: 5px;
             padding: 8px;
         ''')
-        
-        self.lineId = None
-        self.R = None
-        self.X = None
-        self.B = None
-        self.Length = None
-        self.vBase = None
 
         # Line Name Input Box
         self.nameInputLabel = QLabel('Line Name:')
@@ -62,12 +55,9 @@ class AddLineDialog(QDialog):
         self.rInput.setPlaceholderText('R (Ohm/km)')
         self.xInput = QLineEdit(self)
         self.xInput.setPlaceholderText('X (Ohm/km)')
-        self.bInput = QLineEdit(self)
-        self.bInput.setPlaceholderText('B (S/km)')
 
         self.impedanceHBox.addWidget(self.rInput)
         self.impedanceHBox.addWidget(self.xInput)
-        self.impedanceHBox.addWidget(self.bInput)
         self.impedanceWidget.setLayout(self.impedanceHBox)
 
         # Length Input Box
@@ -76,7 +66,7 @@ class AddLineDialog(QDialog):
         self.lenHBox = QHBoxLayout()
         self.lenInput = QLineEdit(self)
         self.lenInput.setPlaceholderText('Length of the line (km)')
-        self.lenUnitDropDown = QComboBox(self) 
+        self.lenUnitDropDown = QComboBox(self)
         self.lenUnitDropDown.addItem('KM')
         self.lenHBox.addWidget(self.lenLabel)
         self.lenHBox.addWidget(self.lenInput)
@@ -84,17 +74,35 @@ class AddLineDialog(QDialog):
         self.lenWidget = QWidget()
         self.lenWidget.setLayout(self.lenHBox)
 
+        # Capacitance and Max Current Inputs
+        self.additionalFieldsLabel = QLabel('Additional Parameters:')
+        self.additionalFieldsLabel.setStyleSheet('color: #ffffff;')
+        self.additionalFieldsHBox = QHBoxLayout()
+
+        self.cInput = QLineEdit(self)
+        self.cInput.setPlaceholderText('Capacitance (nF/km)')
+        self.iMaxInput = QLineEdit(self)
+        self.iMaxInput.setPlaceholderText('Max Current (kA)')
+
+        self.additionalFieldsHBox.addWidget(self.cInput)
+        self.additionalFieldsHBox.addWidget(self.iMaxInput)
+        self.additionalFieldsWidget = QWidget()
+        self.additionalFieldsWidget.setLayout(self.additionalFieldsHBox)
+
         # Button Box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.buttonBox.rejected.connect(self.reject)
         self.buttonBox.accepted.connect(self.accept)
 
+        # Main Layout
         layout = QVBoxLayout()
         layout.addWidget(self.title)
         layout.addWidget(self.nameInputLabel)
         layout.addWidget(self.nameInput)
         layout.addWidget(self.impedanceWidget)
         layout.addWidget(self.lenWidget)
+        layout.addWidget(self.additionalFieldsLabel)
+        layout.addWidget(self.additionalFieldsWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
 
@@ -102,8 +110,9 @@ class AddLineDialog(QDialog):
         inputList = []
         inputList.append(self.rInput.text())
         inputList.append(self.xInput.text())
-        inputList.append(self.bInput.text())
         inputList.append(self.lenInput.text())
+        inputList.append(self.cInput.text())
+        inputList.append(self.iMaxInput.text())
         inputList.append(self.nameInput.text())
 
         # Check if any input is empty
@@ -122,8 +131,9 @@ class AddLineDialog(QDialog):
             name=self.nameInput.text(),
             R=float(self.rInput.text()),
             X=float(self.xInput.text()),
-            B=float(self.bInput.text()),
-            len=float(self.lenInput.text())
+            len=float(self.lenInput.text()),
+            c_nf_per_km=float(self.cInput.text()),
+            max_i_ka=float(self.iMaxInput.text())
         )
 
         line.log()

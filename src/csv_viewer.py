@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (QDialog, QTableWidget, QTableWidgetItem, 
-    QVBoxLayout, QWidget, QLabel, QHeaderView, QTabWidget)
+    QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QLabel, QHeaderView, QTabWidget)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QPalette, QColor
 import csv
@@ -14,26 +14,51 @@ class CsvViewer(QDialog):
         # Create main layout
         mainLayout = QVBoxLayout(self)
         
-        # Create tab widget
-        self.tabWidget = QTabWidget()
-        self.tabWidget.setTabPosition(QTabWidget.TabPosition.North)
-        self.tabWidget.setMovable(True)  # Allow reordering tabs
-
+        # Create execution time label
         self.exeTimeLabel = QLabel(f'Load flow calculations took {time:.4f} seconds')
-        self.exeTimeLabel.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.exeTimeLabel.setAlignment(Qt.AlignmentFlag.AlignLeft)  # Align label to the left
         self.exeTimeLabel.setStyleSheet('''
             QLabel {
                 padding: 5px;
-                background-color: #f0f0f0;
                 border: 1px solid #ddd;
                 border-radius: 3px;
                 font-family: monospace;
             }
         ''')
 
-        # Add to main layout
+        # Create tab widget
+        self.tabWidget = QTabWidget()
+        self.tabWidget.setTabPosition(QTabWidget.TabPosition.North)
+        self.tabWidget.setMovable(True)  # Allow reordering tabs
+        
+        # Create OK button
+        self.okButton = QPushButton('OK')
+        self.okButton.setStyleSheet('''
+            QPushButton {
+                background-color: #3b3e45;
+                color: #ffffff;
+                border: 1px solid #3b3e45;
+                border-radius: 5px;
+                padding: 5px 15px;
+            }
+            QPushButton:hover {
+                background-color: #4b4e55;
+            }
+            QPushButton:pressed {
+                background-color: #2b2d33;
+            }
+        ''')
+        self.okButton.clicked.connect(self.accept)  # Close dialog when clicked
+        
+        # Create button layout
+        buttonLayout = QHBoxLayout()
+        buttonLayout.addStretch()  # Add stretch to align button to the right
+        buttonLayout.addWidget(self.okButton)
+        
+        # Add widgets to main layout
         mainLayout.addWidget(self.exeTimeLabel)
         mainLayout.addWidget(self.tabWidget)
+        mainLayout.addLayout(buttonLayout)
         
         # Style the dialog
         self.styleDialog()
@@ -44,7 +69,6 @@ class CsvViewer(QDialog):
         # Load CSVs if paths are provided
         if csvPaths:
             self.loadCsvs(csvPaths)
-
 
     def styleDialog(self):
         self.setStyleSheet('''

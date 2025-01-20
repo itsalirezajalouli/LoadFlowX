@@ -246,7 +246,7 @@ class Grid(QWidget):
                 connection1, firstPoint, firstNodeType = self.firstNode
                 self.tempPath.append(self.secondPointPos)
                 # print(self.tempPath)
-                print('Point added: ', self.secondPointPos)
+                # print('Point added: ', self.secondPointPos)
                 # to a bus
                 for bus, (point, capacity, orient, points, id) in self.busses.items():
                     for i in range(len(points)):
@@ -290,7 +290,7 @@ class Grid(QWidget):
                                             trafoTuple = (point, ori, hands, bus1, connection2)
                                             self.trafos.update({connection1: trafoTuple})
                                             self.update()
-                                            print(self.trafos)
+                                            # print(self.trafos)
                                             self.addTraffoDialog = AddTrafoDialog(self)
                                             self.addTraffoDialog.trafoPos = point
                                             self.addTraffoDialog.trafoOrient = ori 
@@ -365,11 +365,10 @@ class Grid(QWidget):
                                        firstNodeType, 'trafo')
 
                             if line not in self.paths and revLine not in self.paths:
-                                print(line)
+                                # print(line)
                                 self.tokenTrafoHands.append(hands[i])
                                 if firstNodeType == 'bus':
                                     if bus1 == 0:
-                                        print('fuck')
                                         if connection2 == trafo:
                                             self.paths.append(line)
                                             self.firstNode = None
@@ -378,15 +377,13 @@ class Grid(QWidget):
                                             updates.append((trafo, trafoTuple))  # Add to updates
                                             self.update()
                                     else:
-                                        print('shit fuck')
-                                        if connection2 == trafo:
+                                        # if connection2 == trafo:
                                             self.paths.append(line)
                                             self.firstNode = None
                                             # self.tokenBusPorts.append(hands[i])
                                             trafoTuple = (point, ori, hands, bus1, connection1)
                                             updates.append((trafo, trafoTuple))  # Add to updates
                                             self.update()
-                                            print(self.trafos)
                                             self.addTraffoDialog = AddTrafoDialog(self)
                                             self.addTraffoDialog.trafoPos = point
                                             self.addTraffoDialog.trafoOrient = ori 
@@ -432,6 +429,56 @@ class Grid(QWidget):
                 # to a load
                 # to a slack 
 
+                # to a load
+                for load, (point, ori, hand) in self.loads.items():
+                    if hand == self.secondPointPos and hand not in self.tokenLoadHands:
+                        if firstNodeType == 'bus':
+                            connection2 = load
+                            self.tempPath.pop()
+                            tempPath = deepcopy(self.tempPath)
+                            line = (connection1, connection2, firstPoint, 0, tempPath,
+                                    firstNodeType, 'load')
+                            revLine = (connection2, connection1, firstPoint, 0, tempPath,
+                                       firstNodeType, 'load')
+                            if line not in self.paths and revLine not in self.paths:
+                                self.tokenLoadHands.append(hand)
+                                self.paths.append(line)
+                                self.firstNode = None
+                                self.update()
+                                self.addLoadDialog = AddLoadDialog(self, connection1)
+                                self.addLoadDialog.projectPath = self.projectPath
+                                self.addLoadDialog.loadPos = point
+                                self.addLoadDialog.loadOri = ori
+                                self.addLoadDialog.loadHand = hand
+                                self.addLoadDialog.exec()
+                                self.updateGuiElementsCSV()
+                                self.tempPath.clear()
+
+                    # to a slack
+                    for slack, (point, ori, hand) in self.slacks.items():
+                        if hand == self.secondPointPos and hand not in self.tokenSlackHands:
+                            if firstNodeType == 'bus':
+                                connection2 = slack
+                                self.tempPath.pop()
+                                tempPath = deepcopy(self.tempPath)
+                                line = (connection1, connection2, firstPoint, 0, tempPath,
+                                        firstNodeType, 'slack')
+                                revLine = (connection2, connection1, firstPoint, 0, tempPath,
+                                           firstNodeType, 'slack')
+                                if line not in self.paths and revLine not in self.paths:
+                                    self.tokenSlackHands.append(hand)
+                                    self.paths.append(line)
+                                    self.firstNode = None
+                                    self.update()
+                                    self.addSlackDialog = AddSlackDialog(self, connection1)
+                                    self.addSlackDialog.projectPath = self.projectPath
+                                    self.addSlackDialog.slackPos = point
+                                    self.addSlackDialog.slackOri = ori
+                                    self.addSlackDialog.slackHand = hand
+                                    self.addSlackDialog.exec()
+                                    self.updateGuiElementsCSV()
+                                    self.tempPath.clear()
+
 
         # Double Clicked on an existing bus
         if event.type() == QEvent.Type.MouseButtonDblClick and event.button() == Qt.MouseButton.LeftButton and self.selectMode:
@@ -449,8 +496,7 @@ class Grid(QWidget):
                     editedBus = bus
                     editedTuple = bigTuple
             if editedBus is not None:
-                # print('paths: ',self.paths)
-                editedBus = self.editedBusses(editedBus, editedTuple)
+                # editedBus = self.editedBusses(editedBus, editedTuple)
                 del self.busses[editedBus]
                 editedBus = None
                 self.update()
@@ -579,7 +625,6 @@ class Grid(QWidget):
         if self.insertTrafoMode or self.insertBusMode or self.insertGenMode or self.insertLoadMode \
             or self.insertSlackMode:
             self.insertingOrient = getNextOrientation(self.insertingOrient, event.angleDelta().y() > 0)
-            print(self.insertingOrient)
         
         self.update()
 
@@ -805,9 +850,6 @@ class Grid(QWidget):
 
         if len(self.paths) > 0:
             for line in self.paths:
-                print(
-                    'lalalalala: ', line
-                )
                 connection1, connection2, i1, i2, pathList, firstNodeType, secNodeType = line
                 firstNode, secondNode = None, None
 
@@ -868,7 +910,7 @@ class Grid(QWidget):
                     if secNodeType == 'slack' and connection2 == slack:
                         secondNode = hand
     
-                print(firstNode, secondNode)
+                # print(firstNode, secondNode)
 
                 # Now that we know what are the connections from and to
                 if firstNode is not None and secondNode is not None:
@@ -1073,7 +1115,7 @@ class Grid(QWidget):
                     newBusList.append(row)
 
             with open(self.busCsvPath, 'w', newline = '') as file:
-                writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'vAng',
+                writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'zone', 'vAng',
                                                          'P', 'Q', 'name', 'pos',
                                                          'capacity', 'orient', 'points'])
                 writer.writeheader()
@@ -1097,7 +1139,10 @@ class Grid(QWidget):
                     newTrafoList.append(row)
 
             with open(trafoCsvPath, 'w', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=['id', 'name', 'hvBus', 'lvBus', 'pos', 'orient', 'hands'])
+                writer = csv.DictWriter(file, fieldnames=[
+                    'id', 'name', 'hvBus', 'lvBus', 'pos', 'orient', 'hands', 
+                    'sn_mva', 'vk_percent', 'vkr_percent', 'tap_step_percent'
+                ])
                 writer.writeheader()
                 writer.writerows(newTrafoList)
                 print(f'-> Transformer Data updated in {trafoCsvPath} successfully.')
@@ -1117,7 +1162,10 @@ class Grid(QWidget):
                     newGenList.append(row)
 
             with open(csvPath, 'w', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=['bus', 'name', 'pMW', 'pos', 'orient', 'hand'])
+                writer = csv.DictWriter(file, fieldnames=[
+                    'bus', 'name', 'pMW', 'vmPU', 'minQMvar', 'maxQMvar', 
+                    'minPMW', 'maxPMW', 'pos', 'orient', 'hand'
+                ])
                 writer.writeheader()
                 writer.writerows(newGenList)
             print(f'-> Gen Data updated in {csvPath} successfully.')
@@ -1137,7 +1185,7 @@ class Grid(QWidget):
                     newSlackList.append(row)
 
             with open(csvPath, 'w', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'pos', 'orient', 'hand'])
+                writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'vaD', 'pos', 'orient', 'hand'])
                 writer.writeheader()
                 writer.writerows(newSlackList)
             print(f'-> Slack Data updated in {csvPath} successfully.')
@@ -1759,10 +1807,10 @@ class Grid(QWidget):
 
         self.update()
 
-    def showConvergenceError(self):
+    def showError(self, error_msg: str):
         msg = QMessageBox(self)
         msg.setIcon(QMessageBox.Icon.Warning)
         msg.setText('Load Flow Calculation Failed')
-        msg.setInformativeText('The load flow calculation did not converge within the maximum number of iterations. Please check your network parameters and try again.')
-        msg.setWindowTitle('Convergence Error')
+        msg.setInformativeText(error_msg if error_msg else 'An unknown error occurred during load flow calculation. Please check your network parameters and try again.')
+        msg.setWindowTitle('Load Flow Error')
         msg.exec()
