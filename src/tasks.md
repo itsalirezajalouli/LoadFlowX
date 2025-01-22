@@ -1,31 +1,23 @@
 Tasks:
-- [X] Adding transformer to the simulation (Backend)
-- [x] Refactoring bus and gen drawing (Frontend)
-- [x] Adding load to GUI (Frontend)
-- [x] Adding load to the simulation (Backend)
-- [x] Adding slack to GUI (Frontend)
-- [x] Adding slack to the simulation (Backend)
-- [x] Simulator is not simualting correctly i think
-- [x] Adding results window (Frontend)
-- [x] Fixing move event for all
-- [x] Saving GUI info properly (gen, load, slack)
-- [x] Adding timer
-- [x] Max iteration
-- [x] Convergence error handling
-- [x] Add erase functionality
-- [ ] Adding more optional parameters to dialogs (Frontend)
-    - front:
-    - [x] line
-    - [x] load
-    - [x] slack 
-    - [x] bus
-    - [x] gen 
-    - [x] trafo 
-- [x] error handling for run_dialog
-- [x] ok button for results
-- [x] to slack and load and gen?!
-- [ ] 39 Bus example and test
+- [x] remove bfsw
+- [x] more flexible zooming and hand mechanism
+- [x] putting the hand icon for hand mechanism and seperating it from move mode
+- [ ] moving one element and all the paths attached to it should be possible
+- [ ] transformer connection bug
+- [ ] load and save system 
+- [ ] toggle night mode and light mode
+- [ ] fixing and understanding why the calculations were wrong
+- [ ] showing the results when mouse hovers on the element
+- [ ] add necessary and unnecessary to the input fields
+- [ ] adding edit mechanism to all the elements
 - [ ] Per unit conversion
+- [ ] Error when user doesn't give a project name or gives a name with '\'
+...
+
+Tasks for the future:
+- [ ] adding undo and redo
+- [ ] adding export to schematics
+- [ ] proper load and save system
 
 # places where i should fix the csvs:
 - psa

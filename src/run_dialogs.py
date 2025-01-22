@@ -51,7 +51,6 @@ class RunSimDialog(QDialog):
         self.methDropDown.addItem('Newton Raphson')
         self.methDropDown.addItem('Gauss Seidel')
         self.methDropDown.addItem('Fast Decoupled')
-        self.methDropDown.addItem('Backward/Forward Sweep')
         self.methDropDown.activated.connect(self.method)
         self.methHBox.addWidget(self.methDropDown)
         self.methWidget.setLayout(self.methHBox)
@@ -131,5 +130,3 @@ class RunSimDialog(QDialog):
             self.activatedMethod = 'gs'
         elif index == 2:
             self.activatedMethod = 'fdbx'
-        elif index == 3:
-            self.activatedMethod = 'bfsw'

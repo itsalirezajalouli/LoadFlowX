@@ -20,13 +20,22 @@ class MainWindow(QMainWindow):
         self.projectPath = None
         self.startUp = StartUp(self)
         self.buttSize = 26
-        self.grid = None
-        self.minZoom = 16
-        self.maxZoom = 256
         if self.projectPath is None:
             self.startUp.exec()
             if not self.startUp.nameError:
                 self.projectPath = self.startUp.projectPath
+
+        # Layouts
+        self.mainLayout = QHBoxLayout()
+
+        # Grid Layout
+        self.grid = Grid(32)
+        self.grid.projectPath = self.projectPath
+        if self.startUp.loaded:
+            self.grid.loadGUI()
+        else: 
+            self.grid.drawingParams = [20, 12, 7, 24, 1, 2]
+        self.mainLayout.addWidget(self.grid, 12)
 
         # Menu Bar
         menu = self.menuBar()
@@ -107,9 +116,6 @@ class MainWindow(QMainWindow):
         fdButton.triggered.connect(self.fdLoadFlow)
         loadFlowMenu.addAction(fdButton)
         loadFlowMenu.addSeparator()
-
-        # Layouts
-        self.mainLayout = QHBoxLayout()
         
         # View Toolbox
         self.barWidget = QWidget()
@@ -196,13 +202,13 @@ class MainWindow(QMainWindow):
         self.editGridButton.setStyleSheet(self.normalStyle)
         self.viewBar.addWidget(self.editGridButton)
 
-        # move button
-        self.moveButt = QToolButton()
-        self.moveButt.setIcon(QIcon('../icons/move.png'))
-        self.moveButt.setIconSize(QSize(self.buttSize, self.buttSize))
-        self.moveButt.clicked.connect(self.hand)
-        self.moveButt.setStyleSheet(self.normalStyle)
-        self.viewBar.addWidget(self.moveButt)
+        # hand button
+        self.handButt = QToolButton()
+        self.handButt.setIcon(QIcon('../icons/hand.png'))
+        self.handButt.setIconSize(QSize(self.buttSize, self.buttSize))
+        self.handButt.clicked.connect(self.hand)
+        self.handButt.setStyleSheet(self.normalStyle)
+        self.viewBar.addWidget(self.handButt)
         self.viewToolbox.setLayout(self.viewBar)
 
         #   erase button
@@ -218,7 +224,8 @@ class MainWindow(QMainWindow):
         zoomInButt.setIcon(QIcon('../icons/zoomIn.png'))
         zoomInButt.setIconSize(QSize(self.buttSize, self.buttSize))
         zoomInButt.setStyleSheet(self.normalStyle)
-        zoomInButt.clicked.connect(self.zoomIn)
+        if self.grid is not None:
+            zoomInButt.clicked.connect(self.grid.zoomIn)
         self.viewBar.addWidget(zoomInButt)
 
         #   Zoom Out button
@@ -226,7 +233,8 @@ class MainWindow(QMainWindow):
         self.zoomOutButt.setIcon(QIcon('../icons/zoomOut.png'))
         self.zoomOutButt.setIconSize(QSize(self.buttSize, self.buttSize))
         self.zoomOutButt.setStyleSheet(self.normalStyle)
-        self.zoomOutButt.clicked.connect(self.zoomOut)
+        if self.grid is not None:
+            self.zoomOutButt.clicked.connect(self.grid.zoomOut)
         self.viewBar.addWidget(self.zoomOutButt)
 
         #   Run button
@@ -288,18 +296,9 @@ class MainWindow(QMainWindow):
         self.addSlackButton.setStyleSheet(self.normalStyle)
         self.addSlackButton.clicked.connect(self.addSlack)
         self.toolBoxLayout.addWidget(self.addSlackButton)
-
-        # Grid Layout
-        self.grid = Grid(32)
-        self.grid.projectPath = self.projectPath
-        if self.startUp.loaded:
-            self.grid.loadGUI()
-        else: 
-            self.grid.drawingParams = [20, 12, 7, 24, 1, 2]
-        self.mainLayout.addWidget(self.grid, 12)
-        self.mainLayout.addWidget(self.barWidget)
         
         # Main Widget
+        self.mainLayout.addWidget(self.barWidget)
         widget = QWidget()
         widget.setLayout(self.mainLayout)
         widget.setStyleSheet('''
@@ -399,7 +398,7 @@ class MainWindow(QMainWindow):
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addGenButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
-            self.moveButt.setStyleSheet(self.normalStyle)
+            self.handButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def addLine(self) -> None:
@@ -421,7 +420,7 @@ class MainWindow(QMainWindow):
             self.addGenButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
-            self.moveButt.setStyleSheet(self.normalStyle)
+            self.handButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def addTrafo(self) -> None:
@@ -442,7 +441,7 @@ class MainWindow(QMainWindow):
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.addGenButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
-            self.moveButt.setStyleSheet(self.normalStyle)
+            self.handButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def addGen(self) -> None:
@@ -463,7 +462,7 @@ class MainWindow(QMainWindow):
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
-            self.moveButt.setStyleSheet(self.normalStyle)
+            self.handButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def addLoad(self) -> None:
@@ -483,7 +482,7 @@ class MainWindow(QMainWindow):
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
-            self.moveButt.setStyleSheet(self.normalStyle)
+            self.handButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def addSlack(self) -> None:
@@ -503,7 +502,7 @@ class MainWindow(QMainWindow):
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
-            self.moveButt.setStyleSheet(self.normalStyle)
+            self.handButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def setSelectMode(self) -> None:
@@ -529,7 +528,7 @@ class MainWindow(QMainWindow):
             self.addGenButton.setStyleSheet(self.normalStyle)
             self.addSlackButton.setStyleSheet(self.normalStyle)
             self.addLoadButton.setStyleSheet(self.normalStyle)
-            self.moveButt.setStyleSheet(self.normalStyle)
+            self.handButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def hand(self) -> None:
@@ -543,9 +542,9 @@ class MainWindow(QMainWindow):
         self.grid.insertLoadMode = False
         self.grid.handMode = not(self.grid.handMode) 
         if not self.grid.handMode:
-            self.moveButt.setStyleSheet(self.normalStyle)
+            self.handButt.setStyleSheet(self.normalStyle)
         else:
-            self.moveButt.setStyleSheet(self.toggledStyle)
+            self.handButt.setStyleSheet(self.toggledStyle)
             self.addTrafoButton.setStyleSheet(self.normalStyle)
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
@@ -554,184 +553,6 @@ class MainWindow(QMainWindow):
             self.addLoadButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
         self.update()
-
-    def zoomIn(self) -> None:
-        newSize = self.grid.dist * 2
-        if newSize in range(self.minZoom, self.maxZoom):
-            self.grid.dist = newSize
-
-            # Zoom in for buses
-            for bus, (point, capacity, orient, points, id) in self.grid.busses.items():
-                newOriginX = point.x() * 2
-                newOriginY = point.y() * 2
-                newOrigin = QPoint(newOriginX, newOriginY)
-                point = self.grid.snap(newOrigin)
-                newPoints = []
-                for p in points:
-                    p = QPoint(p.x() * 2, p.y() * 2)
-                    newPoints.append(p)
-                bigTuple = (point, capacity, orient, newPoints, id)
-                edited = self.grid.editedBusses(bus, bigTuple)
-
-            # Zoom in for transformers 
-            for trafo, (point, ori, hands, bus1, bus2) in self.grid.trafos.items():
-                newOriginX = point.x() * 2
-                newOriginY = point.y() * 2
-                newOrigin = QPoint(newOriginX, newOriginY)
-                point = self.grid.snap(newOrigin)
-                newPoints = []
-                for h in hands:
-                    h = QPoint(h.x() * 2, h.y() * 2)
-                    newPoints.append(h)
-                bigTuple = (point, ori, newPoints, bus1, bus2)
-                self.grid.trafos.update({trafo: bigTuple})
-                self.grid.update()
-                self.update()
-
-            # Zoom in for generators 
-            for gen, (point, ori, hand) in self.grid.gens.items():
-                newOriginX = point.x() * 2
-                newOriginY = point.y() * 2
-                newOrigin = QPoint(newOriginX, newOriginY)
-                point = self.grid.snap(newOrigin)
-                hand = QPoint(hand.x() * 2, hand.y() * 2)
-                bigTuple = (point, ori, hand)
-                self.grid.gens.update({gen: bigTuple})
-                self.grid.update()
-                self.update()
-
-            # Zoom in for loads 
-            for load, (point, ori, hand) in self.grid.loads.items():
-                newOriginX = point.x() * 2
-                newOriginY = point.y() * 2
-                newOrigin = QPoint(newOriginX, newOriginY)
-                point = self.grid.snap(newOrigin)
-                hand = QPoint(hand.x() * 2, hand.y() * 2)
-                bigTuple = (point, ori, hand)
-                self.grid.loads.update({load: bigTuple})
-                self.grid.update()
-                self.update()
-
-            # Zoom in for slack 
-            for slack, (point, ori, hand) in self.grid.slacks.items():
-                newOriginX = point.x() * 2
-                newOriginY = point.y() * 2
-                newOrigin = QPoint(newOriginX, newOriginY)
-                point = self.grid.snap(newOrigin)
-                hand = QPoint(hand.x() * 2, hand.y() * 2)
-                bigTuple = (point, ori, hand)
-                self.grid.slacks.update({slack: bigTuple})
-                self.grid.update()
-                self.update()
-
-            # Zoom in for lines and Gui Paths
-            newPaths = []
-            for p in self.grid.paths:
-                connection1, connection2, i1, i2, pathList, firstNodeType, secNodeType = p
-                newPathList = []
-                for tp in pathList:
-                    tp = QPoint(tp.x() * 2, tp.y() * 2)
-                    newPathList.append(tp)
-                p = connection1, connection2, i1, i2, newPathList, firstNodeType, secNodeType 
-                newPaths.append(p)
-
-            self.grid.paths = newPaths
-            self.grid.update()
-            self.grid.updateGuiElementsCSV()
-            self.grid.updateBusCSVGuiParams()
-            self.grid.updateTrafoGUICSVParams()
-            self.grid.updateGenGUICSVParams()
-            self.grid.updateLoadGUICSVParams()
-            self.grid.updateSlackGUICSVParams()
-
-    def zoomOut(self) -> None:
-        newSize = self.grid.dist // 2
-        if newSize in range(self.minZoom, self.maxZoom):
-            self.grid.dist = newSize
-
-            # Zoom out for buses 
-            for bus, (point, capacity, orient, points, id) in self.grid.busses.items():
-                newOriginX = point.x() // 2
-                newOriginY = point.y() // 2
-                newOrigin = QPoint(newOriginX, newOriginY)
-                point = self.grid.snap(newOrigin)
-                newPoints = []
-                for p in points:
-                    p = QPoint(p.x() // 2, p.y() // 2)
-                    newPoints.append(p)
-                bigTuple = (point, capacity, orient, newPoints, id)
-                edited = self.grid.editedBusses(bus, bigTuple)
-
-            # Zoom out for transformers 
-            for trafo, (point, ori, hands, bus1, bus2) in self.grid.trafos.items():
-                newOriginX = point.x() // 2
-                newOriginY = point.y() // 2
-                newOrigin = QPoint(newOriginX, newOriginY)
-                point = self.grid.snap(newOrigin)
-                newPoints = []
-                for h in hands:
-                    h = QPoint(h.x() // 2, h.y() // 2)
-                    newPoints.append(h)
-                bigTuple = (point, ori, newPoints, bus1, bus2)
-                self.grid.trafos.update({trafo: bigTuple})
-                self.grid.update()
-                self.update()
-
-            # Zoom out for generators 
-            for gen, (point, ori, hand) in self.grid.gens.items():
-                newOriginX = point.x() // 2
-                newOriginY = point.y() // 2
-                newOrigin = QPoint(newOriginX, newOriginY)
-                point = self.grid.snap(newOrigin)
-                hand = QPoint(hand.x() // 2, hand.y() // 2)
-                bigTuple = (point, ori, hand)
-                self.grid.gens.update({gen: bigTuple})
-                self.grid.update()
-                self.update()
-
-            # Zoom out for loads 
-            for load, (point, ori, hand) in self.grid.loads.items():
-                newOriginX = point.x() // 2
-                newOriginY = point.y() // 2
-                newOrigin = QPoint(newOriginX, newOriginY)
-                point = self.grid.snap(newOrigin)
-                hand = QPoint(hand.x() // 2, hand.y() // 2)
-                bigTuple = (point, ori, hand)
-                self.grid.loads.update({load: bigTuple})
-                self.grid.update()
-                self.update()
-
-            # Zoom out for slack 
-            for slack, (point, ori, hand) in self.grid.slacks.items():
-                newOriginX = point.x() // 2
-                newOriginY = point.y() // 2
-                newOrigin = QPoint(newOriginX, newOriginY)
-                point = self.grid.snap(newOrigin)
-                hand = QPoint(hand.x() // 2, hand.y() // 2)
-                bigTuple = (point, ori, hand)
-                self.grid.slacks.update({slack: bigTuple})
-                self.grid.update()
-                self.update()
-
-            # Zoom out for lines and Gui Paths
-            newPaths = []
-            for p in self.grid.paths:
-                connection1, connection2, i1, i2, pathList, firstNodeType, secNodeType = p
-                newPathList = []
-                for tp in pathList:
-                    tp = QPoint(tp.x() // 2, tp.y() // 2)
-                    newPathList.append(tp)
-                p = connection1, connection2, i1, i2, newPathList, firstNodeType, secNodeType 
-                newPaths.append(p)
-
-            self.grid.paths = newPaths
-            self.grid.update()
-            self.grid.updateGuiElementsCSV()
-            self.grid.updateBusCSVGuiParams()
-            self.grid.updateTrafoGUICSVParams()
-            self.grid.updateGenGUICSVParams()
-            self.grid.updateLoadGUICSVParams()
-            self.grid.updateSlackGUICSVParams()
 
     def clear(self) -> None:
 
@@ -811,3 +632,4 @@ class MainWindow(QMainWindow):
             writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'vaD', 'pos', 'orient', 'hand'])
             writer.writeheader()
         print(f'-> Slack header cleared to {self.slackCSV} successfuly.')
+

@@ -34,6 +34,8 @@ class Grid(QWidget):
         self.red = theme.toQtColor(theme.red) 
         self.blue = theme.toQtColor(theme.blue) 
         self.yellow = theme.toQtColor(theme.yellow) 
+        self.minZoom = 16
+        self.maxZoom = 512
         self.offSet = QPoint(0, 0)
         self.highLightedPoint = None
         self.currentMousePos = QPoint(400, 400)
@@ -133,6 +135,7 @@ class Grid(QWidget):
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.handMode:
             self.handActivatedPos = None
+
     #
     # def checkCombo(self):
     #     if self.spacePressed and self.leftMouseHold:
@@ -551,6 +554,13 @@ class Grid(QWidget):
         '''
         Handles mouse wheel events for rotating components (busbars, transformers, generators)
         '''
+        if QApplication.keyboardModifiers() == Qt.KeyboardModifier.ControlModifier:
+            if event.angleDelta().y() > 0:
+                self.zoomIn()
+            elif event.angleDelta().y() < 0:
+                self.zoomOut()
+            return
+
         # Define orientations once as a class constant if not already defined
         ORIENTATIONS = ['-90', '0', '90', '180']
         
@@ -673,7 +683,7 @@ class Grid(QWidget):
                 self.dotPen = QPen()
                 self.dotPen.setColor(self.dotColor)
                 painter.setPen(self.dotPen)
-                painter.drawEllipse(x - 1, y - 1, 2, 2)
+                painter.drawEllipse(x + self.offSet.x() - 1, y + self.offSet.y() - 1, 2, 2)
                 x += self.dist
             y += self.dist
             x = 0
@@ -1049,18 +1059,18 @@ class Grid(QWidget):
             reader = csv.DictReader(csvfile)
             for row in reader:
                 if busName == row['name']:
-                    print(busName)
-                    print(row['name'])
+                    # print(busName)
+                    # print(row['name'])
                     posList = json.loads(row['pos'].strip())
                     x, y = map(int, posList)
                     pos = QPoint(x, y)
                     pointsList = []
                     pointsArray = json.loads(row['points'].strip())
                     for px, py in pointsArray:
-                        print(px, py)
+                        # print(px, py)
                         point = QPoint(int(px), int(py))
                         pointsList.append(point)
-                    print(pointsList)
+                    # print(pointsList)
                     self.editBusDialog.busPos = pos 
                     self.editBusDialog.busId = row['id']
                     self.editBusDialog.nameInput.setText(row['name'])
@@ -1120,7 +1130,7 @@ class Grid(QWidget):
                                                          'capacity', 'orient', 'points'])
                 writer.writeheader()
                 writer.writerows(newBusList)
-                print(f'-> Bus Data edited to {self.busCsvPath} successfuly.')
+                # print(f'-> Bus Data edited to {self.busCsvPath} successfuly.')
 
     # Updates transformer CSV GUI parameters every time something new happens in the GUI
     def updateTrafoGUICSVParams(self) -> None:
@@ -1145,7 +1155,7 @@ class Grid(QWidget):
                 ])
                 writer.writeheader()
                 writer.writerows(newTrafoList)
-                print(f'-> Transformer Data updated in {trafoCsvPath} successfully.')
+                # print(f'-> Transformer Data updated in {trafoCsvPath} successfully.')
 
     def updateGenGUICSVParams(self) -> None:
         csvPath = self.projectPath + '/Gens.csv'
@@ -1168,7 +1178,7 @@ class Grid(QWidget):
                 ])
                 writer.writeheader()
                 writer.writerows(newGenList)
-            print(f'-> Gen Data updated in {csvPath} successfully.')
+            # print(f'-> Gen Data updated in {csvPath} successfully.')
 
     def updateSlackGUICSVParams(self) -> None:
         csvPath = self.projectPath + '/Slacks.csv'
@@ -1188,7 +1198,7 @@ class Grid(QWidget):
                 writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'vaD', 'pos', 'orient', 'hand'])
                 writer.writeheader()
                 writer.writerows(newSlackList)
-            print(f'-> Slack Data updated in {csvPath} successfully.')
+            # print(f'-> Slack Data updated in {csvPath} successfully.')
 
     def updateLoadGUICSVParams(self) -> None:
         csvPath = self.projectPath + '/Loads.csv'
@@ -1208,7 +1218,7 @@ class Grid(QWidget):
                 writer = csv.DictWriter(file, fieldnames=['bus', 'pMW', 'qMW', 'pos', 'orient', 'hand'])
                 writer.writeheader()
                 writer.writerows(newLoadList)
-            print(f'-> Load Data updated in {csvPath} successfully.')
+            # print(f'-> Load Data updated in {csvPath} successfully.')
 
     def updateGuiElementsCSV(self) -> None:
         self.guiCsvPath = self.projectPath + '/GUI.csv'
@@ -1232,7 +1242,7 @@ class Grid(QWidget):
                 writer = csv.DictWriter(file, fieldnames=['dist','paths'])
                 writer.writeheader()
                 writer.writerow(data)
-                print(f'-> GUI Data edited to {self.guiCsvPath} successfuly.')
+                # print(f'-> GUI Data edited to {self.guiCsvPath} successfuly.')
             self.setDrawingParams()
 
     def loadGUI(self) -> None:
@@ -1257,7 +1267,7 @@ class Grid(QWidget):
                 bigTuple = (pos, int(row['capacity']), row['orient'],
                             pointsList, int(row['id']))
                 self.busses[row['name']] = bigTuple
-            print('-> busses: ', self.busses)
+            # print('-> busses: ', self.busses)
             self.update()
 
         # Load transformers
@@ -1273,7 +1283,7 @@ class Grid(QWidget):
                     handsList.append(QPoint(int(hx), int(hy)))
                 bigTuple = (pos, row['orient'], handsList, int(row['hvBus']), int(row['lvBus']))
                 self.trafos[row['name']] = bigTuple
-            print('-> trafos: ', self.trafos)
+            # print('-> trafos: ', self.trafos)
             self.update()
 
         # Load generators
@@ -1288,7 +1298,7 @@ class Grid(QWidget):
                 hand = QPoint(hx, hy)
                 bigTuple = (pos, row['orient'], hand)
                 self.gens[row['name']] = bigTuple
-            print('-> gens: ', self.gens)
+            # print('-> gens: ', self.gens)
             self.update()
 
         # Load loads
@@ -1303,7 +1313,7 @@ class Grid(QWidget):
                 hand = QPoint(hx, hy)
                 bigTuple = (pos, row['orient'], hand)
                 self.loads[row['bus']] = bigTuple
-            print('-> loads: ', self.loads)
+            # print('-> loads: ', self.loads)
             self.update()
 
         # Load slacks
@@ -1318,7 +1328,7 @@ class Grid(QWidget):
                 hand = QPoint(hx, hy)
                 bigTuple = (pos, row['orient'], hand)
                 self.slacks[row['bus']] = bigTuple
-            print('-> slacks: ', self.slacks)
+            # print('-> slacks: ', self.slacks)
             self.update()
 
         # Load GUI settings
@@ -1814,3 +1824,187 @@ class Grid(QWidget):
         msg.setInformativeText(error_msg if error_msg else 'An unknown error occurred during load flow calculation. Please check your network parameters and try again.')
         msg.setWindowTitle('Load Flow Error')
         msg.exec()
+
+    def zoomIn(self) -> None:
+        zoomFactor = 2 
+        newSize = int(self.dist * zoomFactor)
+        # print(' -> new size: ', newSize)
+        # print(' -> dist: ', self.dist)
+        # print(' -> zf: ', zoomFactor)
+        if newSize in range(self.minZoom, self.maxZoom):
+            self.dist = newSize
+
+            # Zoom in for buses
+            for bus, (point, capacity, orient, points, id) in self.busses.items():
+                newOriginX = int(point.x() * zoomFactor)
+                newOriginY = int(point.y() * zoomFactor)
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+                newPoints = []
+                for p in points:
+                    p = QPoint(int(p.x() * zoomFactor), int(p.y() * zoomFactor))
+                    newPoints.append(p)
+                bigTuple = (point, capacity, orient, newPoints, id)
+                edited = self.editedBusses(bus, bigTuple)
+
+            # Zoom in for transformers 
+            for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
+                newOriginX = int(point.x() * zoomFactor)
+                newOriginY = int(point.y() * zoomFactor)
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+                newPoints = []
+                for h in hands:
+                    h = QPoint(int(h.x() * zoomFactor), int(h.y() * zoomFactor))
+                    newPoints.append(h)
+                bigTuple = (point, ori, newPoints, bus1, bus2)
+                self.trafos.update({trafo: bigTuple})
+                self.update()
+                self.update()
+
+            # Zoom in for generators 
+            for gen, (point, ori, hand) in self.gens.items():
+                newOriginX = int(point.x() * zoomFactor)
+                newOriginY = int(point.y() * zoomFactor)
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+                hand = QPoint(int(hand.x() * zoomFactor), int(hand.y() * zoomFactor))
+                bigTuple = (point, ori, hand)
+                self.gens.update({gen: bigTuple})
+                self.update()
+                self.update()
+
+            # Zoom in for loads 
+            for load, (point, ori, hand) in self.loads.items():
+                newOriginX = int(point.x() * zoomFactor)
+                newOriginY = int(point.y() * zoomFactor)
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+                hand = QPoint(int(hand.x() * zoomFactor), int(hand.y() * zoomFactor))
+                bigTuple = (point, ori, hand)
+                self.loads.update({load: bigTuple})
+                self.update()
+                self.update()
+
+            # Zoom in for slack 
+            for slack, (point, ori, hand) in self.slacks.items():
+                newOriginX = int(point.x() * zoomFactor)
+                newOriginY = int(point.y() * zoomFactor)
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+                hand = QPoint(int(hand.x() * zoomFactor), int(hand.y() * zoomFactor))
+                bigTuple = (point, ori, hand)
+                self.slacks.update({slack: bigTuple})
+                self.update()
+                self.update()
+
+            # Zoom in for lines and Gui Paths
+            newPaths = []
+            for p in self.paths:
+                connection1, connection2, i1, i2, pathList, firstNodeType, secNodeType = p
+                newPathList = []
+                for tp in pathList:
+                    tp = QPoint(int(tp.x() * zoomFactor), int(tp.y() * zoomFactor))
+                    newPathList.append(tp)
+                p = connection1, connection2, i1, i2, newPathList, firstNodeType, secNodeType 
+                newPaths.append(p)
+
+            self.paths = newPaths
+            self.update()
+            self.updateGuiElementsCSV()
+            self.updateBusCSVGuiParams()
+            self.updateTrafoGUICSVParams()
+            self.updateGenGUICSVParams()
+            self.updateLoadGUICSVParams()
+            self.updateSlackGUICSVParams()
+
+    def zoomOut(self) -> None:
+        zoomFactor = 2
+        newSize = int(self.dist / zoomFactor)
+        if newSize in range(self.minZoom, self.maxZoom):
+            self.dist = newSize
+
+            # Zoom out for buses 
+            for bus, (point, capacity, orient, points, id) in self.busses.items():
+                newOriginX = int(point.x() / zoomFactor)
+                newOriginY = int(point.y() / zoomFactor)
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+                newPoints = []
+                for p in points:
+                    p = QPoint(int(p.x() / zoomFactor), int(p.y() / zoomFactor))
+                    newPoints.append(p)
+                bigTuple = (point, capacity, orient, newPoints, id)
+                edited = self.editedBusses(bus, bigTuple)
+
+            # Zoom out for transformers 
+            for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
+                newOriginX = int(point.x() / zoomFactor)
+                newOriginY = int(point.y() / zoomFactor)
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+                newPoints = []
+                for h in hands:
+                    h = QPoint(int(h.x() / zoomFactor), int(h.y() / zoomFactor))
+                    newPoints.append(h)
+                bigTuple = (point, ori, newPoints, bus1, bus2)
+                self.trafos.update({trafo: bigTuple})
+                self.update()
+                self.update()
+
+            # Zoom out for generators 
+            for gen, (point, ori, hand) in self.gens.items():
+                newOriginX = int(point.x() / zoomFactor)
+                newOriginY = int(point.y() / zoomFactor)
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+                hand = QPoint(int(hand.x() / zoomFactor), int(hand.y() / zoomFactor))
+                bigTuple = (point, ori, hand)
+                self.gens.update({gen: bigTuple})
+                self.update()
+                self.update()
+
+            # Zoom out for loads 
+            for load, (point, ori, hand) in self.loads.items():
+                newOriginX = int(point.x() / zoomFactor)
+                newOriginY = int(point.y() / zoomFactor)
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+                hand = QPoint(int(hand.x() / zoomFactor), int(hand.y() // zoomFactor))
+                bigTuple = (point, ori, hand)
+                self.loads.update({load: bigTuple})
+                self.update()
+                self.update()
+
+            # Zoom out for slack 
+            for slack, (point, ori, hand) in self.slacks.items():
+                newOriginX = int(point.x() / zoomFactor)
+                newOriginY = int(point.y() / zoomFactor)
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+                hand = QPoint(int(hand.x() / zoomFactor), int(hand.y() / zoomFactor))
+                bigTuple = (point, ori, hand)
+                self.slacks.update({slack: bigTuple})
+                self.update()
+                self.update()
+
+            # Zoom out for lines and Gui Paths
+            newPaths = []
+            for p in self.paths:
+                connection1, connection2, i1, i2, pathList, firstNodeType, secNodeType = p
+                newPathList = []
+                for tp in pathList:
+                    tp = QPoint(int(tp.x() / zoomFactor), int(tp.y() / zoomFactor))
+                    newPathList.append(tp)
+                p = connection1, connection2, i1, i2, newPathList, firstNodeType, secNodeType 
+                newPaths.append(p)
+
+            self.paths = newPaths
+            self.update()
+            self.updateGuiElementsCSV()
+            self.updateBusCSVGuiParams()
+            self.updateTrafoGUICSVParams()
+            self.updateGenGUICSVParams()
+            self.updateLoadGUICSVParams()
+            self.updateSlackGUICSVParams()
+
