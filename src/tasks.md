@@ -8,6 +8,7 @@ Tasks:
     - [x] the problem with handmode for trafos after loading...
 - [x] moving one element and all the paths attached to it should be possible
     - [x] making sure gui works great
+    - [x] added mouse thingies
 - [ ] small fix of selection rectangle
 - [ ] toggle night mode and light mode
 - [ ] fixing and understanding why the calculations were wrong

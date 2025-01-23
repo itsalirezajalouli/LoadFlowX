@@ -811,6 +811,7 @@ class Grid(QWidget):
                 painter.setPen(self.dotPen)
                 painter.drawEllipse(xHigh - 1, yHigh - 1, 2, 2)
 
+            # A rectangle as selection indicator
             for bus, (point, capacity, orient, points, _) in self.busses.items():
                 if self.highLightedPoint == point or self.highLightedPoint in points:
                     # Set the fill color with 20% transparency
@@ -839,6 +840,34 @@ class Grid(QWidget):
                     painter.drawRect(point.x() - self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
                 else: 
                     painter.setBrush(Qt.BrushStyle.NoBrush)
+
+            for gen, (point, ori, hand) in self.gens.items():
+                if self.highLightedPoint == point or self.highLightedPoint == hand:
+                    # Set the fill color with 20% transparency
+                    painter.setBrush(color)
+                    painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
+                    painter.drawRect(point.x() - self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
+                else: 
+                    painter.setBrush(Qt.BrushStyle.NoBrush)
+
+            for load, (point, ori, hand) in self.loads.items():
+                if self.highLightedPoint == point or self.highLightedPoint == hand:
+                    # Set the fill color with 20% transparency
+                    painter.setBrush(color)
+                    painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
+                    painter.drawRect(point.x() - self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
+                else: 
+                    painter.setBrush(Qt.BrushStyle.NoBrush)
+
+            for slack, (point, ori, hand) in self.slacks.items():
+                if self.highLightedPoint == point or self.highLightedPoint == hand:
+                    # Set the fill color with 20% transparency
+                    painter.setBrush(color)
+                    painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
+                    painter.drawRect(point.x() - self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
+                else: 
+                    painter.setBrush(Qt.BrushStyle.NoBrush)
+
 
         # Drawing all the busbars here
         for bus, (point, capacity, orient, points, _) in self.busses.items():
@@ -2058,7 +2087,7 @@ class Grid(QWidget):
 
         # Handle Transformers
         for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
-            if point == self.moveActivatedPos:
+            if point == self.moveActivatedPos or self.moveActivatedPos in hands:
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)
@@ -2074,7 +2103,7 @@ class Grid(QWidget):
 
         # Handle Generators
         for gen, (point, ori, hand) in self.gens.items():
-            if point == self.moveActivatedPos:
+            if point == self.moveActivatedPos or hand == self.moveActivatedPos:
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)
@@ -2087,7 +2116,7 @@ class Grid(QWidget):
 
         # Handle Loads
         for load, (point, ori, hand) in self.loads.items():
-            if point == self.moveActivatedPos:
+            if point == self.moveActivatedPos or hand == self.moveActivatedPos:
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)
@@ -2100,7 +2129,7 @@ class Grid(QWidget):
 
         # Handle Slacks
         for slack, (point, ori, hand) in self.slacks.items():
-            if point == self.moveActivatedPos:
+            if point == self.moveActivatedPos or hand == self.moveActivatedPos:
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)

@@ -8,7 +8,7 @@ from simulator import runLoadFlow
 from PyQt6.QtCore import QSize
 from start_window import StartUp
 from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtGui import QAction, QIcon, QCursor, QPixmap
 from PyQt6.QtWidgets import QHBoxLayout, QMainWindow, QStatusBar, QVBoxLayout, QWidget, QToolButton
 
 # Main Window Object
@@ -388,6 +388,8 @@ class MainWindow(QMainWindow):
             self.grid.showError(error_msg)
 
     def addBus(self) -> None:
+        self.unsetCursor()
+
         self.grid.selectMode = False
         self.grid.insertTrafoMode = False
         self.grid.handMode = False
@@ -412,6 +414,12 @@ class MainWindow(QMainWindow):
         self.update()
 
     def addLine(self) -> None:
+        # change cursor
+        icon = QPixmap('../icons/line.png')
+        scaledIcon = icon.scaled(QSize(32, 32))  
+        cursor = QCursor(scaledIcon)
+        self.setCursor(cursor)
+
         self.grid.insertBusMode = False
         self.grid.selectMode = False
         self.grid.insertTrafoMode = False
@@ -436,6 +444,7 @@ class MainWindow(QMainWindow):
         self.update()
 
     def addTrafo(self) -> None:
+        self.unsetCursor()
         self.grid.insertBusMode = False
         self.grid.insertLineMode = False 
         self.grid.insertGenMode = False
@@ -459,6 +468,7 @@ class MainWindow(QMainWindow):
         self.update()
 
     def addGen(self) -> None:
+        self.unsetCursor()
         self.grid.insertBusMode = False
         self.grid.insertLineMode = False 
         self.grid.selectMode = False
@@ -482,6 +492,8 @@ class MainWindow(QMainWindow):
         self.update()
 
     def addLoad(self) -> None:
+        self.unsetCursor()
+
         self.grid.insertBusMode = False
         self.grid.insertLineMode = False 
         self.grid.selectMode = False
@@ -504,6 +516,8 @@ class MainWindow(QMainWindow):
         self.update()
 
     def addSlack(self) -> None:
+        self.unsetCursor()
+
         self.grid.insertBusMode = False
         self.grid.insertLineMode = False 
         self.grid.selectMode = False
@@ -526,6 +540,7 @@ class MainWindow(QMainWindow):
         self.update()
 
     def setSelectMode(self) -> None:
+        self.unsetCursor()
         self.grid.insertLoadMode = False
         self.grid.firstNode = None
         if self.grid.insertLineMode:
@@ -553,6 +568,12 @@ class MainWindow(QMainWindow):
         self.update()
 
     def hand(self) -> None:
+        # change cursor
+        icon = QPixmap('../icons/hand.png')
+        scaledIcon = icon.scaled(QSize(32, 32))  
+        cursor = QCursor(scaledIcon)
+        self.setCursor(cursor)
+
         self.grid.insertLoadMode = False
         self.grid.insertBusMode = False
         self.grid.insertLineMode = False
@@ -578,6 +599,12 @@ class MainWindow(QMainWindow):
         self.update()
 
     def moveFunc(self) -> None:
+        # change cursor
+        icon = QPixmap('../icons/move.png')
+        scaledIcon = icon.scaled(QSize(32, 32))  
+        cursor = QCursor(scaledIcon)
+        self.setCursor(cursor)
+
         self.grid.insertLoadMode = False
         self.grid.insertBusMode = False
         self.grid.insertLineMode = False
