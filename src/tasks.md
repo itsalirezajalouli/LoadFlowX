@@ -9,10 +9,11 @@ Tasks:
 - [x] moving one element and all the paths attached to it should be possible
     - [x] making sure gui works great
     - [x] added mouse thingies
+- [x] adding erase system
+- [ ] showing the results when mouse hovers on the element
 - [ ] small fix of selection rectangle
 - [ ] toggle night mode and light mode
 - [ ] fixing and understanding why the calculations were wrong
-- [ ] showing the results when mouse hovers on the element
 - [ ] add necessary and unnecessary to the input fields
 - [ ] adding edit mechanism to all the elements
 - [ ] Per unit conversion

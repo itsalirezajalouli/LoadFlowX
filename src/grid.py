@@ -47,6 +47,7 @@ class Grid(QWidget):
         self.selectMode = False
         self.handMode = False
         self.moveMode = False
+        self.eraseMode = False
 
         self.insertBusMode = False
         self.insertLineMode = False
@@ -121,8 +122,10 @@ class Grid(QWidget):
         self.currentMousePos = event.pos()
         self.highLightedPoint = self.snap(event.pos())
         self.update()
+
         if self.handMode and self.handActivatedPos is not None:
             self.handleHandMode()
+
         if self.moveMode and self.moveActivatedPos is not None:
             self.handleMoveElement()
 
@@ -151,6 +154,8 @@ class Grid(QWidget):
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
+            if self.eraseMode:
+                self.handleEraseElement()
             self.leftMouseHold = True
             # Placing a bus
             if self.insertBusMode:
@@ -1158,7 +1163,7 @@ class Grid(QWidget):
                                 tup = (p.x(), p.y())
                                 pointsList.append(tup)
                             row['points'] = json.dumps(pointsList)
-                    newBusList.append(row)
+                            newBusList.append(row)
 
             with open(self.busCsvPath, 'w', newline = '') as file:
                 writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'zone', 'vAng',
@@ -1182,7 +1187,7 @@ class Grid(QWidget):
                             row['orient'] = orient
                             handsList = [(h.x(), h.y()) for h in hands]
                             row['hands'] = json.dumps(handsList)
-                    newTrafoList.append(row)
+                            newTrafoList.append(row)
 
             with open(trafoCsvPath, 'w', newline='') as file:
                 writer = csv.DictWriter(file, fieldnames=[
@@ -1205,7 +1210,7 @@ class Grid(QWidget):
                             row['pos'] = json.dumps((point.x(), point.y()))
                             row['orient'] = orient
                             row['hand'] = json.dumps((hand.x(), hand.y()))
-                    newGenList.append(row)
+                            newGenList.append(row)
 
             with open(csvPath, 'w', newline='') as file:
                 writer = csv.DictWriter(file, fieldnames=[
@@ -1228,7 +1233,7 @@ class Grid(QWidget):
                             row['pos'] = json.dumps((point.x(), point.y()))
                             row['orient'] = orient
                             row['hand'] = json.dumps((hand.x(), hand.y()))
-                    newSlackList.append(row)
+                            newSlackList.append(row)
 
             with open(csvPath, 'w', newline='') as file:
                 writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'vaD', 'pos', 'orient', 'hand'])
@@ -1248,7 +1253,7 @@ class Grid(QWidget):
                             row['pos'] = json.dumps((point.x(), point.y()))
                             row['orient'] = orient
                             row['hand'] = json.dumps((hand.x(), hand.y()))
-                    newLoadList.append(row)
+                            newLoadList.append(row)
 
             with open(csvPath, 'w', newline='') as file:
                 writer = csv.DictWriter(file, fieldnames=['bus', 'pMW', 'qMW', 'pos', 'orient', 'hand'])
@@ -2148,3 +2153,89 @@ class Grid(QWidget):
         self.updateLoadGUICSVParams()
         self.updateSlackGUICSVParams()
         self.update()
+
+    def handleEraseElement(self) -> None:
+        if not self.eraseMode:
+            return
+
+        # Handle Buses
+        erased = {}
+        bus2go = None
+        for bus, (point, capacity, orient, points, id) in self.busses.items():
+            if point == self.highLightedPoint or self.highLightedPoint in points:
+                bus2go = str(id)
+                print('2go:',bus2go)
+                continue
+            else:
+                bigTuple = (point, capacity, orient, points, id)
+                erased[bus] = bigTuple
+        self.busses = erased
+
+        # erasing lines connected to it from csv
+        linesCsv = self.projectPath + '/Lines.csv'
+        newLines = []
+        with open(linesCsv) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if row['bus1id'] == bus2go or row['bus2id'] == bus2go:
+                    continue
+                else:
+                    newLines.append(row)
+
+        with open(linesCsv, 'w', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=[
+                'name', 'bus1id', 'bus2id', 'R', 'X', 
+                'len', 'c_nf_per_km', 'max_i_ka'
+            ])
+            writer.writeheader()
+            writer.writerows(newLines)
+
+        # Handle Trafos
+        erased = {}
+        for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
+            if point == self.highLightedPoint or self.highLightedPoint in hands:
+                continue
+            else:
+                bigTuple = (point, ori, hands, bus1, bus2)
+                erased[trafo] = bigTuple
+        self.trafos = erased
+        self.tokenTrafoHands = []
+
+        # Handle Gens 
+        erased = {}
+        for gen, (point, ori, hand) in self.trafos.items():
+            if point == self.highLightedPoint or self.highLightedPoint == hand:
+                continue
+            else:
+                bigTuple = (point, ori, hand)
+                erased[gen] = bigTuple
+        self.gens = erased
+        self.tokenGenHands = []
+
+        # Handle Loads 
+        erased = {}
+        for load, (point, ori, hand) in self.loads.items():
+            if point == self.highLightedPoint or self.highLightedPoint == hand:
+                continue
+            else:
+                bigTuple = (point, ori, hand)
+                erased[load] = bigTuple
+        self.loads = erased
+        self.tokenLoadHands = []
+
+        # Handle Slack
+        erased = {}
+        for slack, (point, ori, hand) in self.slacks.items():
+            if point == self.highLightedPoint or self.highLightedPoint == hand:
+                continue
+            else:
+                bigTuple = (point, ori, hand)
+                erased[slack] = bigTuple
+        self.loads = erased
+        self.tokenSlackHands = []
+
+        self.update()
+        self.updateBusCSVGuiParams()
+        self.updateTrafoGUICSVParams()
+        self.updateGenGUICSVParams()
+        self.updateLoadGUICSVParams()

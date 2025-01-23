@@ -220,12 +220,12 @@ class MainWindow(QMainWindow):
         self.viewToolbox.setLayout(self.viewBar)
 
         #   erase button
-        eraseGridButt = QToolButton()
-        eraseGridButt.setIcon(QIcon('../icons/eraseGrid.png'))
-        eraseGridButt.setIconSize(QSize(self.buttSize, self.buttSize))
-        eraseGridButt.setStyleSheet(self.normalStyle)
-        eraseGridButt.clicked.connect(self.clear)
-        self.viewBar.addWidget(eraseGridButt)
+        self.eraseButt = QToolButton()
+        self.eraseButt.setIcon(QIcon('../icons/eraseGrid.png'))
+        self.eraseButt.setIconSize(QSize(self.buttSize, self.buttSize))
+        self.eraseButt.setStyleSheet(self.normalStyle)
+        self.eraseButt.clicked.connect(self.erase)
+        self.viewBar.addWidget(self.eraseButt)
 
         #   Zoom In button
         zoomInButt = QToolButton()
@@ -428,6 +428,7 @@ class MainWindow(QMainWindow):
         self.grid.insertLoadMode = False
         self.grid.insertSlackMode = False
         self.grid.moveMode = False
+        self.grid.eraseMode = False
         self.grid.insertLineMode = not(self.grid.insertLineMode) 
         if not self.grid.insertLineMode:
             self.addLineButton.setStyleSheet(self.normalStyle)
@@ -441,6 +442,7 @@ class MainWindow(QMainWindow):
             self.editGridButton.setStyleSheet(self.normalStyle)
             self.handButt.setStyleSheet(self.normalStyle)
             self.moveButt.setStyleSheet(self.normalStyle)
+            self.eraseButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def addTrafo(self) -> None:
@@ -619,6 +621,39 @@ class MainWindow(QMainWindow):
             self.moveButt.setStyleSheet(self.normalStyle)
         else:
             self.moveButt.setStyleSheet(self.toggledStyle)
+            self.addTrafoButton.setStyleSheet(self.normalStyle)
+            self.addLineButton.setStyleSheet(self.normalStyle)
+            self.addBusButton.setStyleSheet(self.normalStyle)
+            self.addGenButton.setStyleSheet(self.normalStyle)
+            self.addSlackButton.setStyleSheet(self.normalStyle)
+            self.addLoadButton.setStyleSheet(self.normalStyle)
+            self.editGridButton.setStyleSheet(self.normalStyle)
+            self.handButt.setStyleSheet(self.normalStyle)
+        self.update()
+
+    def erase(self) -> None:
+        # change cursor
+        icon = QPixmap('../icons/eraseGrid.png')
+        scaledIcon = icon.scaled(QSize(32, 32))  
+        cursor = QCursor(scaledIcon)
+        self.setCursor(cursor)
+
+        self.grid.insertLoadMode = False
+        self.grid.insertBusMode = False
+        self.grid.insertLineMode = False
+        self.grid.insertTrafoMode = False
+        self.grid.selectMode = False
+        self.grid.insertGenMode = False
+        self.grid.insertSlackMode = False
+        self.grid.insertLoadMode = False
+        self.grid.handMode = False
+        self.grid.moveMode = False
+        self.grid.eraseMode = not(self.grid.eraseMode) 
+        if not self.grid.eraseMode:
+            self.eraseButt.setStyleSheet(self.normalStyle)
+        else:
+            self.eraseButt.setStyleSheet(self.toggledStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
             self.addTrafoButton.setStyleSheet(self.normalStyle)
             self.addLineButton.setStyleSheet(self.normalStyle)
             self.addBusButton.setStyleSheet(self.normalStyle)
