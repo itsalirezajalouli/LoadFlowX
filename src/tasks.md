@@ -3,7 +3,9 @@ Tasks:
 - [x] more flexible zooming and hand mechanism
 - [x] putting the hand icon for hand mechanism and seperating it from move mode
 - [x] transformer connection bug
-- [ ] load and save system 
+- [x] load and save system 
+    - [x] loads everything? yes
+    - [ ] the problem with handmode for trafos after loading...
 - [ ] moving one element and all the paths attached to it should be possible
 - [ ] toggle night mode and light mode
 - [ ] fixing and understanding why the calculations were wrong

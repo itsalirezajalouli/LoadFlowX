@@ -861,6 +861,10 @@ class Grid(QWidget):
             for line in self.paths:
                 connection1, connection2, i1, i2, pathList, firstNodeType, secNodeType = line
                 firstNode, secondNode = None, None
+                print(100 * '-')
+                print('the line', line)
+                print('first node:', firstNode)
+                print('second node:', secondNode)
 
                 # from and to bus
                 for bus, (point, capacity, orient, points, id) in self.busses.items():
@@ -1252,6 +1256,7 @@ class Grid(QWidget):
         # Load buses
         with open(self.busCsvPath) as csvfile:
             reader = csv.DictReader(csvfile)
+            counter = 0
             for row in reader:
                 posList = json.loads(row['pos'].strip())
                 x, y = map(int, posList)
@@ -1262,14 +1267,18 @@ class Grid(QWidget):
                     pointsList.append(QPoint(int(px), int(py)))
                 bigTuple = (pos, int(row['capacity']), row['orient'],
                             pointsList, int(row['id']))
+                counter += 1
                 self.busses[row['name']] = bigTuple
+
+            self.busCounter = counter 
             # print('-> busses: ', self.busses)
             self.update()
 
         # Load transformers
         with open(self.trafoCsvPath) as csvfile:
             reader = csv.DictReader(csvfile)
-            for row in reader:
+            counter = 0
+            for id, row in enumerate(reader):
                 posList = json.loads(row['pos'].strip())
                 x, y = map(int, posList)
                 pos = QPoint(x, y)
@@ -1278,14 +1287,18 @@ class Grid(QWidget):
                 for hx, hy in handsArray:
                     handsList.append(QPoint(int(hx), int(hy)))
                 bigTuple = (pos, row['orient'], handsList, int(row['hvBus']), int(row['lvBus']))
-                self.trafos[row['name']] = bigTuple
-            # print('-> trafos: ', self.trafos)
+                self.trafos[id + 1] = bigTuple
+                counter += 1
+
+            self.trafoCounter = counter 
+            print('-> trafos: ', self.trafos)
             self.update()
 
         # Load generators
         with open(self.genCsvPath) as csvfile:
             reader = csv.DictReader(csvfile)
-            for row in reader:
+            counter = 0
+            for id, row in enumerate(reader):
                 posList = json.loads(row['pos'].strip())
                 x, y = map(int, posList)
                 pos = QPoint(x, y)
@@ -1293,14 +1306,17 @@ class Grid(QWidget):
                 hx, hy = map(int, handList)
                 hand = QPoint(hx, hy)
                 bigTuple = (pos, row['orient'], hand)
-                self.gens[row['name']] = bigTuple
+                self.gens[id + 1] = bigTuple
+                counter += 1
             # print('-> gens: ', self.gens)
+            self.genCounter = counter
             self.update()
 
         # Load loads
         with open(self.loadCsvPath) as csvfile:
             reader = csv.DictReader(csvfile)
-            for row in reader:
+            counter = 0
+            for id, row in enumerate(reader):
                 posList = json.loads(row['pos'].strip())
                 x, y = map(int, posList)
                 pos = QPoint(x, y)
@@ -1308,14 +1324,17 @@ class Grid(QWidget):
                 hx, hy = map(int, handList)
                 hand = QPoint(hx, hy)
                 bigTuple = (pos, row['orient'], hand)
-                self.loads[row['bus']] = bigTuple
+                self.loads[id + 1] = bigTuple
+                counter += 1
             # print('-> loads: ', self.loads)
+            self.loadCounter = counter
             self.update()
 
         # Load slacks
         with open(self.slackCsvPath) as csvfile:
             reader = csv.DictReader(csvfile)
-            for row in reader:
+            counter = 0
+            for id, row in enumerate(reader):
                 posList = json.loads(row['pos'].strip())
                 x, y = map(int, posList)
                 pos = QPoint(x, y)
@@ -1323,8 +1342,10 @@ class Grid(QWidget):
                 hx, hy = map(int, handList)
                 hand = QPoint(hx, hy)
                 bigTuple = (pos, row['orient'], hand)
-                self.slacks[row['bus']] = bigTuple
+                self.slacks[id + 1] = bigTuple
+                counter += 1
             # print('-> slacks: ', self.slacks)
+            self.slackCounter = counter
             self.update()
 
         # Load GUI settings
@@ -1343,6 +1364,7 @@ class Grid(QWidget):
                     bigTuple = connection1, connection2, i1, i2, newTp, firstNodeType, secNodeType
                     paths.append(bigTuple)
                 self.paths = paths
+                print('here are the loaded paths: ', self.paths)
             self.setDrawingParams()
             self.update()
 
