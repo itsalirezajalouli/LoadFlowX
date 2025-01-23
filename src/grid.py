@@ -284,6 +284,7 @@ class Grid(QWidget):
                                             # self.tokenBusPorts.append(points[i])
                                             trafoTuple = (point, ori, hands, connection2, 0)
                                             self.trafos.update({connection1: trafoTuple})
+                                            self.tempPath.clear() 
                                             self.update()
                                     else:
                                         if connection1 == trafo:
@@ -292,7 +293,6 @@ class Grid(QWidget):
                                             # self.tokenBusPorts.append(points[i])
                                             trafoTuple = (point, ori, hands, bus1, connection2)
                                             self.trafos.update({connection1: trafoTuple})
-                                            self.update()
                                             # print(self.trafos)
                                             self.addTraffoDialog = AddTrafoDialog(self)
                                             self.addTraffoDialog.trafoPos = point
@@ -303,6 +303,7 @@ class Grid(QWidget):
                                             self.addTraffoDialog.bus2Id = connection2
                                             self.addTraffoDialog.projectPath = self.projectPath
                                             self.addTraffoDialog.exec()
+                                            self.tempPath.clear() 
                                             self.updateGuiElementsCSV()
                                             self.update()
 
@@ -378,6 +379,7 @@ class Grid(QWidget):
                                             self.tokenTrafoHands.append(hands[i])
                                             trafoTuple = (point, ori, hands, connection1, 0)
                                             updates.append((trafo, trafoTuple))  # Add to updates
+                                            self.tempPath.clear() 
                                             self.update()
                                     else:
                                         # if connection2 == trafo:
@@ -386,7 +388,6 @@ class Grid(QWidget):
                                             # self.tokenBusPorts.append(hands[i])
                                             trafoTuple = (point, ori, hands, bus1, connection1)
                                             updates.append((trafo, trafoTuple))  # Add to updates
-                                            self.update()
                                             self.addTraffoDialog = AddTrafoDialog(self)
                                             self.addTraffoDialog.trafoPos = point
                                             self.addTraffoDialog.trafoOrient = ori 
@@ -397,9 +398,10 @@ class Grid(QWidget):
                                             self.addTraffoDialog.projectPath = self.projectPath
                                             self.addTraffoDialog.exec()
                                             self.updateGuiElementsCSV()
+
+                                            self.firstNode = None
+                                            self.tempPath.clear() 
                                             self.update()
-                                self.firstNode = None
-                                self.tempPath.clear() 
                 if len(updates) > 0:
                     for key, value in updates:
                         self.trafos[key] = value
@@ -428,9 +430,6 @@ class Grid(QWidget):
                                 self.addGenDialog.exec()
                                 self.updateGuiElementsCSV()
                                 self.tempPath.clear() 
-
-                # to a load
-                # to a slack 
 
                 # to a load
                 for load, (point, ori, hand) in self.loads.items():
@@ -848,7 +847,7 @@ class Grid(QWidget):
         for load, (pos, ori, hand) in self.loads.items():
             self.drawLoad(painter, pos.x(), pos.y(), ori)
 
-        # Drawing all the loads here
+        # Drawing all the slacks here
         for slack, (pos, ori, hand) in self.slacks.items():
             self.drawSlack(painter, pos.x(), pos.y(), ori)
 
@@ -883,13 +882,13 @@ class Grid(QWidget):
                     # from trafo
                     if firstNodeType == 'trafo' and connection1 == trafo:
                         if i1 == 0:
-                            firstNode = point
+                            firstNode = hands[i1] 
                         else:
                             firstNode = hands[i1]
                     # to trafo
                     if secNodeType == 'trafo' and connection2 == trafo:
                         if i2 == 0:
-                            secondNode = point
+                            secondNode = hands[i2]
                         else:
                             secondNode = hands[i2]
 
@@ -953,10 +952,7 @@ class Grid(QWidget):
                 if firstNodeType == 'trafo':
                     for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
                         if connection == trafo:
-                            if i == 0: 
-                                firstNode = point
-                            else:
-                                firstNode = hands[i]
+                            firstNode = hands[i] 
 
                 # draw start connection from gen
                 if firstNodeType == 'gen':
