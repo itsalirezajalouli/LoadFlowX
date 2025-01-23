@@ -861,10 +861,6 @@ class Grid(QWidget):
             for line in self.paths:
                 connection1, connection2, i1, i2, pathList, firstNodeType, secNodeType = line
                 firstNode, secondNode = None, None
-                print(100 * '-')
-                print('the line', line)
-                print('first node:', firstNode)
-                print('second node:', secondNode)
 
                 # from and to bus
                 for bus, (point, capacity, orient, points, id) in self.busses.items():
@@ -1139,9 +1135,9 @@ class Grid(QWidget):
             newTrafoList = []
             with open(trafoCsvPath) as csvfile:
                 reader = csv.DictReader(csvfile)
-                for row in reader:
+                for id, row in enumerate(reader):
                     for trafo, (point, orient, hands, hvBus, lvBus) in self.trafos.items():
-                        if row['name'] == trafo:
+                        if id + 1 == trafo:
                             row['pos'] = json.dumps((point.x(), point.y()))
                             row['orient'] = orient
                             handsList = [(h.x(), h.y()) for h in hands]
@@ -1163,9 +1159,9 @@ class Grid(QWidget):
             newGenList = []
             with open(csvPath) as csvfile:
                 reader = csv.DictReader(csvfile)
-                for row in reader:
+                for id, row in enumerate(reader):
                     for gen, (point, orient, hand) in self.gens.items():
-                        if row['name'] == gen:
+                        if id + 1 == gen:
                             row['pos'] = json.dumps((point.x(), point.y()))
                             row['orient'] = orient
                             row['hand'] = json.dumps((hand.x(), hand.y()))
@@ -1186,9 +1182,9 @@ class Grid(QWidget):
             newSlackList = []
             with open(csvPath) as csvfile:
                 reader = csv.DictReader(csvfile)
-                for row in reader:
+                for id, row in enumerate(reader):
                     for slack, (point, orient, hand) in self.slacks.items():
-                        if row['bus'] == slack:
+                        if id + 1 == slack:
                             row['pos'] = json.dumps((point.x(), point.y()))
                             row['orient'] = orient
                             row['hand'] = json.dumps((hand.x(), hand.y()))
@@ -1206,9 +1202,9 @@ class Grid(QWidget):
             newLoadList = []
             with open(csvPath) as csvfile:
                 reader = csv.DictReader(csvfile)
-                for row in reader:
+                for id, row in enumerate(reader):
                     for load, (point, orient, hand) in self.loads.items():
-                        if row['bus'] == load:
+                        if id + 1 == load:
                             row['pos'] = json.dumps((point.x(), point.y()))
                             row['orient'] = orient
                             row['hand'] = json.dumps((hand.x(), hand.y()))
@@ -1751,7 +1747,7 @@ class Grid(QWidget):
             ]
 
             bigTuple = (point, capacity, orient, newPoints, id)
-            self.editedBusses(bus, bigTuple)
+            self.busses.update({bus: bigTuple})
 
         # Handle Transformers
         for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():

@@ -5,7 +5,7 @@ Tasks:
 - [x] transformer connection bug
 - [x] load and save system 
     - [x] loads everything? yes
-    - [ ] the problem with handmode for trafos after loading...
+    - [x] the problem with handmode for trafos after loading...
 - [ ] moving one element and all the paths attached to it should be possible
 - [ ] toggle night mode and light mode
 - [ ] fixing and understanding why the calculations were wrong
