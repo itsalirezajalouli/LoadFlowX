@@ -130,7 +130,7 @@ class MainWindow(QMainWindow):
             border-radius: 15px;
         ''')
         self.viewToolbox.setFixedWidth(52)
-        self.viewToolbox.setFixedHeight(210)
+        self.viewToolbox.setFixedHeight(260)
         self.viewBar = QVBoxLayout()
         self.viewBar.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -202,7 +202,15 @@ class MainWindow(QMainWindow):
         self.editGridButton.setStyleSheet(self.normalStyle)
         self.viewBar.addWidget(self.editGridButton)
 
-        # hand button
+        #   Move button
+        self.moveButt = QToolButton()
+        self.moveButt.setIcon(QIcon('../icons/move.png'))
+        self.moveButt.setIconSize(QSize(self.buttSize, self.buttSize))
+        self.moveButt.clicked.connect(self.moveFunc)
+        self.moveButt.setStyleSheet(self.normalStyle)
+        self.viewBar.addWidget(self.moveButt)
+
+        # Hand button
         self.handButt = QToolButton()
         self.handButt.setIcon(QIcon('../icons/hand.png'))
         self.handButt.setIconSize(QSize(self.buttSize, self.buttSize))
@@ -387,6 +395,7 @@ class MainWindow(QMainWindow):
         self.grid.insertGenMode = False
         self.grid.insertLoadMode = False
         self.grid.insertSlackMode = False
+        self.grid.moveMode = False
         self.grid.insertBusMode = not(self.grid.insertBusMode) 
         if not self.grid.insertBusMode:
             self.addBusButton.setStyleSheet(self.normalStyle)
@@ -399,6 +408,7 @@ class MainWindow(QMainWindow):
             self.addGenButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
             self.handButt.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def addLine(self) -> None:
@@ -409,6 +419,7 @@ class MainWindow(QMainWindow):
         self.grid.handMode = False
         self.grid.insertLoadMode = False
         self.grid.insertSlackMode = False
+        self.grid.moveMode = False
         self.grid.insertLineMode = not(self.grid.insertLineMode) 
         if not self.grid.insertLineMode:
             self.addLineButton.setStyleSheet(self.normalStyle)
@@ -421,6 +432,7 @@ class MainWindow(QMainWindow):
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
             self.handButt.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def addTrafo(self) -> None:
@@ -430,6 +442,7 @@ class MainWindow(QMainWindow):
         self.grid.selectMode = False
         self.grid.insertLoadMode = False
         self.grid.insertSlackMode = False
+        self.grid.moveMode = False
         self.grid.insertTrafoMode = not(self.grid.insertTrafoMode) 
         if not self.grid.insertTrafoMode:
             self.addTrafoButton.setStyleSheet(self.normalStyle)
@@ -442,6 +455,7 @@ class MainWindow(QMainWindow):
             self.addGenButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
             self.handButt.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def addGen(self) -> None:
@@ -451,6 +465,7 @@ class MainWindow(QMainWindow):
         self.grid.insertTrafoMode = False
         self.grid.insertLoadMode = False
         self.grid.insertSlackMode = False
+        self.grid.moveMode = False
         self.grid.insertGenMode = not(self.grid.insertGenMode) 
         if not self.grid.insertGenMode:
             self.addGenButton.setStyleSheet(self.normalStyle)
@@ -463,6 +478,7 @@ class MainWindow(QMainWindow):
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
             self.handButt.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def addLoad(self) -> None:
@@ -472,6 +488,7 @@ class MainWindow(QMainWindow):
         self.grid.insertTrafoMode = False
         self.grid.insertGenMode = False
         self.grid.insertSlackMode = False
+        self.grid.moveMode = False
         self.grid.insertLoadMode = not(self.grid.insertLoadMode) 
         if not self.grid.insertLoadMode:
             self.addLoadButton.setStyleSheet(self.normalStyle)
@@ -483,6 +500,7 @@ class MainWindow(QMainWindow):
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
             self.handButt.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def addSlack(self) -> None:
@@ -492,6 +510,7 @@ class MainWindow(QMainWindow):
         self.grid.insertTrafoMode = False
         self.grid.insertGenMode = False
         self.grid.insertLoadMode = False
+        self.grid.moveMode = False
         self.grid.insertSlackMode = not(self.grid.insertSlackMode) 
         if not self.grid.insertSlackMode:
             self.addSlackButton.setStyleSheet(self.normalStyle)
@@ -503,6 +522,7 @@ class MainWindow(QMainWindow):
             self.addBusButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
             self.handButt.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def setSelectMode(self) -> None:
@@ -529,6 +549,7 @@ class MainWindow(QMainWindow):
             self.addSlackButton.setStyleSheet(self.normalStyle)
             self.addLoadButton.setStyleSheet(self.normalStyle)
             self.handButt.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def hand(self) -> None:
@@ -540,6 +561,7 @@ class MainWindow(QMainWindow):
         self.grid.insertGenMode = False
         self.grid.insertSlackMode = False
         self.grid.insertLoadMode = False
+        self.grid.moveMode = False
         self.grid.handMode = not(self.grid.handMode) 
         if not self.grid.handMode:
             self.handButt.setStyleSheet(self.normalStyle)
@@ -552,6 +574,32 @@ class MainWindow(QMainWindow):
             self.addSlackButton.setStyleSheet(self.normalStyle)
             self.addLoadButton.setStyleSheet(self.normalStyle)
             self.editGridButton.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
+        self.update()
+
+    def moveFunc(self) -> None:
+        self.grid.insertLoadMode = False
+        self.grid.insertBusMode = False
+        self.grid.insertLineMode = False
+        self.grid.insertTrafoMode = False
+        self.grid.selectMode = False
+        self.grid.insertGenMode = False
+        self.grid.insertSlackMode = False
+        self.grid.insertLoadMode = False
+        self.grid.handMode = False
+        self.grid.moveMode = not(self.grid.moveMode) 
+        if not self.grid.moveMode:
+            self.moveButt.setStyleSheet(self.normalStyle)
+        else:
+            self.moveButt.setStyleSheet(self.toggledStyle)
+            self.addTrafoButton.setStyleSheet(self.normalStyle)
+            self.addLineButton.setStyleSheet(self.normalStyle)
+            self.addBusButton.setStyleSheet(self.normalStyle)
+            self.addGenButton.setStyleSheet(self.normalStyle)
+            self.addSlackButton.setStyleSheet(self.normalStyle)
+            self.addLoadButton.setStyleSheet(self.normalStyle)
+            self.editGridButton.setStyleSheet(self.normalStyle)
+            self.handButt.setStyleSheet(self.normalStyle)
         self.update()
 
     def clear(self) -> None:

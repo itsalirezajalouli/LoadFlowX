@@ -41,10 +41,12 @@ class Grid(QWidget):
         self.currentMousePos = QPoint(400, 400)
         self.insertingOrient = '-90'
         self.handActivatedPos = None
+        self.moveActivatedPos = None
 
         # State Properties
         self.selectMode = False
         self.handMode = False
+        self.moveMode = False
 
         self.insertBusMode = False
         self.insertLineMode = False
@@ -121,6 +123,8 @@ class Grid(QWidget):
         self.update()
         if self.handMode and self.handActivatedPos is not None:
             self.handleHandMode()
+        if self.moveMode and self.moveActivatedPos is not None:
+            self.handleMoveElement()
 
     # def keyPressEvent(self, event):
     #     if event.key() == Qt.Key.Key_Space:
@@ -135,6 +139,9 @@ class Grid(QWidget):
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.handMode:
             self.handActivatedPos = None
+
+        if event.button() == Qt.MouseButton.LeftButton and self.moveMode:
+            self.moveActivatedPos = None
 
     #
     # def checkCombo(self):
@@ -506,6 +513,10 @@ class Grid(QWidget):
         # Hand mode pressed
         if event.button() == Qt.MouseButton.LeftButton and self.handMode:
             self.handActivatedPos = self.snap(event.pos())
+
+        # Move element mode pressed
+        if event.button() == Qt.MouseButton.LeftButton and self.moveMode:
+            self.moveActivatedPos = self.snap(event.pos())
 
         # Left + Alt: Removes Node
         if event.button() == Qt.MouseButton.RightButton and QApplication.keyboardModifiers() == Qt.KeyboardModifier.AltModifier:
@@ -2022,3 +2033,89 @@ class Grid(QWidget):
             self.updateLoadGUICSVParams()
             self.updateSlackGUICSVParams()
 
+    def handleMoveElement(self) -> None:
+        if not self.moveMode or self.moveActivatedPos is None:
+            return
+
+        xDiff = self.highLightedPoint.x() - self.moveActivatedPos.x()
+        yDiff = self.highLightedPoint.y() - self.moveActivatedPos.y()
+
+        # Handle Buses
+        for bus, (point, capacity, orient, points, id) in self.busses.items():
+            if point == self.moveActivatedPos or self.moveActivatedPos in points:
+                newOriginX = point.x() + xDiff
+                newOriginY = point.y() + yDiff
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+
+                newPoints = [
+                    self.snap(QPoint(p.x() + xDiff, p.y() + yDiff))
+                    for p in points
+                ]
+
+                bigTuple = (point, capacity, orient, newPoints, id)
+                self.busses.update({bus: bigTuple})
+
+        # Handle Transformers
+        for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
+            if point == self.moveActivatedPos:
+                newOriginX = point.x() + xDiff
+                newOriginY = point.y() + yDiff
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+
+                newHands = [
+                    self.snap(QPoint(h.x() + xDiff, h.y() + yDiff))
+                    for h in hands
+                ]
+
+                bigTuple = (point, ori, newHands, bus1, bus2)
+                self.trafos.update({trafo: bigTuple})
+
+        # Handle Generators
+        for gen, (point, ori, hand) in self.gens.items():
+            if point == self.moveActivatedPos:
+                newOriginX = point.x() + xDiff
+                newOriginY = point.y() + yDiff
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+
+                newHand = self.snap(QPoint(hand.x() + xDiff, hand.y() + yDiff))
+
+                bigTuple = (point, ori, newHand)
+                self.gens.update({gen: bigTuple})
+
+        # Handle Loads
+        for load, (point, ori, hand) in self.loads.items():
+            if point == self.moveActivatedPos:
+                newOriginX = point.x() + xDiff
+                newOriginY = point.y() + yDiff
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+
+                newHand = self.snap(QPoint(hand.x() + xDiff, hand.y() + yDiff))
+
+                bigTuple = (point, ori, newHand)
+                self.loads.update({load: bigTuple})
+
+        # Handle Slacks
+        for slack, (point, ori, hand) in self.slacks.items():
+            if point == self.moveActivatedPos:
+                newOriginX = point.x() + xDiff
+                newOriginY = point.y() + yDiff
+                newOrigin = QPoint(newOriginX, newOriginY)
+                point = self.snap(newOrigin)
+
+                newHand = self.snap(QPoint(hand.x() + xDiff, hand.y() + yDiff))
+
+                bigTuple = (point, ori, newHand)
+                self.slacks.update({slack: bigTuple})
+
+        self.moveActivatedPos = self.highLightedPoint
+        self.updateBusCSVGuiParams()
+        self.updateGuiElementsCSV()
+        self.updateTrafoGUICSVParams()
+        self.updateGenGUICSVParams()
+        self.updateLoadGUICSVParams()
+        self.updateSlackGUICSVParams()
+        self.update()
