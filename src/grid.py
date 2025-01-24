@@ -4,7 +4,7 @@ import csv
 import json
 import math
 from copy import deepcopy
-from PyQt6.QtCore import QPoint, Qt, QEvent
+from PyQt6.QtCore import QPoint, Qt, QEvent, QTimer
 from bus_dialogs import AddBusDialog, EditBusDialog
 from line_dialogs import AddLineDialog
 from gen_dialogs import AddGenDialog
@@ -46,15 +46,17 @@ class Grid(QWidget):
         # State Properties
         self.selectMode = False
         self.handMode = False
-        self.moveMode = False
         self.eraseMode = False
 
+        self.moveMode = False
         self.insertBusMode = False
         self.insertLineMode = False
         self.insertTrafoMode = False
         self.insertGenMode = False
         self.insertLoadMode = False
         self.insertSlackMode = False 
+
+        self.afterRun = True 
 
         self.correctNodeSelect = False 
         self.spacePressed = False  # Track the state of the Space key
@@ -92,6 +94,7 @@ class Grid(QWidget):
         self.tempPath = []
         self.firstType = None
         self.drawingParams = None
+        self.dataToShow = None
 
         # Defaults
         self.freq = 50
@@ -101,6 +104,13 @@ class Grid(QWidget):
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)  # Enable focus for key events
         self.update()
+
+        # Checking if mouse is still
+        self.lastPos = QPoint()
+        self.mouseIdleTimer = QTimer()
+        self.mouseIdleTimer.setSingleShot(True)
+        self.mouseIdleTimer.timeout.connect(self.onMouseIdle)
+        self.mouseIdleDelay = 10  # 1 second idle time
 
     def snap(self, pos: QPoint) -> QPoint:
         # To escape repetition of code i created this function it's gonna be very useful
@@ -129,6 +139,14 @@ class Grid(QWidget):
         if self.moveMode and self.moveActivatedPos is not None:
             self.handleMoveElement()
 
+        if event.pos() != self.lastPos:
+            self.lastPos = event.pos()
+            self.mouseIdleTimer.start(self.mouseIdleDelay)
+            self.dataToShow = None
+
+    def onMouseIdle(self):
+        if self.afterRun and self.selectMode:
+            self.handleAfterRun()
     # def keyPressEvent(self, event):
     #     if event.key() == Qt.Key.Key_Space:
     #         self.spacePressed = True
@@ -667,9 +685,9 @@ class Grid(QWidget):
         self.gridPen.setColor(self.lineColor)
         painter = QPainter()
         painter.begin(self)
-        painter.setPen(self.gridPen)
 
         # Horizontal lines
+        painter.setPen(self.gridPen)
         startH = QPoint(0, int(self.offSet.y()))
         endH = QPoint(int(self.width()), int(self.offSet.y()))
         distanceH = QPoint(0, int(self.dist))
@@ -989,6 +1007,9 @@ class Grid(QWidget):
                         painter.drawLine(pathList[-1].x(), pathList[-1].y(),
                                          secondNode.x(), secondNode.y())
 
+        if self.dataToShow is not None:
+            self.drawInfoBox(painter)
+
         # still not chosen the destination of the line 
         if self.insertLineMode and self.correctNodeSelect:
             if self.firstNode is not None:
@@ -1038,7 +1059,6 @@ class Grid(QWidget):
 
         else:
             return
-
         painter.end()
 
     def setBusDict(self, name: str, pos: QPoint, cap: int, ori: str, id: int):
@@ -2266,3 +2286,63 @@ class Grid(QWidget):
         self.updateTrafoGUICSVParams()
         self.updateGenGUICSVParams()
         self.updateLoadGUICSVParams()
+        self.updateSlackGUICSVParams()
+
+    def handleAfterRun(self) -> None:
+        # Handle Buses
+        for bus, (point, capacity, orient, points, id) in self.busses.items():
+            xRange = range(point.x() - self.dist, point.x() + self.dist)
+            yRange = range(point.y() - self.dist, point.y() + self.dist)
+            if self.highLightedPoint.x() in xRange and self.highLightedPoint.y() in yRange:
+                # Open result bus csv
+                csvPath = self.projectPath + '/results_buses.csv'
+                with open(csvPath) as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    for idx, row in enumerate(reader):
+                        if idx == id:
+                            self.dataToShow = {
+                                'Vm': f'{float(row['vm_pu']):.4f}' + ' (PU)',
+                                'Va': f'{float(row['va_degree']):.4f}' + ' (Deg)',
+                                'P': f'{float(row['p_mw']):.4f}' + ' (MW)',
+                                'Q': f'{float(row['q_mvar']):.4f}' + ' (MVAR)',
+                            }
+                        else:
+                            continue
+            else:
+                continue
+
+    def drawInfoBox(self, painter: QPainter) -> None:
+
+        padding = 10  # Padding around text inside the rectangle
+        lineSpacing = 1.5  # Space multiplier between lines
+        maxTextWidth = 0
+        totalHeight = 0
+
+        # Measure the widest text and total height
+        for key, value in self.dataToShow.items():
+            txt = f'{key} : {value}'
+            textRect = painter.fontMetrics().boundingRect(txt)
+            maxTextWidth = max(maxTextWidth, textRect.width())
+            totalHeight += textRect.height() * lineSpacing
+
+        # Calculate the background rectangle position
+        rectX = self.highLightedPoint.x() - (maxTextWidth // 2) - padding
+        rectY = self.highLightedPoint.y() + self.dist
+        rectWidth = maxTextWidth + 2 * padding
+        rectHeight = int(totalHeight) + padding
+
+        painter.setBrush(QBrush(QColor(44, 47, 51, 255)))
+        painter.setPen(Qt.PenStyle.NoPen)  # No border outline
+        painter.drawRect(rectX, rectY, rectWidth, rectHeight)
+
+        # Draw Left-aligned
+        painter.setPen(self.txtPen)
+        n = 0.5
+        for key, value in self.dataToShow.items():
+            txt = f'{key} : {value}'
+            textHeight = painter.fontMetrics().height()
+            txtPointX = rectX + padding  # Left-align text within rectangle
+            txtPointY = rectY + padding + int(n * textHeight)
+            n += lineSpacing
+            painter.drawText(QPoint(txtPointX, txtPointY), txt)
+

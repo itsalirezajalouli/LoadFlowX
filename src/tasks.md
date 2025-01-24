@@ -11,16 +11,19 @@ Tasks:
     - [x] added mouse thingies
 - [x] adding erase system
 - [x] small fix of selection rectangle
+- [x] showing the results when mouse hovers on the element
+    - [x] bus
+    - [ ] loads
+    - [ ] trafos 
+- [ ] add necessary and unnecessary to the input fields
 - [ ] refactor id to loading system
     - [x] bus
     - [x] trafo
     - [x] gen
     - [ ] load
     - [ ] slack
-- [ ] showing the results when mouse hovers on the element
 - [ ] toggle dark mode and light mode
 - [ ] fixing and understanding why the calculations were wrong
-- [ ] add necessary and unnecessary to the input fields
 - [ ] adding edit mechanism to all the elements
 - [ ] Per unit conversion
 - [ ] Smooth hand movement

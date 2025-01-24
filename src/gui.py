@@ -356,6 +356,7 @@ class MainWindow(QMainWindow):
 
     def run(self) -> None:
         # Takes chosen method from dialog chosen by user
+        self.grid.afterRun = True
         method, maxIter = self.grid.openRunDialog()
         # Passing data csvs to the simulator
         busCsvPath = self.projectPath + '/Buses.csv'
