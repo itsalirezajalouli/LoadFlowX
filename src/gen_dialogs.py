@@ -8,6 +8,7 @@ class AddGenDialog(QDialog):
         self.projectPath = None
         self.inputError = False
         self.bus = bus
+        self.genId = None
         self.genPos = None
         self.genOri = None
         self.genHand = None
@@ -121,6 +122,7 @@ class AddGenDialog(QDialog):
 
         # Create generator object
         generator = Generator(
+            id = self.genId,
             bus=self.bus, 
             name=self.nameInput.text(),
             pMW=float(self.pInput.text()),

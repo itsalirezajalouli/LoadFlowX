@@ -1,0 +1,2 @@
+dist,paths,busCounter,trafoCounter,genCounter,loadCounter,slackCounter,tokenGenHands,tokenTrafoHands,tokenLoadHands,tokenSlackHands
+32,"[[1, 1, 0, 0, [[416, 320]], ""gen"", ""bus""], [2, 1, 0, 0, [[704, 320]], ""gen"", ""bus""], [3, 2, 0, 0, [[768, 608]], ""gen"", ""bus""]]",2,0,3,0,0,,,,

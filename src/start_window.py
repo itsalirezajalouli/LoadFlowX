@@ -231,7 +231,7 @@ class StartUp(QDialog):
 
             with open(self.genCSV, 'a', newline = '') as file:
                 writer = csv.DictWriter(file, fieldnames=[
-                    'bus', 'name', 'pMW', 'vmPU', 'minQMvar', 'maxQMvar', 
+                    'id', 'bus', 'name', 'pMW', 'vmPU', 'minQMvar', 'maxQMvar', 
                     'minPMW', 'maxPMW', 'pos', 'orient', 'hand'
                 ])
                 writer.writeheader()

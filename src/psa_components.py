@@ -272,6 +272,7 @@ class Transformer():
 
 class Generator():
     def __init__(self,
+                 id: int,
                  bus: int,
                  name: str,
                  pMW: float,
@@ -284,6 +285,7 @@ class Generator():
                  orient: str,
                  hand: QPoint
                  ) -> None:
+        self.id = id 
         self.bus = bus
         self.name = name
         self.pMW = pMW
@@ -298,6 +300,7 @@ class Generator():
 
     def append2CSV(self, path: str) -> None:
         data = {
+            'id': self.id,
             'bus': self.bus,
             'name': self.name,
             'pMW': self.pMW,
@@ -313,7 +316,7 @@ class Generator():
         csvPath = path + '/Gens.csv'
         with open(csvPath, 'a', newline='') as file:
             writer = csv.DictWriter(file, fieldnames=[
-                'bus', 'name', 'pMW', 'vmPU', 'minQMvar', 'maxQMvar', 
+                'id', 'bus', 'name', 'pMW', 'vmPU', 'minQMvar', 'maxQMvar', 
                 'minPMW', 'maxPMW', 'pos', 'orient', 'hand'
             ])
             if file.tell() == 0:  # Check if the file is empty to write headers

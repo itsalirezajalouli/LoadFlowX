@@ -1,0 +1,2 @@
+bus,name,pMW,vmPU,minQMvar,maxQMvar,minPMW,maxPMW,pos,orient,hand
+1,2,Gen1,1.0,1.0,1.0,1.0,1.0,1.0,"[1120, 288]",-90,"[1120, 320]"

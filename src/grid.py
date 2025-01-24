@@ -328,6 +328,7 @@ class Grid(QWidget):
                                         self.update()
                                         self.addGenDialog = AddGenDialog(self, connection2)
                                         self.addGenDialog.projectPath = self.projectPath
+                                        self.addGenDialog.genId = gen 
                                         self.addGenDialog.genPos = point
                                         self.addGenDialog.genOri = ori
                                         self.addGenDialog.genHand = hand 
@@ -436,6 +437,7 @@ class Grid(QWidget):
                                 self.update()
                                 self.addGenDialog = AddGenDialog(self, connection1)
                                 self.addGenDialog.projectPath = self.projectPath
+                                self.addGenDialog.genId = gen 
                                 self.addGenDialog.genPos = point
                                 self.addGenDialog.genOri = ori 
                                 self.addGenDialog.genHand = hand 
@@ -1204,9 +1206,9 @@ class Grid(QWidget):
             newGenList = []
             with open(csvPath) as csvfile:
                 reader = csv.DictReader(csvfile)
-                for id, row in enumerate(reader):
+                for row in reader:
                     for gen, (point, orient, hand) in self.gens.items():
-                        if id + 1 == gen:
+                        if int(row['id']) == gen:
                             row['pos'] = json.dumps((point.x(), point.y()))
                             row['orient'] = orient
                             row['hand'] = json.dumps((hand.x(), hand.y()))
@@ -1214,7 +1216,7 @@ class Grid(QWidget):
 
             with open(csvPath, 'w', newline='') as file:
                 writer = csv.DictWriter(file, fieldnames=[
-                    'bus', 'name', 'pMW', 'vmPU', 'minQMvar', 'maxQMvar', 
+                    'id', 'bus', 'name', 'pMW', 'vmPU', 'minQMvar', 'maxQMvar', 
                     'minPMW', 'maxPMW', 'pos', 'orient', 'hand'
                 ])
                 writer.writeheader()
@@ -1277,10 +1279,22 @@ class Grid(QWidget):
                 newPaths.append(bigTuple)
             data = {
                 'dist': self.dist,
-                'paths': json.dumps(newPaths)
+                'paths': json.dumps(newPaths),
+                'busCounter': self.busCounter,
+                'trafoCounter': self.trafoCounter,
+                'genCounter': self.genCounter,
+                'loadCounter': self.loadCounter,
+                'slackCounter': self.slackCounter,
+                # 'tokenGenHands': self.tokenGenHands,
+                # 'tokenTrafoHands': self.tokenTrafoHands,
+                # 'tokenLoadHands': self.tokenLoadHands,
+                # 'tokenSlackHands': self.tokenSlackHands,
             }
             with open(self.guiCsvPath, 'w', newline = '') as file:
-                writer = csv.DictWriter(file, fieldnames=['dist','paths'])
+                writer = csv.DictWriter(file, fieldnames=['dist','paths', 'busCounter',
+                          'trafoCounter', 'genCounter', 'loadCounter', 'slackCounter',
+                            'tokenGenHands', 'tokenTrafoHands', 'tokenLoadHands',
+                                                          'tokenSlackHands'])
                 writer.writeheader()
                 writer.writerow(data)
                 # print(f'-> GUI Data edited to {self.guiCsvPath} successfuly.')
@@ -1294,106 +1308,23 @@ class Grid(QWidget):
         self.slackCsvPath = self.projectPath + '/Slacks.csv'
         self.guiCsvPath = self.projectPath + '/GUI.csv'
 
-        # Load buses
-        with open(self.busCsvPath) as csvfile:
-            reader = csv.DictReader(csvfile)
-            counter = 0
-            for row in reader:
-                posList = json.loads(row['pos'].strip())
-                x, y = map(int, posList)
-                pos = QPoint(x, y)
-                pointsList = []
-                pointsArray = json.loads(row['points'].strip())
-                for px, py in pointsArray:
-                    pointsList.append(QPoint(int(px), int(py)))
-                bigTuple = (pos, int(row['capacity']), row['orient'],
-                            pointsList, int(row['id']))
-                counter += 1
-                self.busses[row['name']] = bigTuple
-
-            self.busCounter = counter 
-            # print('-> busses: ', self.busses)
-            self.update()
-
-        # Load transformers
-        with open(self.trafoCsvPath) as csvfile:
-            reader = csv.DictReader(csvfile)
-            counter = 0
-            for id, row in enumerate(reader):
-                posList = json.loads(row['pos'].strip())
-                x, y = map(int, posList)
-                pos = QPoint(x, y)
-                handsList = []
-                handsArray = json.loads(row['hands'].strip())
-                for hx, hy in handsArray:
-                    handsList.append(QPoint(int(hx), int(hy)))
-                bigTuple = (pos, row['orient'], handsList, int(row['hvBus']), int(row['lvBus']))
-                self.trafos[id + 1] = bigTuple
-                counter += 1
-
-            self.trafoCounter = counter 
-            print('-> trafos: ', self.trafos)
-            self.update()
-
-        # Load generators
-        with open(self.genCsvPath) as csvfile:
-            reader = csv.DictReader(csvfile)
-            counter = 0
-            for id, row in enumerate(reader):
-                posList = json.loads(row['pos'].strip())
-                x, y = map(int, posList)
-                pos = QPoint(x, y)
-                handList = json.loads(row['hand'].strip())
-                hx, hy = map(int, handList)
-                hand = QPoint(hx, hy)
-                bigTuple = (pos, row['orient'], hand)
-                self.gens[id + 1] = bigTuple
-                counter += 1
-            # print('-> gens: ', self.gens)
-            self.genCounter = counter
-            self.update()
-
-        # Load loads
-        with open(self.loadCsvPath) as csvfile:
-            reader = csv.DictReader(csvfile)
-            counter = 0
-            for id, row in enumerate(reader):
-                posList = json.loads(row['pos'].strip())
-                x, y = map(int, posList)
-                pos = QPoint(x, y)
-                handList = json.loads(row['hand'].strip())
-                hx, hy = map(int, handList)
-                hand = QPoint(hx, hy)
-                bigTuple = (pos, row['orient'], hand)
-                self.loads[id + 1] = bigTuple
-                counter += 1
-            # print('-> loads: ', self.loads)
-            self.loadCounter = counter
-            self.update()
-
-        # Load slacks
-        with open(self.slackCsvPath) as csvfile:
-            reader = csv.DictReader(csvfile)
-            counter = 0
-            for id, row in enumerate(reader):
-                posList = json.loads(row['pos'].strip())
-                x, y = map(int, posList)
-                pos = QPoint(x, y)
-                handList = json.loads(row['hand'].strip())
-                hx, hy = map(int, handList)
-                hand = QPoint(hx, hy)
-                bigTuple = (pos, row['orient'], hand)
-                self.slacks[id + 1] = bigTuple
-                counter += 1
-            # print('-> slacks: ', self.slacks)
-            self.slackCounter = counter
-            self.update()
-
         # Load GUI settings
         with open(self.guiCsvPath) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 self.dist = int(row['dist'])
+                self.busCounter = int(row['busCounter'])
+                self.trafoCounter = int(row['trafoCounter'])
+                self.genCounter = int(row['genCounter'])
+                self.loadCounter = int(row['loadCounter'])
+                self.slackCounter = int(row['slackCounter'])
+                print('buscounter:', self.busCounter)
+                print('trafocounter:', self.trafoCounter)
+                print('gencounter:', self.genCounter)
+                # self.tokenTrafoHands = json.loads(row['tokenTrafoHands'].strip())
+                # self.tokenGenHands = json.loads(row['tokenGenHands'].strip())
+                # self.tokenLoadHands = json.loads(row['tokenLoadHands'].strip())
+                # self.tokenSlackHands = json.loads(row['tokenSlackHands'].strip())
                 pathArray = json.loads(row['paths'].strip())
                 paths = []
                 for p in pathArray:
@@ -1407,6 +1338,86 @@ class Grid(QWidget):
                 self.paths = paths
                 print('here are the loaded paths: ', self.paths)
             self.setDrawingParams()
+            self.update()
+
+        # Load buses
+        with open(self.busCsvPath) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                posList = json.loads(row['pos'].strip())
+                x, y = map(int, posList)
+                pos = QPoint(x, y)
+                pointsList = []
+                pointsArray = json.loads(row['points'].strip())
+                for px, py in pointsArray:
+                    pointsList.append(QPoint(int(px), int(py)))
+                bigTuple = (pos, int(row['capacity']), row['orient'],
+                            pointsList, int(row['id']))
+                self.busses[row['name']] = bigTuple
+
+            print('-> busses: ', self.busses)
+            self.update()
+
+        # Load transformers
+        with open(self.trafoCsvPath) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                posList = json.loads(row['pos'].strip())
+                x, y = map(int, posList)
+                pos = QPoint(x, y)
+                handsList = []
+                handsArray = json.loads(row['hands'].strip())
+                for hx, hy in handsArray:
+                    handsList.append(QPoint(int(hx), int(hy)))
+                bigTuple = (pos, row['orient'], handsList, int(row['hvBus']), int(row['lvBus']))
+                self.trafos[int(row['id'])] = bigTuple
+
+            print('-> trafos: ', self.trafos)
+            self.update()
+
+        # Load generators
+        with open(self.genCsvPath) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                posList = json.loads(row['pos'].strip())
+                x, y = map(int, posList)
+                pos = QPoint(x, y)
+                handList = json.loads(row['hand'].strip())
+                hx, hy = map(int, handList)
+                hand = QPoint(hx, hy)
+                bigTuple = (pos, row['orient'], hand)
+                self.gens[int(row['id'])] = bigTuple
+            print('-> gens: ', self.gens)
+            self.update()
+
+        # Load loads
+        with open(self.loadCsvPath) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for id, row in enumerate(reader):
+                posList = json.loads(row['pos'].strip())
+                x, y = map(int, posList)
+                pos = QPoint(x, y)
+                handList = json.loads(row['hand'].strip())
+                hx, hy = map(int, handList)
+                hand = QPoint(hx, hy)
+                bigTuple = (pos, row['orient'], hand)
+                self.loads[id + 1] = bigTuple
+            # print('-> loads: ', self.loads)
+            self.update()
+
+        # Load slacks
+        with open(self.slackCsvPath) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for id, row in enumerate(reader):
+                posList = json.loads(row['pos'].strip())
+                x, y = map(int, posList)
+                pos = QPoint(x, y)
+                handList = json.loads(row['hand'].strip())
+                hx, hy = map(int, handList)
+                hand = QPoint(hx, hy)
+                bigTuple = (pos, row['orient'], hand)
+                self.slacks[id + 1] = bigTuple
+            # print('-> slacks: ', self.slacks)
             self.update()
 
     def openRunDialog(self) -> str:
@@ -2203,7 +2214,7 @@ class Grid(QWidget):
 
         # Handle Gens 
         erased = {}
-        for gen, (point, ori, hand) in self.trafos.items():
+        for gen, (point, ori, hand) in self.gens.items():
             if point == self.highLightedPoint or self.highLightedPoint == hand:
                 continue
             else:
