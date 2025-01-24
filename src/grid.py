@@ -728,7 +728,10 @@ class Grid(QWidget):
                 # Set the fill color with 20% transparency
                 painter.setBrush(color)
                 painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
-                painter.drawRect(xHigh - self.dist, yHigh - self.dist, 2 * self.dist, 2 * self.dist)
+                if self.insertLoadMode or self.insertSlackMode:
+                    painter.drawRect(xHigh - self.dist, yHigh, 2 * self.dist, 2 * self.dist)
+                else:
+                    painter.drawRect(xHigh - self.dist, yHigh - self.dist, 2 * self.dist, 2 * self.dist)
                 painter.setPen(self.symbolPen)
 
                 # Before Placing Bus
@@ -790,7 +793,7 @@ class Grid(QWidget):
                     textWidth = textRect.width()
                     textHeight = textRect.height()
                     txtPointX = xHigh - (textWidth // 2)
-                    txtPointY = yHigh - (self.dist) - (textHeight)
+                    txtPointY = yHigh + (2 * self.dist) + (textHeight)
                     txtPoint = QPoint(xHigh, yHigh - self.dist)
                     painter.setPen(self.txtPen)
                     txtPoint = QPoint(txtPointX, txtPointY)
@@ -806,7 +809,7 @@ class Grid(QWidget):
                     textWidth = textRect.width()
                     textHeight = textRect.height()
                     txtPointX = xHigh - (textWidth // 2)
-                    txtPointY = yHigh + (self.dist) + (textHeight)
+                    txtPointY = yHigh + (2 * self.dist) + (textHeight)
                     txtPoint = QPoint(xHigh, yHigh - self.dist)
                     painter.setPen(self.txtPen)
                     txtPoint = QPoint(txtPointX, txtPointY)
@@ -858,20 +861,24 @@ class Grid(QWidget):
                     painter.setBrush(Qt.BrushStyle.NoBrush)
 
             for load, (point, ori, hand) in self.loads.items():
-                if self.highLightedPoint == point or self.highLightedPoint == hand:
+                centroid = QPoint(point.x(), point.y() + self.dist)
+                if self.highLightedPoint == point or self.highLightedPoint == centroid or \
+                    self.highLightedPoint == hand:
                     # Set the fill color with 20% transparency
                     painter.setBrush(color)
                     painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
-                    painter.drawRect(point.x() - self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
+                    painter.drawRect(point.x() - self.dist, point.y(), 2 * self.dist, 2 * self.dist)
                 else: 
                     painter.setBrush(Qt.BrushStyle.NoBrush)
 
             for slack, (point, ori, hand) in self.slacks.items():
-                if self.highLightedPoint == point or self.highLightedPoint == hand:
+                centroid = QPoint(point.x(), point.y() + self.dist)
+                if self.highLightedPoint == point or self.highLightedPoint == centroid or \
+                    self.highLightedPoint == hand:
                     # Set the fill color with 20% transparency
                     painter.setBrush(color)
                     painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
-                    painter.drawRect(point.x() - self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
+                    painter.drawRect(point.x() - self.dist, point.y(), 2 * self.dist, 2 * self.dist)
                 else: 
                     painter.setBrush(Qt.BrushStyle.NoBrush)
 
@@ -2132,7 +2139,9 @@ class Grid(QWidget):
 
         # Handle Loads
         for load, (point, ori, hand) in self.loads.items():
-            if point == self.moveActivatedPos or hand == self.moveActivatedPos:
+            centroid = QPoint(point.x(), point.y() + self.dist)
+            if point == self.moveActivatedPos or hand == self.moveActivatedPos or \
+                hand == self.moveActivatedPos:
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)
@@ -2145,7 +2154,9 @@ class Grid(QWidget):
 
         # Handle Slacks
         for slack, (point, ori, hand) in self.slacks.items():
-            if point == self.moveActivatedPos or hand == self.moveActivatedPos:
+            centroid = QPoint(point.x(), point.y() + self.dist)
+            if point == self.moveActivatedPos or hand == self.moveActivatedPos or \
+                hand == self.moveActivatedPos:
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)
@@ -2225,8 +2236,11 @@ class Grid(QWidget):
 
         # Handle Loads 
         erased = {}
+        print('self.loads:', self.loads)
         for load, (point, ori, hand) in self.loads.items():
-            if point == self.highLightedPoint or self.highLightedPoint == hand:
+            centroid = QPoint(point.x(), point.y() + self.dist)
+            if point == self.highLightedPoint or hand == self.highLightedPoint or \
+                centroid == self.highLightedPoint:
                 continue
             else:
                 bigTuple = (point, ori, hand)
@@ -2237,12 +2251,14 @@ class Grid(QWidget):
         # Handle Slack
         erased = {}
         for slack, (point, ori, hand) in self.slacks.items():
-            if point == self.highLightedPoint or self.highLightedPoint == hand:
+            centroid = QPoint(point.x(), point.y() + self.dist)
+            if point == self.highLightedPoint or hand == self.highLightedPoint or \
+                centroid == self.highLightedPoint:
                 continue
             else:
                 bigTuple = (point, ori, hand)
                 erased[slack] = bigTuple
-        self.loads = erased
+        self.slacks = erased
         self.tokenSlackHands = []
 
         self.update()

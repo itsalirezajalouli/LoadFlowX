@@ -10,6 +10,7 @@ Tasks:
     - [x] making sure gui works great
     - [x] added mouse thingies
 - [x] adding erase system
+- [x] small fix of selection rectangle
 - [ ] refactor id to loading system
     - [x] bus
     - [x] trafo
@@ -17,13 +18,11 @@ Tasks:
     - [ ] load
     - [ ] slack
 - [ ] showing the results when mouse hovers on the element
-- [ ] small fix of selection rectangle
 - [ ] toggle dark mode and light mode
 - [ ] fixing and understanding why the calculations were wrong
 - [ ] add necessary and unnecessary to the input fields
 - [ ] adding edit mechanism to all the elements
 - [ ] Per unit conversion
-- [ ] Error when user doesn't give a project name or gives a name with '\'
 - [ ] Smooth hand movement
 ...
 
