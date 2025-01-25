@@ -23,10 +23,11 @@ Tasks:
     - [x] trafos 
 - [ ] field to set high voltage and low voltage
 - [ ] add necessary and unnecessary to the input fields
-- [ ] toggle dark mode and light mode
 - [ ] fixing and understanding why the calculations were wrong
-- [ ] adding edit mechanism to all the elements
 - [ ] Per unit conversion
+- [ ] adding edit mechanism to all the elements
+- [ ] toggle dark mode and light mode
+    - [ ] gui
 - [ ] Smooth hand movement
 ...
 

@@ -17,6 +17,27 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle('PSA II Project')
         self.setMinimumSize(800, 700)
+        self.isThemeLight = False
+        self.THEMES = {
+            'dark': {
+                'background': '#2c2f33',
+                'secondaryBackground': '#23272a',
+                'buttonBackground': '#3b3e45',
+                'buttonBorder': '#3b3e45',
+                'buttonHoverBorder': '#7289da',
+                'buttonPressedBorder': '#FAA61A',
+                'text': '#ffffff'
+            },
+            'light': {
+                'background': '#f0f0f0',  # Light grey background
+                'secondaryBackground': '#d9d9d9',  # Lighter secondary
+                'buttonBackground': '#e0e0e0',  # Light button background
+                'buttonBorder': '#d9d9d9',
+                'buttonHoverBorder': '#4b6cb7',  # Soft blue for hover
+                'buttonPressedBorder': '#ff9800',  # Orange highlight
+                'text': '#333333'  # Dark text for contrast
+            }
+        }
         self.projectPath = None
         self.startUp = StartUp(self)
         self.buttSize = 26
@@ -38,14 +59,14 @@ class MainWindow(QMainWindow):
         self.mainLayout.addWidget(self.grid, 12)
 
         # Menu Bar
-        menu = self.menuBar()
-        menu.setStyleSheet('''
+        self.menu = self.menuBar()
+        self.menu.setStyleSheet('''
             background-color: #2c2f33; color: #fff; ''')
-        fileMenu = menu.addMenu('&File')
-        editMenu = menu.addMenu('&Edit')
-        loadFlowMenu = menu.addMenu('&Load Flow')
-        viewMenu = menu.addMenu('&View')
-        docMenu = menu.addMenu('&Docs')
+        fileMenu = self.menu.addMenu('&File')
+        editMenu = self.menu.addMenu('&Edit')
+        loadFlowMenu = self.menu.addMenu('&Load Flow')
+        viewMenu = self.menu.addMenu('&View')
+        docMenu = self.menu.addMenu('&Docs')
 
         # New Project Button
         newButton = QAction('New Project', self)
@@ -144,7 +165,7 @@ class MainWindow(QMainWindow):
             border-radius: 15px;
         ''')
         self.runWidget.setFixedWidth(52)
-        self.runWidget.setFixedHeight(55)
+        self.runWidget.setFixedHeight(100)
 
         # Symbols Toolbox
         self.symbolsToolbox = QWidget()
@@ -246,12 +267,20 @@ class MainWindow(QMainWindow):
         self.viewBar.addWidget(self.zoomOutButt)
 
         #   Run button
-        self.runButton = QToolButton()
-        self.runButton.setIcon(QIcon('../icons/run.png'))
-        self.runButton.setIconSize(QSize(self.buttSize, self.buttSize))
-        self.runButton.setStyleSheet(self.normalStyle)
-        self.runButton.clicked.connect(self.run)
-        self.runLayout.addWidget(self.runButton)
+        self.themeButton = QToolButton()
+        self.themeButton.setIcon(QIcon('../icons/run.png'))
+        self.themeButton.setIconSize(QSize(self.buttSize, self.buttSize))
+        self.themeButton.setStyleSheet(self.normalStyle)
+        self.themeButton.clicked.connect(self.run)
+        self.runLayout.addWidget(self.themeButton)
+
+        #   theme button
+        self.themeButton = QToolButton()
+        self.themeButton.setIcon(QIcon('../icons/lightMode.png'))
+        self.themeButton.setIconSize(QSize(self.buttSize, self.buttSize))
+        self.themeButton.setStyleSheet(self.normalStyle)
+        self.themeButton.clicked.connect(self.toggleTheme)
+        self.runLayout.addWidget(self.themeButton)
 
         #   Add Bus button
         self.addBusButton = QToolButton()
@@ -307,19 +336,19 @@ class MainWindow(QMainWindow):
         
         # Main Widget
         self.mainLayout.addWidget(self.barWidget)
-        widget = QWidget()
-        widget.setLayout(self.mainLayout)
-        widget.setStyleSheet('''
+        self.widget = QWidget()
+        self.widget.setLayout(self.mainLayout)
+        self.widget.setStyleSheet('''
             background-color: #191b1d;
         ''')
-        self.setCentralWidget(widget)
+        self.setCentralWidget(self.widget)
 
         # Status Bar
-        statusBar = QStatusBar()
-        self.setStatusBar(statusBar)
-        statusBar.showMessage(
+        self.statusBar = QStatusBar()
+        self.setStatusBar(self.statusBar)
+        self.statusBar.showMessage(
             'Power System Analysis II Project - Load Flow Methods GUI Simulator')
-        statusBar.setStyleSheet('''
+        self.statusBar.setStyleSheet('''
             color: #ffffff;
             background-color: #23272a;
         ''')
@@ -746,3 +775,39 @@ class MainWindow(QMainWindow):
             writer.writeheader()
         print(f'-> Slack header cleared to {self.slackCSV} successfuly.')
 
+    def toggleTheme(self) -> None:
+        if self.isThemeLight:
+            self.themeButton.setIcon(QIcon('../icons/lightMode.png'))
+            self.widget.setStyleSheet('''
+                background-color: #191b1d;
+            ''')
+            self.applyGeneralStyle(widget = self.menu, theme = 'dark')
+            self.applyGeneralStyle(widget = self.statusBar,theme = 'dark')
+            self.applyGeneralStyle(widget = self.viewToolbox, theme = 'dark')
+            self.applyGeneralStyle(widget = self.symbolsToolbox, theme = 'dark')
+            self.applyGeneralStyle(widget = self.runWidget, theme = 'dark')
+        else:
+            self.themeButton.setIcon(QIcon('../icons/darkMode.png'))
+            self.applyGeneralStyle(widget = self.widget, theme = 'light')
+            self.applyGeneralStyle(widget = self.menu, theme = 'light')
+            self.applyGeneralStyle(widget = self.statusBar,theme = 'light')
+            self.applyContainerStyle(widget = self.viewToolbox, theme = 'light')
+            self.applyContainerStyle(widget = self.symbolsToolbox, theme = 'light')
+            self.applyContainerStyle(widget = self.runWidget, theme = 'light')
+        self.isThemeLight = not(self.isThemeLight) 
+
+    def applyGeneralStyle(self, widget, theme: str):
+        colors = self.THEMES[theme]
+        widget.setStyleSheet(f'''
+            background-color: {colors['background']};
+            color: {colors['text']};
+            border-radius: 15px;
+        ''')
+
+    def applyContainerStyle(self, widget, theme: str):
+        colors = self.THEMES[theme]
+        widget.setStyleSheet(f'''
+            background-color: {colors['secondaryBackground']};
+            color: {colors['text']};
+            border-radius: 15px;
+        ''')
