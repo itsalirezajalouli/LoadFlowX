@@ -41,6 +41,7 @@ class AddLoadDialog(QDialog):
         self.projectPath = None
         self.inputError = False
         self.bus = bus 
+        self.loadId = None
         self.loadPos = None
         self.loadOri = None
         self.loadHand = None
@@ -157,6 +158,7 @@ class AddLoadDialog(QDialog):
             self.inputError = False
         # Creating the Load
         load = Load(
+            id = self.loadId,
             bus = self.bus,
             pMW = float(self.pInput.text()),
             qMW = float(self.qInput.text()),

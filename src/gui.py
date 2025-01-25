@@ -735,12 +735,14 @@ class MainWindow(QMainWindow):
         print(f'-> Trafo header cleared to {self.trafoCSV} successfuly.')
 
         with open(self.loadCSV, 'w', newline = '') as file:
-            writer = csv.DictWriter(file, fieldnames=['bus', 'pMW', 'qMW', 'pos', 'orient', 'hand'])
+            writer = csv.DictWriter(file, fieldnames=['id','bus', 'vmPU', 'vaD',
+                                                          'pos', 'orient', 'hand'])
             writer.writeheader()
         print(f'-> Load header cleared to {self.loadCSV} successfuly.')
 
         with open(self.slackCSV, 'w', newline = '') as file:
-            writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'vaD', 'pos', 'orient', 'hand'])
+            writer = csv.DictWriter(file, fieldnames=['id','bus', 'vmPU', 'vaD',
+                                                          'pos', 'orient', 'hand'])
             writer.writeheader()
         print(f'-> Slack header cleared to {self.slackCSV} successfuly.')
 

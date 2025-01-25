@@ -1,1 +1,2 @@
 id,name,hvBus,lvBus,pos,orient,hands,sn_mva,vk_percent,vkr_percent,tap_step_percent
+1,afasdf,5,4,"[416, 96]",180,"[[448, 96], [384, 96]]",1.0,1.0,1.0,1.0

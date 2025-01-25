@@ -1,1 +1,2 @@
-bus,pMW,qMW,pos,orient,hand
+id,bus,pMW,qMW,pos,orient,hand
+3,3,100.0,20.0,"[832, 352]",-90,"[832, 352]"

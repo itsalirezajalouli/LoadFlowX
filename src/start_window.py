@@ -246,11 +246,13 @@ class StartUp(QDialog):
             print(f'-> Trafo header appended to {self.trafoCSV} successfuly.')
 
             with open(self.loadCSV, 'a', newline = '') as file:
-                writer = csv.DictWriter(file, fieldnames=['bus', 'pMW', 'qMW', 'pos', 'orient', 'hand'])
+                writer = csv.DictWriter(file, fieldnames=['id', 'bus', 'pMW', 'qMW',
+                                                      'pos', 'orient', 'hand'])
                 writer.writeheader()
             print(f'-> Load header appended to {self.loadCSV} successfuly.')
 
             with open(self.slackCSV, 'a', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'vaD', 'pos', 'orient', 'hand'])
+                writer = csv.DictWriter(file, fieldnames=['id','bus', 'vmPU', 'vaD',
+                                                          'pos', 'orient', 'hand'])
                 writer.writeheader()
             print(f'-> Slack header appended to {self.slackCSV} successfuly.')

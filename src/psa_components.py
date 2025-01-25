@@ -326,6 +326,7 @@ class Generator():
 
 class Load():
     def __init__(self,
+                 id: int,
                  bus: int,
                  pMW: float,
                  qMW: float,
@@ -333,6 +334,7 @@ class Load():
                  orient: str,
                  hand: QPoint,
                  ) -> None:
+        self.id = id
         self.bus = bus
         self.pMW = pMW
         self.qMW = qMW
@@ -342,6 +344,7 @@ class Load():
 
     def append2CSV(self, path: str) -> None:
         data = {
+            'id': self.id,
             'bus': self.bus,
             'pMW': self.pMW,
             'qMW': self.qMW,
@@ -351,12 +354,14 @@ class Load():
         }
         csvPath = path + '/Loads.csv'
         with open(csvPath, 'a', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames=['bus', 'pMW', 'qMW', 'pos', 'orient', 'hand'])
+            writer = csv.DictWriter(file, fieldnames=['id', 'bus', 'pMW', 'qMW',
+                                                      'pos', 'orient', 'hand'])
             writer.writerow(data)
         print(f'-> Load data appended to {csvPath} successfully.')
 
 class Slack():
     def __init__(self,
+                 id: int,
                  bus: int,
                  vmPU: float,
                  vaD: float,
@@ -364,6 +369,7 @@ class Slack():
                  orient: str,
                  hand: QPoint,
                  ) -> None:
+        self.id = id
         self.bus = bus
         self.vmPU = vmPU
         self.vaD = vaD 
@@ -373,6 +379,7 @@ class Slack():
 
     def append2CSV(self, path: str) -> None:
         data = {
+            'id': self.id,
             'bus': self.bus,
             'vmPU': self.vmPU,
             'vaD': self.vaD,
@@ -382,6 +389,7 @@ class Slack():
         }
         csvPath = path + '/Slacks.csv'
         with open(csvPath, 'a', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'vaD', 'pos', 'orient', 'hand'])
+            writer = csv.DictWriter(file, fieldnames=['id','bus', 'vmPU', 'vaD',
+                                                      'pos', 'orient', 'hand'])
             writer.writerow(data)
         print(f'-> Slack data appended to {csvPath} successfully.')

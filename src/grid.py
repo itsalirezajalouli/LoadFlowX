@@ -363,6 +363,7 @@ class Grid(QWidget):
                                         self.update()
                                         self.addLoadDialog = AddLoadDialog(self, connection2)
                                         self.addLoadDialog.projectPath = self.projectPath
+                                        self.addLoadDialog.loadId = load 
                                         self.addLoadDialog.loadPos = point
                                         self.addLoadDialog.loadOri = ori 
                                         self.addLoadDialog.loadHand = hand 
@@ -379,6 +380,7 @@ class Grid(QWidget):
                                         self.update()
                                         self.addSlackDialog = AddSlackDialog(self, connection1)
                                         self.addSlackDialog.projectPath = self.projectPath
+                                        self.addSlackDialog.slackId = slack
                                         self.addSlackDialog.slackPos = point
                                         self.addSlackDialog.slackOri = ori
                                         self.addSlackDialog.slackHand = hand 
@@ -481,6 +483,7 @@ class Grid(QWidget):
                                 self.update()
                                 self.addLoadDialog = AddLoadDialog(self, connection1)
                                 self.addLoadDialog.projectPath = self.projectPath
+                                self.addLoadDialog.loadId = load 
                                 self.addLoadDialog.loadPos = point
                                 self.addLoadDialog.loadOri = ori
                                 self.addLoadDialog.loadHand = hand
@@ -506,6 +509,7 @@ class Grid(QWidget):
                                     self.update()
                                     self.addSlackDialog = AddSlackDialog(self, connection1)
                                     self.addSlackDialog.projectPath = self.projectPath
+                                    self.addSlackDialog.slackId = slack
                                     self.addSlackDialog.slackPos = point
                                     self.addSlackDialog.slackOri = ori
                                     self.addSlackDialog.slackHand = hand
@@ -1209,9 +1213,9 @@ class Grid(QWidget):
             newTrafoList = []
             with open(trafoCsvPath) as csvfile:
                 reader = csv.DictReader(csvfile)
-                for id, row in enumerate(reader):
+                for row in reader:
                     for trafo, (point, orient, hands, hvBus, lvBus) in self.trafos.items():
-                        if id + 1 == trafo:
+                        if int(row['id']) == trafo:
                             row['pos'] = json.dumps((point.x(), point.y()))
                             row['orient'] = orient
                             handsList = [(h.x(), h.y()) for h in hands]
@@ -1256,16 +1260,17 @@ class Grid(QWidget):
             newSlackList = []
             with open(csvPath) as csvfile:
                 reader = csv.DictReader(csvfile)
-                for id, row in enumerate(reader):
+                for row in enumerate(reader):
                     for slack, (point, orient, hand) in self.slacks.items():
-                        if id + 1 == slack:
+                        if int(row['id']) == slack:
                             row['pos'] = json.dumps((point.x(), point.y()))
                             row['orient'] = orient
                             row['hand'] = json.dumps((hand.x(), hand.y()))
                             newSlackList.append(row)
 
             with open(csvPath, 'w', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=['bus', 'vmPU', 'vaD', 'pos', 'orient', 'hand'])
+                writer = csv.DictWriter(file, fieldnames=['id','bus', 'vmPU', 'vaD',
+                                                          'pos', 'orient', 'hand'])
                 writer.writeheader()
                 writer.writerows(newSlackList)
             # print(f'-> Slack Data updated in {csvPath} successfully.')
@@ -1276,16 +1281,17 @@ class Grid(QWidget):
             newLoadList = []
             with open(csvPath) as csvfile:
                 reader = csv.DictReader(csvfile)
-                for id, row in enumerate(reader):
+                for row in reader:
                     for load, (point, orient, hand) in self.loads.items():
-                        if id + 1 == load:
+                        if int(row['id']) == load:
                             row['pos'] = json.dumps((point.x(), point.y()))
                             row['orient'] = orient
                             row['hand'] = json.dumps((hand.x(), hand.y()))
                             newLoadList.append(row)
 
             with open(csvPath, 'w', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=['bus', 'pMW', 'qMW', 'pos', 'orient', 'hand'])
+                writer = csv.DictWriter(file, fieldnames=['id', 'bus', 'pMW', 'qMW',
+                                                          'pos', 'orient', 'hand'])
                 writer.writeheader()
                 writer.writerows(newLoadList)
             # print(f'-> Load Data updated in {csvPath} successfully.')
@@ -1420,7 +1426,7 @@ class Grid(QWidget):
         # Load loads
         with open(self.loadCsvPath) as csvfile:
             reader = csv.DictReader(csvfile)
-            for id, row in enumerate(reader):
+            for row in reader:
                 posList = json.loads(row['pos'].strip())
                 x, y = map(int, posList)
                 pos = QPoint(x, y)
@@ -1428,14 +1434,14 @@ class Grid(QWidget):
                 hx, hy = map(int, handList)
                 hand = QPoint(hx, hy)
                 bigTuple = (pos, row['orient'], hand)
-                self.loads[id + 1] = bigTuple
+                self.loads[int(row['id'])] = bigTuple
             # print('-> loads: ', self.loads)
             self.update()
 
         # Load slacks
         with open(self.slackCsvPath) as csvfile:
             reader = csv.DictReader(csvfile)
-            for id, row in enumerate(reader):
+            for row in reader:
                 posList = json.loads(row['pos'].strip())
                 x, y = map(int, posList)
                 pos = QPoint(x, y)
@@ -1443,7 +1449,7 @@ class Grid(QWidget):
                 hx, hy = map(int, handList)
                 hand = QPoint(hx, hy)
                 bigTuple = (pos, row['orient'], hand)
-                self.slacks[id + 1] = bigTuple
+                self.slacks[int(row['id'])] = bigTuple
             # print('-> slacks: ', self.slacks)
             self.update()
 
@@ -2292,17 +2298,72 @@ class Grid(QWidget):
         # Handle Buses
         for bus, (point, capacity, orient, points, id) in self.busses.items():
             xRange = range(point.x() - self.dist, point.x() + self.dist)
-            yRange = range(point.y() - self.dist, point.y() + self.dist)
+            yRange = range(point.y() - self.dist, point.y() + capacity * self.dist)
             if self.highLightedPoint.x() in xRange and self.highLightedPoint.y() in yRange:
                 # Open result bus csv
                 csvPath = self.projectPath + '/results_buses.csv'
                 with open(csvPath) as csvfile:
                     reader = csv.DictReader(csvfile)
-                    for idx, row in enumerate(reader):
+                    for idx, row in enumerate(reader): # this is temporary
                         if idx == id:
                             self.dataToShow = {
                                 'Vm': f'{float(row['vm_pu']):.4f}' + ' (PU)',
                                 'Va': f'{float(row['va_degree']):.4f}' + ' (Deg)',
+                                'P': f'{float(row['p_mw']):.4f}' + ' (MW)',
+                                'Q': f'{float(row['q_mvar']):.4f}' + ' (MVAR)',
+                            }
+                        else:
+                            continue
+            else:
+                continue
+
+        # Handle Trafos
+        for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
+            if self.highLightedPoint == point:
+                # Open result trafo csv
+                csvPath = self.projectPath + '/results_trafos.csv'
+                with open(csvPath) as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    for idx, row in enumerate(reader): # this is temporary
+                        if idx == trafo:
+                            self.dataToShow = {
+                                'P HV': f'{float(row['p_hv_mw']):.4f}' + ' (MW)',
+                                'Q HV': f'{float(row['q_hv_mvar']):.4f}' + ' (MVAR)',
+                                'P LV': f'{float(row['p_lv_mw']):.4f}' + ' (MW)',
+                                'Q LV': f'{float(row['q_lv_mvar']):.4f}' + ' (MVAR)',
+                                'P Loss': f'{float(row['pl_mw']):.4f}' + ' (MW)',
+                                'Q Loss': f'{float(row['ql_mvar']):.4f}' + ' (MVAR)',
+                                'I HV': f'{float(row['i_hv_ka']):.4f}' + ' (kA)',
+                                'I LV': f'{float(row['i_lv_ka']):.4f}' + ' (kA)',
+                                'Vm HV': f'{float(row['vm_hv_pu']):.4f}' + ' (PU)',
+                                'Va HV': f'{float(row['va_hv_degree']):.4f}' + ' (Deg)',
+                                'Vm LV': f'{float(row['vm_lv_pu']):.4f}' + ' (PU)',
+                                'Va LV': f'{float(row['va_lv_degree']):.4f}' + ' (Deg)',
+                                'Loading': f'{float(row['loading_percent']):.2f}' + ' (%)',
+                            }
+                        else:
+                            continue
+            else:
+                continue
+
+        # Handle Loads
+        for load, (point, ori, hand) in self.loads.items():
+            if ori == '-90':
+                centroid = QPoint(point.x(), point.y() + self.dist)
+            elif ori == '0':
+                centroid = QPoint(point.x() + self.dist, point.y())
+            elif ori == '90':
+                centroid = QPoint(point.x(), point.y() - self.dist)
+            elif ori == '180':
+                centroid = QPoint(point.x() - self.dist, point.y())
+            if self.highLightedPoint == point or self.highLightedPoint == centroid :
+                # Open result trafo csv
+                csvPath = self.projectPath + '/results_loads.csv'
+                with open(csvPath) as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    for idx, row in enumerate(reader): # this is temporary
+                        if idx == load:
+                            self.dataToShow = {
                                 'P': f'{float(row['p_mw']):.4f}' + ' (MW)',
                                 'Q': f'{float(row['q_mvar']):.4f}' + ' (MVAR)',
                             }

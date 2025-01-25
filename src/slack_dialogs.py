@@ -8,6 +8,7 @@ class AddSlackDialog(QDialog):
         self.projectPath = None
         self.inputError = False
         self.bus = bus
+        self.slackId = None 
         self.slackPos = None
         self.slackOri = None
         self.slackHand = None
@@ -99,6 +100,7 @@ class AddSlackDialog(QDialog):
         else:
             self.inputError = False
         slack = Slack(
+            id = self.slackId,
             bus = self.bus,
             vmPU = float(self.vMagInput.text()),
             vaD = float(self.vangInput.text()),

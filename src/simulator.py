@@ -53,7 +53,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
                         in_service=bool(True),
                         max_loading_percent=float(100), 
                         df=int(1), 
-                        parallel=int(1)
+                        parallel=int(1),
                     )
 
         # Load and add generators
@@ -72,7 +72,8 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
                     max_p_mw=float(row.get('maxPMW', 1e6)),       # Default to a large positive value if not present
                     controllable=True,  # Hardcoded to True
                     slack=False,        # Hardcoded to False
-                    slack_weight=0      # Hardcoded to 0
+                    slack_weight=0,     # Hardcoded to 0
+                    index = int(row['id'])
                 )
 
         # Load and add transformers
@@ -105,6 +106,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
                     lv_bus=lv_bus,
                     name=row["name"],
                     std_type=std_type,
+                    index = int(row['id'])
                 )
                 print(f"Transformer {row['name']} added to the network.")
         
@@ -122,6 +124,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
                                scaling = 1,
                                # type = None,
                                in_service = True,
+                               index = int(row['id']),
                                controllable = False)
 
         # Load and add slacks
@@ -131,7 +134,8 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
                 pp.create_ext_grid(net, bus = int(row['bus']), vm_pu = float(row['vmPU']),
                                    va_degree = float(row['vaD']), slack_weight = 1,
                                    in_service = True, max_p_mw = 646, min_p_mw = 0,
-                                   max_q_mvar = 300, min_q_mvar = -100)
+                                   max_q_mvar = 300, min_q_mvar = -100,
+                                   index = int(row['id']))
 
         # Run power flow
         print('bus', 30 * '-')

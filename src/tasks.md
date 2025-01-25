@@ -11,17 +11,18 @@ Tasks:
     - [x] added mouse thingies
 - [x] adding erase system
 - [x] small fix of selection rectangle
-- [x] showing the results when mouse hovers on the element
-    - [x] bus
-    - [ ] loads
-    - [ ] trafos 
-- [ ] add necessary and unnecessary to the input fields
-- [ ] refactor id to loading system
+- [x] refactor id to loading system
     - [x] bus
     - [x] trafo
     - [x] gen
-    - [ ] load
-    - [ ] slack
+    - [x] slack
+    - [x] load
+- [x] showing the results when mouse hovers on the element
+    - [x] bus
+    - [x] loads
+    - [x] trafos 
+- [ ] field to set high voltage and low voltage
+- [ ] add necessary and unnecessary to the input fields
 - [ ] toggle dark mode and light mode
 - [ ] fixing and understanding why the calculations were wrong
 - [ ] adding edit mechanism to all the elements
@@ -35,8 +36,10 @@ Tasks for the future:
 - [ ] proper load and save system
 
 # places where i should fix the csvs:
+- dialog 
+- grid(loadgui)
+- grid (update csv)
 - psa
 - startup
 - gui (clean) 
-- grid (update csv)
 - simulator 
