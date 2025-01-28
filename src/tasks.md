@@ -21,10 +21,18 @@ Tasks:
     - [x] bus
     - [x] loads
     - [x] trafos 
-- [ ] field to set high voltage and low voltage
+- [x] some calculations for pp
 - [ ] add necessary and unnecessary to the input fields
-- [ ] fixing and understanding why the calculations were wrong
+    - [x] bus dialog
+    - [ ] trafo dialog
+        - [ ] field to set high voltage and low voltage
+    - [ ] load dialog
+    - [ ] slack dialog
+    - [ ] gen dialog
 - [ ] Per unit conversion
+    - [x] bus dialog
+    - [ ] trafo dialog
+- [ ] fixing and understanding why the calculations were wrong
 - [ ] adding edit mechanism to all the elements
 - [ ] toggle dark mode and light mode
     - [ ] gui

@@ -10,6 +10,8 @@ class AddBusDialog(QDialog):
     def __init__(self, parent) -> None:
         super().__init__(parent)
         self.setWindowTitle('Add Bus Bar')
+        # self.canceled = False
+        self.vUnit = 'KV'
         self.setStyleSheet('''
         QDialog {
             font-size: 24px;
@@ -49,21 +51,20 @@ class AddBusDialog(QDialog):
         self.points = None
 
         # Bus Name Input Box
+        self.nameWidget = QWidget()
+        self.nameHBox = QHBoxLayout()
         self.nameInputLabel = QLabel('Bus Name:')
-        self.nameInputLabel.setStyleSheet('color: #ffffff;')
         self.nameInput = QLineEdit(self)
-        self.nameInput.setPlaceholderText('Set Your Bus Name')
+        self.nameInputLabel.setStyleSheet('color: #ffffff;')
+        self.nameInput.setPlaceholderText('Set Bus Name')
+        self.nameHBox.addWidget(self.nameInputLabel)
+        starLabel = QLabel('*  ')
+        starLabel.setStyleSheet('color: #f04747;')
+        self.nameHBox.addWidget(starLabel)
+        self.nameHBox.addWidget(self.nameInput)
+        self.nameWidget.setLayout(self.nameHBox)
 
-        # Bus Type Combo Box
-        # self.typeInputLabel = QLabel('Bus Type:')
-        # self.typeInputLabel.setStyleSheet('color: #ffffff;')
-        # self.busTypeDropDown = QComboBox(self) 
-        # self.busTypeDropDown.addItem('SLACK')
-        # self.busTypeDropDown.addItem('PV')
-        # self.busTypeDropDown.addItem('PQ')
-        # self.busTypeDropDown.activated.connect(self.busTypeActivator)
-        #
-        # V Magnitude & Angle Input Box
+        # V Magnitude Input Box
         self.vInputLabel = QLabel('Nominal Voltage:')
         self.vInputLabel.setStyleSheet('color: #ffffff;')
         self.vWidget = QWidget()
@@ -73,50 +74,27 @@ class AddBusDialog(QDialog):
         self.vMagInput.setPlaceholderText('i.e. 345 KV')
         self.vUnitDropDown = QComboBox(self) 
         self.vUnitDropDown.addItem('KV')
-        self.vUnitDropDown.addItem('PU (Not Implemented)')
-        self.zoneLabel = QLabel('Zone: ')
-        self.zoneInput = QLineEdit(self)
-        self.zoneInput.setPlaceholderText('i.e. 1, 2, 3')
-        # self.vUnitDropDown.addItem('V')
-        # self.vUnitDropDown.activated.connect(self.vMagUnitActivator)
-        # self.vDegreeTypeDropDown = QComboBox(self) 
-        # self.vDegreeTypeDropDown.addItem('Deg')
-        # self.vDegreeTypeDropDown.addItem('Rad')
+        self.vUnitDropDown.addItem('PU')
+        self.vUnitDropDown.activated.connect(self.perUnitActivator)
         self.vHBox.addWidget(self.vMagLabel)
+        starLabel = QLabel('*  ')
+        starLabel.setStyleSheet('color: #f04747;')
+        self.vHBox.addWidget(starLabel)
         self.vHBox.addWidget(self.vMagInput)
         self.vHBox.addWidget(self.vUnitDropDown)
-        self.vHBox.addWidget(self.zoneLabel)
-        self.vHBox.addWidget(self.zoneInput)
-        # self.vHBox.addWidget(self.vAngLabel)
-        # self.vHBox.addWidget(self.vAngInput)
-        # self.vHBox.addWidget(self.vDegreeTypeDropDown)
         self.vWidget.setLayout(self.vHBox)
 
-        # P & Q Input Box
-        # self.pqInputLabel = QLabel('Active & Passive Power:')
-        # self.pqInputLabel.setStyleSheet('color: #ffffff;')
-        # self.pqWidget = QWidget()
-        # self.pqHBox = QHBoxLayout()
-        # self.pInput = QLineEdit(self)
-        # self.pInput.setPlaceholderText('P')
-        # self.qInput = QLineEdit(self)
-        # self.qInput.setPlaceholderText('Q')
-        # self.pUnitDropDown = QComboBox(self) 
-        # self.pUnitDropDown.addItem('PU')
-        # self.pUnitDropDown.addItem('KW')
-        # self.qUnitDropDown = QComboBox(self) 
-        # self.qUnitDropDown.addItem('PU')
-        # self.qUnitDropDown.addItem('KVA')
-        # self.pqHBox.addWidget(self.pInput)
-        # self.pqHBox.addWidget(self.pUnitDropDown)
-        # self.pqHBox.addWidget(self.qInput)
-        # self.pqHBox.addWidget(self.qUnitDropDown)
-        # self.pqWidget.setLayout(self.pqHBox)
-
         self.vMagInput.setValidator(QDoubleValidator())
-        # self.vAngInput.setValidator(QDoubleValidator())
-        # self.qInput.setValidator(QDoubleValidator())
-        # self.pInput.setValidator(QDoubleValidator())
+
+        # Zone Input Box
+        self.zWidget = QWidget()
+        self.zHBox = QHBoxLayout()
+        self.zoneLabel = QLabel('Zone: ')
+        self.zoneInput = QLineEdit(self)
+        self.zoneInput.setPlaceholderText('i.e. 1,...')
+        self.zHBox.addWidget(self.zoneLabel)
+        self.zHBox.addWidget(self.zoneInput)
+        self.zWidget.setLayout(self.zHBox)
 
         # Button Box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -125,28 +103,36 @@ class AddBusDialog(QDialog):
 
         layout = QVBoxLayout()
         layout.addWidget(self.title)
-        layout.addWidget(self.nameInputLabel)
-        layout.addWidget(self.nameInput)
-        # layout.addWidget(self.typeInputLabel)
-        # layout.addWidget(self.busTypeDropDown)
+        layout.addWidget(self.nameWidget)
         layout.addWidget(self.vInputLabel)
         layout.addWidget(self.vWidget)
-        # layout.addWidget(self.pqInputLabel)
-        # layout.addWidget(self.pqWidget)
+        layout.addWidget(self.zWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
 
-    # Handling bus type combo box
-    def busTypeActivator(self, index) -> None:
+    # Handling per unit combo box
+    def perUnitActivator(self, index) -> None:
         if index == 0: 
-            self.busType = BusType.SLACK
-        elif index == 1:
-            self.busType = BusType.PV
-        elif index == 2:
-            self.busType = BusType.PQ
+            if self.vUnit == 'PU':
+                self.vBaseLabel.deleteLater()
+                self.vBaseStarLabel.deleteLater()
+                self.vBaseInput.deleteLater()
+            self.vUnit = 'KV'
+            self.vMagInput.setPlaceholderText('i.e. 345 KV')
+            self.vWidget.setLayout(self.vHBox)
 
-    def vMagUnitActivator(self, index) -> None:
-        pass
+        elif index == 1:
+            self.vUnit = 'PU'
+            self.vMagInput.setPlaceholderText('i.e. 1.02 PU')
+            self.vBaseLabel = QLabel('Vb: ')
+            self.vBaseLabel.setStyleSheet('color: #ffffff;')
+            self.vBaseStarLabel = QLabel('*  ')
+            self.vBaseStarLabel.setStyleSheet('color: #f04747;')
+            self.vBaseInput = QLineEdit(self)
+            self.vBaseInput.setPlaceholderText('i.e. 220 KV')
+            self.vHBox.addWidget(self.vBaseLabel)
+            self.vHBox.addWidget(self.vBaseStarLabel)
+            self.vHBox.addWidget(self.vBaseInput)
 
     def accept(self) -> None:
         # Handling Same Name Bus Names
@@ -165,25 +151,36 @@ class AddBusDialog(QDialog):
         inputList = []
         inputList.append(self.nameInput.text())
         inputList.append(self.vMagInput.text())
-        inputList.append(self.zoneInput.text())
         # inputList.append(self.vAngInput.text())
         # inputList.append(self.pInput.text())
         # inputList.append(self.qInput.text())
         if '' in inputList:
             self.inputError = True
-            QMessageBox.warning(self, 'Fill all the fields.',
-                'No field can be empty! Please fill them all.', QMessageBox.StandardButton.Ok)
+            QMessageBox.warning(self, 'Fill all the necessary fields.',
+                'No necessary field can be empty! Please fill them.', QMessageBox.StandardButton.Ok)
             return
         else:
             self.inputError = False
+
+        # Zone is not necessary
+        zone = self.zoneInput.text()
+        if zone == '':
+            zone = 0
+
+        # Handling per unit
+        vMag = self.vMagInput.text()
+        if self.vUnit == 'PU':
+            vMag = float(self.vMagInput.text()) * float(self.vBaseInput.text())
+
+
         # Creating the BusBar
         bus = BusBar(
             id = self.busId,
             pos = self.busPos,
             name = self.nameInput.text(),
             bType = self.busType, 
-            zone = int(self.zoneInput.text()),
-            vMag = float(self.vMagInput.text()),
+            zone = int(zone),
+            vMag = float(vMag),
             # P = float(self.pInput.text()),
             # Q = float(self.qInput.text()),
             capacity = self.capacity,

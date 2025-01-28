@@ -561,6 +561,7 @@ class Grid(QWidget):
                 self.setBusDict(bus, point, capacity, orient, id)
             self.update()
             self.updateBusCSVGuiParams()
+            self.updateGuiElementsCSV()
 
 
         if event.button() == Qt.MouseButton.RightButton:
@@ -1088,6 +1089,7 @@ class Grid(QWidget):
                 points.append(QPoint(newPointX, newPointY))
         busTuple = (pos, cap, ori, points, id)
         self.busses[name] = busTuple
+        self.updateGuiElementsCSV()
 
     def setTrafoDict(self, pos: QPoint, ori: str, id: int, bus1: int, bus2: int) -> None:
         x = pos.x()
@@ -1102,6 +1104,7 @@ class Grid(QWidget):
             hands = (QPoint(x, y + self.dist), QPoint(x, y - self.dist))
         trafoTuple = (pos, ori, hands, bus1, bus2)
         self.trafos[id] = trafoTuple
+        self.updateGuiElementsCSV()
         # print(self.trafos)
 
     def setGenDict(self, id: int, pos: QPoint, ori: str) -> None:
@@ -1118,12 +1121,15 @@ class Grid(QWidget):
         genTuple = (pos, ori, hand)
         print(genTuple)
         self.gens[id] = genTuple
+        self.updateGuiElementsCSV()
 
     def setLoadDict(self, id, pos, orient):
         self.loads[id] = (pos, orient, pos)
+        self.updateGuiElementsCSV()
 
     def setSlackDict(self, id, pos, orient):
         self.slacks[id] = (pos, orient, pos)
+        self.updateGuiElementsCSV()
 
     def initEditBox(self, busName: str, point: QPoint) -> None:
         self.editBusDialog = EditBusDialog(self)
