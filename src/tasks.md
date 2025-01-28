@@ -22,21 +22,27 @@ Tasks:
     - [x] loads
     - [x] trafos 
 - [x] some calculations for pp
-- [ ] add necessary and unnecessary to the input fields
+- [x] add necessary and unnecessary to the input fields
     - [x] bus dialog
-    - [ ] trafo dialog
-        - [ ] field to set high voltage and low voltage
-    - [ ] load dialog
-    - [ ] slack dialog
-    - [ ] gen dialog
-- [ ] Per unit conversion
+    - [x] line
+    - [x] load dialog
+    - [x] slack dialog
+    - [x] gen dialog
+    - [x] trafo dialog
+        - [x] field to set high voltage and low voltage
+- [x] Per unit conversion
     - [x] bus dialog
-    - [ ] trafo dialog
+    - [x] trafo dialog
+    - [x] load dialog
+    - [x] slack dialog
+    - [x] gen dialog
+    - [x] trafo dialog
 - [ ] fixing and understanding why the calculations were wrong
 - [ ] adding edit mechanism to all the elements
 - [ ] toggle dark mode and light mode
     - [ ] gui
 - [ ] Smooth hand movement
+- [ ] Add the error handling of AddGenDialog to all
 ...
 
 Tasks for the future:

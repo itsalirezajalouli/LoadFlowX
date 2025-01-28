@@ -27,20 +27,24 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
             for row in reader:
                 if row['bus1id'] != row['bus2id']:
                     # Create a unique std_type for each line
-                    std_type_name = f"custom_type_{row['name']}"
-                    pp.create_std_type(
-                        net,
-                        {
-                            "r_ohm_per_km": float(row['R']),
-                            "x_ohm_per_km": float(row['X']),
-                            "c_nf_per_km": float(row['c_nf_per_km']),
-                            "max_i_ka": float(row['max_i_ka']),
-                            "type": "ol",
-                            "g_us_per_km": float(0)
-                        },
-                        name=std_type_name,
-                        element="line"
-                    )
+                    stdTypeName = f'custom_type_{row['name']}'
+                    if row['R'] == 'None':
+                        stdTypeName = 'NAYY 4x50 SE'
+                    else:
+                        pp.create_std_type(
+                            net,
+                            {
+                                'r_ohm_per_km': float(row['R']),
+                                'x_ohm_per_km': float(row['X']),
+                                'c_nf_per_km': float(row['c_nf_per_km']),
+                                'max_i_ka': float(row['max_i_ka']),
+                                'type': 'ol',
+                                'g_us_per_km': float(0)
+                            },
+                            name=stdTypeName,
+                            element='line'
+                        )
+                    # if not given the std_type params set it to default
 
                     fromBus, toBus = int(row['bus1id']), int(row['bus2id'])
                     pp.create_line(
@@ -49,7 +53,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
                         to_bus=int(toBus), 
                         length_km=float(row['len']),
                         name=str(row['name']), 
-                        std_type=std_type_name,  # Use the custom type we just created
+                        std_type=stdTypeName,  # Use the custom type we just created
                         in_service=bool(True),
                         max_loading_percent=float(100), 
                         df=int(1), 

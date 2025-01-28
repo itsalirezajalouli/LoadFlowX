@@ -324,13 +324,11 @@ class Grid(QWidget):
                                             trafoTuple = (point, ori, hands, bus1, connection2)
                                             self.trafos.update({connection1: trafoTuple})
                                             # print(self.trafos)
-                                            self.addTraffoDialog = AddTrafoDialog(self)
+                                            self.addTraffoDialog = AddTrafoDialog(self, bus1, connection2)
                                             self.addTraffoDialog.trafoPos = point
                                             self.addTraffoDialog.trafoOrient = ori 
                                             self.addTraffoDialog.trafoHands = hands 
                                             self.addTraffoDialog.trafoId = trafo
-                                            self.addTraffoDialog.bus1Id = bus1
-                                            self.addTraffoDialog.bus2Id = connection2
                                             self.addTraffoDialog.projectPath = self.projectPath
                                             self.addTraffoDialog.exec()
                                             self.tempPath.clear() 
@@ -421,13 +419,11 @@ class Grid(QWidget):
                                             # self.tokenBusPorts.append(hands[i])
                                             trafoTuple = (point, ori, hands, bus1, connection1)
                                             updates.append((trafo, trafoTuple))  # Add to updates
-                                            self.addTraffoDialog = AddTrafoDialog(self)
+                                            self.addTraffoDialog = AddTrafoDialog(self, bus1, connection2)
                                             self.addTraffoDialog.trafoPos = point
                                             self.addTraffoDialog.trafoOrient = ori 
                                             self.addTraffoDialog.trafoHands = hands 
                                             self.addTraffoDialog.trafoId = trafo
-                                            self.addTraffoDialog.bus1Id = bus1
-                                            self.addTraffoDialog.bus2Id = connection1
                                             self.addTraffoDialog.projectPath = self.projectPath
                                             self.addTraffoDialog.exec()
                                             self.updateGuiElementsCSV()
@@ -666,7 +662,7 @@ class Grid(QWidget):
                 slX, slY = point.x(), point.y()
                 if x == slX and y == slY:
                     newOrient = getNextOrientation(orient, event.angleDelta().y() > 0)
-                    self.setLoadDict(slack, pos, newOrient)
+                    self.setSlackDict(slack, pos, newOrient)
                     componentUpdated = True
                     self.updateSlackGUICSVParams()
                     break
@@ -1266,7 +1262,7 @@ class Grid(QWidget):
             newSlackList = []
             with open(csvPath) as csvfile:
                 reader = csv.DictReader(csvfile)
-                for row in enumerate(reader):
+                for row in reader:
                     for slack, (point, orient, hand) in self.slacks.items():
                         if int(row['id']) == slack:
                             row['pos'] = json.dumps((point.x(), point.y()))
@@ -1360,6 +1356,8 @@ class Grid(QWidget):
                 print('buscounter:', self.busCounter)
                 print('trafocounter:', self.trafoCounter)
                 print('gencounter:', self.genCounter)
+                print('loadcounter:', self.genCounter)
+                print('slackcounter:', self.genCounter)
                 # self.tokenTrafoHands = json.loads(row['tokenTrafoHands'].strip())
                 # self.tokenGenHands = json.loads(row['tokenGenHands'].strip())
                 # self.tokenLoadHands = json.loads(row['tokenLoadHands'].strip())
@@ -2173,7 +2171,7 @@ class Grid(QWidget):
         for load, (point, ori, hand) in self.loads.items():
             centroid = QPoint(point.x(), point.y() + self.dist)
             if point == self.moveActivatedPos or hand == self.moveActivatedPos or \
-                hand == self.moveActivatedPos:
+                centroid == self.moveActivatedPos:
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)
@@ -2188,7 +2186,7 @@ class Grid(QWidget):
         for slack, (point, ori, hand) in self.slacks.items():
             centroid = QPoint(point.x(), point.y() + self.dist)
             if point == self.moveActivatedPos or hand == self.moveActivatedPos or \
-                hand == self.moveActivatedPos:
+                centroid == self.moveActivatedPos:
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)

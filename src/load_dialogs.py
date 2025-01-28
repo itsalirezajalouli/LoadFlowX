@@ -5,11 +5,10 @@ from psa_components import Load
 from PyQt6.QtGui import QDoubleValidator
 from PyQt6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget, QLabel, QDialogButtonBox, QMessageBox
 
-# Dialogs Related to Bus Objects
 class AddLoadDialog(QDialog):
     def __init__(self, parent, bus) -> None:
         super().__init__(parent)
-        self.setWindowTitle('Add Bus Bar')
+        self.setWindowTitle('Add Load')
         self.setStyleSheet('''
         QDialog {
             font-size: 24px;
@@ -31,7 +30,7 @@ class AddLoadDialog(QDialog):
             color: #ffffff;
         }
         ''')
-        self.title = QLabel('Add Bus Bar to Network')
+        self.title = QLabel('Add Load to Network')
         self.title.setStyleSheet('''
             color: #ffffff;
             border: 2px solid #7289da;
@@ -40,89 +39,54 @@ class AddLoadDialog(QDialog):
         ''')
         self.projectPath = None
         self.inputError = False
-        self.bus = bus 
+        self.bus = bus
         self.loadId = None
         self.loadPos = None
         self.loadOri = None
         self.loadHand = None
 
-        # Bus Name Input Box
-        # self.nameInputLabel = QLabel('Load Name:')
-        # self.nameInputLabel.setStyleSheet('color: #ffffff;')
-        # self.nameInput = QLineEdit(self)
-        # self.nameInput.setPlaceholderText('Set Your Bus Name')
-
-        # Bus Type Combo Box
-        # self.typeInputLabel = QLabel('Bus Type:')
-        # self.typeInputLabel.setStyleSheet('color: #ffffff;')
-        # self.busTypeDropDown = QComboBox(self) 
-        # self.busTypeDropDown.addItem('SLACK')
-        # self.busTypeDropDown.addItem('PV')
-        # self.busTypeDropDown.addItem('PQ')
-        # self.busTypeDropDown.activated.connect(self.busTypeActivator)
-        #
-        # V Magnitude & Angle Input Box
-        self.pInputLabel = QLabel('Load:')
-        self.pInputLabel.setStyleSheet('color: #ffffff;')
+        # Active Power (P) Input Box
         self.pWidget = QWidget()
         self.pHBox = QHBoxLayout()
+        self.pInputLabel = QLabel('Active Power (P):')
+        self.pInputLabel.setStyleSheet('color: #ffffff;')
         self.pLabel = QLabel('P: ')
         self.pInput = QLineEdit(self)
         self.pInput.setPlaceholderText('i.e. 100 MW')
-        self.pUnitDropDown = QComboBox(self) 
+        self.pUnitDropDown = QComboBox(self)
         self.pUnitDropDown.addItem('MW')
-        # self.pUnitDropDown.addItem('PU (Not Implemented)')
+        self.pUnitDropDown.addItem('PU')
+        self.pUnitDropDown.activated.connect(self.updatePUnit)
+        starLabelP = QLabel('*  ')
+        starLabelP.setStyleSheet('color: #f04747;')
+        self.pHBox.addWidget(self.pLabel)
+        self.pHBox.addWidget(starLabelP)
+        self.pHBox.addWidget(self.pInput)
+        self.pHBox.addWidget(self.pUnitDropDown)
+        self.pWidget.setLayout(self.pHBox)
+
+        # Reactive Power (Q) Input Box
         self.qWidget = QWidget()
         self.qHBox = QHBoxLayout()
+        self.qInputLabel = QLabel('Reactive Power (Q):')
+        self.qInputLabel.setStyleSheet('color: #ffffff;')
         self.qLabel = QLabel('Q: ')
         self.qInput = QLineEdit(self)
         self.qInput.setPlaceholderText('i.e. 20 MVAR')
-        self.qUnitDropDown = QComboBox(self) 
+        self.qUnitDropDown = QComboBox(self)
         self.qUnitDropDown.addItem('MVar')
-        # self.qUnitDropDown.addItem('PU (Not Implemented)')
-        # self.vUnitDropDown.addItem('V')
-        # self.vUnitDropDown.activated.connect(self.vMagUnitActivator)
-        # self.vDegreeTypeDropDown = QComboBox(self) 
-        # self.vDegreeTypeDropDown.addItem('Deg')
-        # self.vDegreeTypeDropDown.addItem('Rad')
-        self.pHBox.addWidget(self.pLabel)
-        self.pHBox.addWidget(self.pInput)
-        self.pHBox.addWidget(self.pUnitDropDown)
+        self.qUnitDropDown.addItem('PU')
+        self.qUnitDropDown.activated.connect(self.updateQUnit)
+        starLabelQ = QLabel('*  ')
+        starLabelQ.setStyleSheet('color: #f04747;')
         self.qHBox.addWidget(self.qLabel)
+        self.qHBox.addWidget(starLabelQ)
         self.qHBox.addWidget(self.qInput)
         self.qHBox.addWidget(self.qUnitDropDown)
-        # self.vHBox.addWidget(self.vAngLabel)
-        # self.vHBox.addWidget(self.vAngInput)
-        # self.vHBox.addWidget(self.vDegreeTypeDropDown)
-        self.pWidget.setLayout(self.pHBox)
         self.qWidget.setLayout(self.qHBox)
-
-        # P & Q Input Box
-        # self.pqInputLabel = QLabel('Active & Passive Power:')
-        # self.pqInputLabel.setStyleSheet('color: #ffffff;')
-        # self.pqWidget = QWidget()
-        # self.pqHBox = QHBoxLayout()
-        # self.pInput = QLineEdit(self)
-        # self.pInput.setPlaceholderText('P')
-        # self.qInput = QLineEdit(self)
-        # self.qInput.setPlaceholderText('Q')
-        # self.pUnitDropDown = QComboBox(self) 
-        # self.pUnitDropDown.addItem('PU')
-        # self.pUnitDropDown.addItem('KW')
-        # self.qUnitDropDown = QComboBox(self) 
-        # self.qUnitDropDown.addItem('PU')
-        # self.qUnitDropDown.addItem('KVA')
-        # self.pqHBox.addWidget(self.pInput)
-        # self.pqHBox.addWidget(self.pUnitDropDown)
-        # self.pqHBox.addWidget(self.qInput)
-        # self.pqHBox.addWidget(self.qUnitDropDown)
-        # self.pqWidget.setLayout(self.pqHBox)
 
         self.pInput.setValidator(QDoubleValidator())
         self.qInput.setValidator(QDoubleValidator())
-        # self.vAngInput.setValidator(QDoubleValidator())
-        # self.qInput.setValidator(QDoubleValidator())
-        # self.pInput.setValidator(QDoubleValidator())
 
         # Button Box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -131,40 +95,95 @@ class AddLoadDialog(QDialog):
 
         layout = QVBoxLayout()
         layout.addWidget(self.title)
-        # layout.addWidget(self.typeInputLabel)
-        # layout.addWidget(self.busTypeDropDown)
         layout.addWidget(self.pInputLabel)
         layout.addWidget(self.pWidget)
+        layout.addWidget(self.qInputLabel)
         layout.addWidget(self.qWidget)
-        # layout.addWidget(self.pqInputLabel)
-        # layout.addWidget(self.pqWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
 
+    def updatePUnit(self, index) -> None:
+        if index == 0:  # MW
+            self.removePBaseFields()
+            self.pInput.setPlaceholderText('i.e. 100 MW')
+        elif index == 1:  # PU
+            self.addPBaseFields()
+            self.pInput.setPlaceholderText('i.e. 1.02 PU')
+
+    def updateQUnit(self, index) -> None:
+        if index == 0:  # MVAR
+            self.removeQBaseFields()
+            self.qInput.setPlaceholderText('i.e. 20 MVAR')
+        elif index == 1:  # PU
+            self.addQBaseFields()
+            self.qInput.setPlaceholderText('i.e. 1.02 PU')
+
+    def addPBaseFields(self) -> None:
+        if not hasattr(self, 'pBaseLabel'):
+            self.pBaseLabel = QLabel('SBase: ')
+            self.pBaseLabel.setStyleSheet('color: #ffffff;')
+            self.pBaseStarLabel = QLabel('*  ')
+            self.pBaseStarLabel.setStyleSheet('color: #f04747;')
+            self.pBaseInput = QLineEdit(self)
+            self.pBaseInput.setPlaceholderText('i.e. 100 MVA')
+            self.pHBox.addWidget(self.pBaseLabel)
+            self.pHBox.addWidget(self.pBaseStarLabel)
+            self.pHBox.addWidget(self.pBaseInput)
+
+    def removePBaseFields(self) -> None:
+        if hasattr(self, 'pBaseLabel'):
+            self.pBaseLabel.deleteLater()
+            self.pBaseStarLabel.deleteLater()
+            self.pBaseInput.deleteLater()
+            del self.pBaseLabel, self.pBaseStarLabel, self.pBaseInput
+
+    def addQBaseFields(self) -> None:
+        if not hasattr(self, 'qBaseLabel'):
+            self.qBaseLabel = QLabel('SBase: ')
+            self.qBaseLabel.setStyleSheet('color: #ffffff;')
+            self.qBaseStarLabel = QLabel('*  ')
+            self.qBaseStarLabel.setStyleSheet('color: #f04747;')
+            self.qBaseInput = QLineEdit(self)
+            self.qBaseInput.setPlaceholderText('i.e. 100 MVA')
+            self.qHBox.addWidget(self.qBaseLabel)
+            self.qHBox.addWidget(self.qBaseStarLabel)
+            self.qHBox.addWidget(self.qBaseInput)
+
+    def removeQBaseFields(self) -> None:
+        if hasattr(self, 'qBaseLabel'):
+            self.qBaseLabel.deleteLater()
+            self.qBaseStarLabel.deleteLater()
+            self.qBaseInput.deleteLater()
+            del self.qBaseLabel, self.qBaseStarLabel, self.qBaseInput
+
     def accept(self) -> None:
         # Handling Empty Inputs Error
-        inputList = []
-        inputList.append(self.pInput.text())
-        inputList.append(self.qInput.text())
-        # inputList.append(self.vAngInput.text())
-        # inputList.append(self.pInput.text())
-        # inputList.append(self.qInput.text())
+        inputList = [self.pInput.text(), self.qInput.text()]
         if '' in inputList:
             self.inputError = True
             QMessageBox.warning(self, 'Fill all the fields.',
                 'No field can be empty! Please fill them all.', QMessageBox.StandardButton.Ok)
             return
-        else:
-            self.inputError = False
+        self.inputError = False
+
+        # Convert P and Q to MW and MVAR if in PU
+        pValue = float(self.pInput.text())
+        qValue = float(self.qInput.text())
+        if self.pUnitDropDown.currentIndex() == 1:  # PU
+            pValue *= float(self.pBaseInput.text())
+        if self.qUnitDropDown.currentIndex() == 1:  # PU
+            qValue *= float(self.qBaseInput.text())
+
         # Creating the Load
         load = Load(
-            id = self.loadId,
-            bus = self.bus,
-            pMW = float(self.pInput.text()),
-            qMW = float(self.qInput.text()),
-            pos = self.loadPos,
-            orient = self.loadOri,
-            hand = self.loadHand,
+            id=self.loadId,
+            bus=self.bus,
+            pMW=pValue,
+            qMW=qValue,
+            pos=self.loadPos,
+            orient=self.loadOri,
+            hand=self.loadHand,
         )
+        load.log()
         load.append2CSV(self.projectPath)
         super().accept()

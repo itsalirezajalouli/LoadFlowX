@@ -118,11 +118,11 @@ class Line:
                  bus1id: int,
                  bus2id: int,
                  name: str,
-                 R: float,
-                 X: float,
                  len: float,
-                 c_nf_per_km: float,
-                 max_i_ka: float) -> None:
+                 R = None,
+                 X = None,
+                 c_nf_per_km = None,
+                 max_i_ka = None) -> None:
         self.name = name
         self.bus1id = bus1id
         self.bus2id = bus2id
@@ -131,6 +131,13 @@ class Line:
         self.len = len
         self.c_nf_per_km = c_nf_per_km
         self.max_i_ka = max_i_ka
+
+        if self.R is None:
+            self.R = 'None'
+            self.X = 'None'
+            self.c_nf_per_km = 'None'
+            self.max_i_ka = 'None'
+
 
     def log(self) -> None:
         """Logs the line parameters in a formatted and colored manner."""
@@ -171,7 +178,6 @@ class Line:
                 writer.writeheader()
             writer.writerow(data)
         print(f'-> Line data appended to {csvPath} successfully.')
-
 
 class Transformer():
     def __init__(self,
@@ -324,6 +330,27 @@ class Generator():
             writer.writerow(data)
         print(f'-> Gen data appended to {csvPath} successfully.')
 
+    def log(self) -> None:
+        print(colored(
+        '''
+                                █   █▀█ █▀▀ █▀
+                                █▄▄ █▄█ █▄█ ▄█
+        '''
+        , 'light_green'))
+        print(colored('-' * 80, 'yellow'))
+        print(colored('-> ID:', 'light_green'), self.id)
+        print(colored('-> Bus:', 'light_green'), self.bus)
+        print(colored('-> Name:', 'light_green'), self.name)
+        print(colored('-> Active Power (pMW):', 'light_green'), self.pMW)
+        print(colored('-> Voltage Magnitude (vmPU):', 'light_green'), self.vmPU)
+        print(colored('-> Min Reactive Power (minQMvar):', 'light_green'), self.minQMvar)
+        print(colored('-> Max Reactive Power (maxQMvar):', 'light_green'), self.maxQMvar)
+        print(colored('-> Min Active Power (minPMW):', 'light_green'), self.minPMW)
+        print(colored('-> Max Active Power (maxPMW):', 'light_green'), self.maxPMW)
+        print(colored('-> Pos:', 'light_green'), self.pos)
+        print(colored('-> Orientation:', 'light_green'), self.orient)
+        print(colored('-> Hand:', 'light_green'), self.hand)
+
 class Load():
     def __init__(self,
                  id: int,
@@ -359,6 +386,22 @@ class Load():
             writer.writerow(data)
         print(f'-> Load data appended to {csvPath} successfully.')
 
+    def log(self) -> None:
+        print(colored(
+        '''
+                                █   █▀█ █▀▀ █▀
+                                █▄▄ █▄█ █▄█ ▄█
+        '''
+        , 'cyan'))
+        print(colored('-' * 80, 'yellow'))
+        print(colored('-> ID:', 'cyan'), self.id)
+        print(colored('-> Bus:', 'cyan'), self.bus)
+        print(colored('-> Active Power (pMW):', 'cyan'), self.pMW)
+        print(colored('-> Reactive Power (qMW):', 'cyan'), self.qMW)
+        print(colored('-> Pos:', 'cyan'), self.pos)
+        print(colored('-> Orientation:', 'cyan'), self.orient)
+        print(colored('-> Hand:', 'cyan'), self.hand)
+
 class Slack():
     def __init__(self,
                  id: int,
@@ -393,3 +436,19 @@ class Slack():
                                                       'pos', 'orient', 'hand'])
             writer.writerow(data)
         print(f'-> Slack data appended to {csvPath} successfully.')
+
+    def log(self) -> None:
+        print(colored(
+        '''
+                                █   █▀█ █▀▀ █▀
+                                █▄▄ █▄█ █▄█ ▄█
+        '''
+        , 'magenta'))
+        print(colored('-' * 80, 'yellow'))
+        print(colored('-> ID:', 'magenta'), self.id)
+        print(colored('-> Bus:', 'magenta'), self.bus)
+        print(colored('-> Voltage Magnitude (vmPU):', 'magenta'), self.vmPU)
+        print(colored('-> Voltage Angle (vaD):', 'magenta'), self.vaD)
+        print(colored('-> Pos:', 'magenta'), self.pos)
+        print(colored('-> Orientation:', 'magenta'), self.orient)
+        print(colored('-> Hand:', 'magenta'), self.hand)

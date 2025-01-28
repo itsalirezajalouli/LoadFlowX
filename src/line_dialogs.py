@@ -1,6 +1,6 @@
 # Dialogs for lines
 from psa_components import Line
-from PyQt6.QtWidgets import QDialog, QLabel, QWidget, QHBoxLayout, QLineEdit, QComboBox, QVBoxLayout, QDialogButtonBox, QMessageBox
+from PyQt6.QtWidgets import QDialog, QLabel, QWidget, QHBoxLayout, QLineEdit, QComboBox, QVBoxLayout, QDialogButtonBox, QMessageBox, QCheckBox
 
 class AddLineDialog(QDialog):
     def __init__(self, parent, bus1, bus2) -> None:
@@ -9,6 +9,7 @@ class AddLineDialog(QDialog):
         self.inputError = False
         self.bus1Id = bus1
         self.bus2Id = bus2
+        self.extraParams = False  
         self.setWindowTitle('Add Line')
         self.setStyleSheet('''
         QDialog {
@@ -40,13 +41,21 @@ class AddLineDialog(QDialog):
         ''')
 
         # Line Name Input Box
+        self.nameWidget = QWidget()
+        self.nameHBox = QHBoxLayout()
         self.nameInputLabel = QLabel('Line Name:')
         self.nameInputLabel.setStyleSheet('color: #ffffff;')
         self.nameInput = QLineEdit(self)
         self.nameInput.setPlaceholderText('Set a name for the line')
+        starLabel = QLabel('*  ')
+        starLabel.setStyleSheet('color: #f04747;')
+        self.nameHBox.addWidget(self.nameInputLabel)
+        self.nameHBox.addWidget(starLabel)
+        self.nameHBox.addWidget(self.nameInput)
+        self.nameWidget.setLayout(self.nameHBox)
 
-        # Impedance Inputs (R, X, B)
-        self.impedanceLabel = QLabel('Impedance (R, X, B):')
+        # Impedance Inputs (R, X)
+        self.impedanceLabel = QLabel('Impedance (R, X):')
         self.impedanceLabel.setStyleSheet('color: #ffffff;')
         self.impedanceWidget = QWidget()
         self.impedanceHBox = QHBoxLayout()
@@ -61,17 +70,20 @@ class AddLineDialog(QDialog):
         self.impedanceWidget.setLayout(self.impedanceHBox)
 
         # Length Input Box
+        self.lenWidget = QWidget()
+        self.lenHBox = QHBoxLayout()
         self.lenLabel = QLabel('Length (km):')
         self.lenLabel.setStyleSheet('color: #ffffff;')
-        self.lenHBox = QHBoxLayout()
+        starLabel = QLabel('*  ')
+        starLabel.setStyleSheet('color: #f04747;')
         self.lenInput = QLineEdit(self)
         self.lenInput.setPlaceholderText('Length of the line (km)')
         self.lenUnitDropDown = QComboBox(self)
         self.lenUnitDropDown.addItem('KM')
         self.lenHBox.addWidget(self.lenLabel)
+        self.lenHBox.addWidget(starLabel)
         self.lenHBox.addWidget(self.lenInput)
         self.lenHBox.addWidget(self.lenUnitDropDown)
-        self.lenWidget = QWidget()
         self.lenWidget.setLayout(self.lenHBox)
 
         # Capacitance and Max Current Inputs
@@ -89,6 +101,11 @@ class AddLineDialog(QDialog):
         self.additionalFieldsWidget = QWidget()
         self.additionalFieldsWidget.setLayout(self.additionalFieldsHBox)
 
+        # Checkbox for Extra Parameters
+        self.extraParamsCheckBox = QCheckBox('Extra Parameters')
+        self.extraParamsCheckBox.setStyleSheet('color: #ffffff;')
+        self.extraParamsCheckBox.stateChanged.connect(self.toggleExtraParameters)
+
         # Button Box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.buttonBox.rejected.connect(self.reject)
@@ -97,44 +114,59 @@ class AddLineDialog(QDialog):
         # Main Layout
         layout = QVBoxLayout()
         layout.addWidget(self.title)
-        layout.addWidget(self.nameInputLabel)
-        layout.addWidget(self.nameInput)
-        layout.addWidget(self.impedanceWidget)
+        layout.addWidget(self.nameWidget)
         layout.addWidget(self.lenWidget)
+        layout.addWidget(self.extraParamsCheckBox)
+        layout.addWidget(self.impedanceWidget)
         layout.addWidget(self.additionalFieldsLabel)
         layout.addWidget(self.additionalFieldsWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
 
+        # Initially hide extra parameters
+        self.toggleExtraParameters()
+
+    def toggleExtraParameters(self):
+        #Toggle visibility of extra parameter fields
+        self.extraParams = self.extraParamsCheckBox.isChecked()
+        self.impedanceWidget.setVisible(self.extraParams)
+        self.additionalFieldsLabel.setVisible(self.extraParams)
+        self.additionalFieldsWidget.setVisible(self.extraParams)
+
     def accept(self) -> None:
-        inputList = []
-        inputList.append(self.rInput.text())
-        inputList.append(self.xInput.text())
-        inputList.append(self.lenInput.text())
-        inputList.append(self.cInput.text())
-        inputList.append(self.iMaxInput.text())
-        inputList.append(self.nameInput.text())
+        inputList = [self.nameInput.text(), self.lenInput.text()]
+        if self.extraParams:
+            inputList.extend([self.rInput.text(), self.xInput.text(), self.cInput.text(),
+                              self.iMaxInput.text()])
 
         # Check if any input is empty
         if '' in inputList:
             self.inputError = True
-            QMessageBox.warning(self, 'Fill all the fields.',
-                'No field can be empty! Please fill them all.', QMessageBox.StandardButton.Ok)
+            QMessageBox.warning(self, 'Fill all the necessary fields.',
+                'No necessary field can be empty! Please fill them.', QMessageBox.StandardButton.Ok)
             return
         else:
             self.inputError = False
 
         # Create the line object with the provided inputs
-        line = Line(
-            bus1id=self.bus1Id,
-            bus2id=self.bus2Id,
-            name=self.nameInput.text(),
-            R=float(self.rInput.text()),
-            X=float(self.xInput.text()),
-            len=float(self.lenInput.text()),
-            c_nf_per_km=float(self.cInput.text()),
-            max_i_ka=float(self.iMaxInput.text())
-        )
+        if self.extraParams:
+            line = Line(
+                bus1id=self.bus1Id,
+                bus2id=self.bus2Id,
+                name=self.nameInput.text(),
+                R=float(self.rInput.text()),
+                X=float(self.xInput.text()),
+                len=float(self.lenInput.text()),
+                c_nf_per_km=float(self.cInput.text()),
+                max_i_ka=float(self.iMaxInput.text())
+            )
+        else:
+            line = Line(
+                bus1id=self.bus1Id,
+                bus2id=self.bus2Id,
+                name=self.nameInput.text(),
+                len=float(self.lenInput.text())
+            )
 
         line.log()
         line.append2CSV(self.projectPath)
