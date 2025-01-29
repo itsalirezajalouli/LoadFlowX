@@ -1,0 +1,2 @@
+id,name,hvBus,lvBus,pos,orient,hands,sn_mva,vk_percent,vkr_percent,tap_step_percent
+1,0.25 MVA 10/0.4 k,1,2,"[416, 192]",180,"[[448, 192], [384, 192]]",0.25,4.0,1.2,2.5

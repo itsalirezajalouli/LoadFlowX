@@ -1,0 +1,4 @@
+id,bType,vMag,zone,vAng,P,Q,name,pos,capacity,orient,points
+1,BusType.SLACK,20.0,0,NaN,NaN,NaN,Bus 1,"[384, 384]",1,-90,"[[384, 384]]"
+2,BusType.SLACK,0.4,0,NaN,NaN,NaN,Bus 2,"[768, 384]",1,-90,"[[768, 384]]"
+3,BusType.SLACK,0.4,0,NaN,NaN,NaN,Bus 3,"[1088, 384]",1,-90,"[[1088, 384]]"

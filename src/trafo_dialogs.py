@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
 )
 
 class AddTrafoDialog(QDialog):
-    def __init__(self, parent, bus1, bus2) -> None:
+    def __init__(self, parent, bus1, bus2, theme = 'dark') -> None:
         super().__init__(parent)
         self.projectPath = None
         self.trafoPos = None
@@ -17,40 +17,65 @@ class AddTrafoDialog(QDialog):
         self.bus1Id = bus1 
         self.bus2Id = bus2 
         self.setWindowTitle('Add Transformer')
-        
-        self.setStyleSheet('''
-        QDialog {
-            font-size: 24px;
-            color: #ffffff;
+
+        # Apply theme-specific styles
+        self.setStyleSheet(f'''
+        QDialog {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
             border: 2px solid #7289da;
             border-radius: 10px;
             padding: 2px;
-        }
-        QLineEdit {
+        }}
+        QLineEdit {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QLabel {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#d9d9d9' if theme == 'light' else '#23272a'};
+        }}
+        QLabel {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QComboBox {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QComboBox {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#23272a' if theme == 'dark' else '#d9d9d9'};
+            border: 1px solid #7289da;
+            border-radius: 5px;
+        }}
+        QCheckBox {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QButton {
-            color: #ffffff;
-        }
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QDialogButtonBox QPushButton {{
+            font-size: 12px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #7289da;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QDialogButtonBox QPushButton:hover {{
+            font-size: 12px;
+            background-color: #99aab5;
+            padding: 5px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            border: 1px solid #7289da;
+        }}
         ''')
         
         self.title = QLabel('Add Transformer to Network')
-        self.title.setStyleSheet('color: #ffffff; border: 2px solid #7289da; border-radius: 5px; padding: 8px;')
+        self.title.setStyleSheet(f'''
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            font-weight: bold;
+            border: 2px solid #7289da;
+            border-radius: 5px;
+            padding: 10px;
+        ''')
         
         # Transformer Name
         self.trafoWidget = QWidget()
         self.trafoHBox = QHBoxLayout()
         self.trafoLabel = QLabel('Name:')
-        self.trafoLabel.setStyleSheet('color: #ffffff;')
         starLabelName = QLabel('* ')
         starLabelName.setStyleSheet('color: #f04747;')
         self.trafoInput = QLineEdit(self)
@@ -65,7 +90,6 @@ class AddTrafoDialog(QDialog):
         self.busWidget = QWidget()
         self.busHBox = QHBoxLayout()
         self.busLabel = QLabel('High Voltage Bus:')
-        self.busLabel.setStyleSheet('color: #ffffff;')
         self.hvBusLabel = QLabel(str(self.bus1Id))
         self.hvBusLabel.setStyleSheet('color: #f04747;')
         self.lvBusLabel = QLabel(str(self.bus2Id))
@@ -82,14 +106,12 @@ class AddTrafoDialog(QDialog):
         
         # Rated Power and Short-Circuit Voltage
         self.snLabel = QLabel('Rated Power (MVA):')
-        self.snLabel.setStyleSheet('color: #ffffff;')
         starLabelSn = QLabel('* ')
         starLabelSn.setStyleSheet('color: #f04747;')
         self.snInput = QLineEdit(self)
         self.snInput.setPlaceholderText('i.e. 10')
         
         self.vkLabel = QLabel('Short-Circuit Voltage (%):')
-        self.vkLabel.setStyleSheet('color: #ffffff;')
         starLabelVk = QLabel('* ')
         starLabelVk.setStyleSheet('color: #f04747;')
         self.vkInput = QLineEdit(self)
@@ -107,14 +129,12 @@ class AddTrafoDialog(QDialog):
         
         # Resistive Component and Tap Step Percent
         self.vkrLabel = QLabel('Resistive Component (%):')
-        self.vkrLabel.setStyleSheet('color: #ffffff;')
         starLabelVkr = QLabel('* ')
         starLabelVkr.setStyleSheet('color: #f04747;')
         self.vkrInput = QLineEdit(self)
         self.vkrInput.setPlaceholderText('i.e. 0.5')
         
         self.tapStepLabel = QLabel('Tap Step (%):')
-        self.tapStepLabel.setStyleSheet('color: #ffffff;')
         starLabelTap = QLabel('* ')
         starLabelTap.setStyleSheet('color: #f04747;')
         self.tapStepInput = QLineEdit(self)

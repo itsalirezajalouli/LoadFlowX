@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QDialog, QLabel, QWidget, QHBoxLayout, QLineEdit, QC
 from PyQt6.QtGui import QDoubleValidator
 
 class AddSlackDialog(QDialog):
-    def __init__(self, parent, bus) -> None:
+    def __init__(self, parent, bus, theme = 'dark') -> None:
         super().__init__(parent)
         self.projectPath = None
         self.inputError = False
@@ -14,54 +14,77 @@ class AddSlackDialog(QDialog):
         self.slackOri = None
         self.slackHand = None
         self.setWindowTitle('Add Bus')
-        self.setStyleSheet('''
-        QDialog {
-            font-size: 24px;
-            color: #ffffff;
+
+        # Apply theme-specific styles
+        self.setStyleSheet(f'''
+        QDialog {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
             border: 2px solid #7289da;
             border-radius: 10px;
             padding: 2px;
-        }
-        QLineEdit {
+        }}
+        QLineEdit {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QLabel {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#d9d9d9' if theme == 'light' else '#23272a'};
+        }}
+        QLabel {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QComboBox {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QComboBox {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#23272a' if theme == 'dark' else '#d9d9d9'};
+            border: 1px solid #7289da;
+            border-radius: 5px;
+        }}
+        QCheckBox {{
             font-size: 12px;
-            color: #ffffff;
-        }
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QDialogButtonBox QPushButton {{
+            font-size: 12px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #7289da;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QDialogButtonBox QPushButton:hover {{
+            font-size: 12px;
+            background-color: #99aab5;
+            padding: 5px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            border: 1px solid #7289da;
+        }}
         ''')
+
         self.title = QLabel('Add Slack to Network')
-        self.title.setStyleSheet('''
-            color: #ffffff;
+        self.title.setStyleSheet(f'''
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            font-weight: bold;
             border: 2px solid #7289da;
             border-radius: 5px;
-            padding: 8px;
+            padding: 10px;
         ''')
 
         # Bus Name Input Box
         self.nameInputLabel = QLabel('Slack Name:')
-        self.nameInputLabel.setStyleSheet('color: #ffffff;')
         self.nameInput = QLineEdit(self)
         self.nameInput.setPlaceholderText('Set a name for the grid')
 
         # Voltage Magnitude Input
         self.vMagHBox = QHBoxLayout()
         self.vMagLabel = QLabel('|V|:')
-        self.vMagLabel.setStyleSheet('color: #ffffff;')
         self.vMagInput = QLineEdit(self)
         self.vMagInput.setPlaceholderText('i.e. 1.02 p.u')
         self.vMagInput.setValidator(QDoubleValidator())
         self.vMagUnitDropDown = QComboBox(self)
-        self.vMagUnitDropDown.addItem('PU')
-        self.vMagUnitDropDown.addItem('KV')
+        self.vMagUnitDropDown.addItem('PU   ')
+        self.vMagUnitDropDown.addItem('KV   ')
         self.vMagUnitDropDown.activated.connect(self.handleVoltageUnitChange)
         self.vBaseLabel = QLabel('Vb: ')
-        self.vBaseLabel.setStyleSheet('color: #ffffff;')
         self.vBaseInput = QLineEdit(self)
         self.vBaseInput.setPlaceholderText('Base Voltage (KV)')
         self.vBaseInput.setValidator(QDoubleValidator())
@@ -77,13 +100,12 @@ class AddSlackDialog(QDialog):
         # Voltage Angle Input
         self.vAngHBox = QHBoxLayout()
         self.vangLabel = QLabel('δ:')
-        self.vangLabel.setStyleSheet('color: #ffffff;')
         self.vangInput = QLineEdit(self)
         self.vangInput.setPlaceholderText('i.e. 0')
         self.vangInput.setValidator(QDoubleValidator())
         self.vangUnitDropDown = QComboBox(self)
-        self.vangUnitDropDown.addItem('deg')
-        self.vangUnitDropDown.addItem('rad')
+        self.vangUnitDropDown.addItem('DEG   ')
+        self.vangUnitDropDown.addItem('RAD   ')
         self.vangUnitDropDown.activated.connect(self.handleAngleUnitChange)
 
         self.vAngHBox.addWidget(self.vangLabel)

@@ -1,2 +1,0 @@
-dist,paths,busCounter,trafoCounter,genCounter,loadCounter,slackCounter,tokenGenHands,tokenTrafoHands,tokenLoadHands,tokenSlackHands
-32,"[[2, 1, 0, 0, [], ""bus"", ""trafo""], [1, 1, 1, 0, [], ""trafo"", ""bus""], [2, 2, 1, 0, [], ""bus"", ""trafo""], [2, 1, 1, 1, [], ""trafo"", ""bus""], [1, 2, 0, 1, [[1120, 352]], ""gen"", ""bus""]]",2,2,1,0,0,,,,

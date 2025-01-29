@@ -6,43 +6,67 @@ from PyQt6.QtGui import QDoubleValidator
 from PyQt6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget, QLabel, QDialogButtonBox, QMessageBox
 
 # Dialogs Related to Bus Objects
+# self.canceled = False
 class AddBusDialog(QDialog):
-    def __init__(self, parent) -> None:
+    def __init__(self, parent, theme = 'dark') -> None:
         super().__init__(parent)
         self.setWindowTitle('Add Bus Bar')
-        # self.canceled = False
         self.vUnit = 'KV'
-        self.setStyleSheet('''
-        QDialog {
-            font-size: 24px;
-            color: #ffffff;
+
+        # Apply theme-specific styles
+        self.setStyleSheet(f'''
+        QDialog {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
             border: 2px solid #7289da;
             border-radius: 10px;
             padding: 2px;
-        }
-        QLineEdit {
+        }}
+        QLineEdit {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QLabel {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#d9d9d9' if theme == 'light' else '#23272a'}
+        }}
+        QLabel {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QComboBox {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QComboBox {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#23272a' if theme == 'dark' else '#d9d9d9'};
+            border: 1px solid #7289da;
+            border-radius: 5px;
+        }}
+        QDialogButtonBox QPushButton {{
             font-size: 12px;
-            color: #ffffff;
-        }
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #7289da;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            border-radius: 5px
+        }}
+        QDialogButtonBox QPushButton:hover {{
+            font-size: 12px;
+            background-color: #99aab5;
+            padding: 5px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            border: 1px solid #7289da;
+            border-radius: 5px
+        }}
         ''')
+
         self.title = QLabel('Add Bus Bar to Network')
-        self.title.setStyleSheet('''
-            color: #ffffff;
+        self.title.setStyleSheet(f'''
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            font-weight: bold;
             border: 2px solid #7289da;
             border-radius: 5px;
-            padding: 8px;
+            padding: 10px;
         ''')
         self.projectName = None
         self.inputError = False
-        
+
         self.busId = None
         self.busPos = None
         self.busType = BusType.SLACK 
@@ -55,7 +79,7 @@ class AddBusDialog(QDialog):
         self.nameHBox = QHBoxLayout()
         self.nameInputLabel = QLabel('Bus Name:')
         self.nameInput = QLineEdit(self)
-        self.nameInputLabel.setStyleSheet('color: #ffffff;')
+        self.nameInputLabel.setStyleSheet(f'color: {"#ffffff" if theme == "dark" else "#000000"};')
         self.nameInput.setPlaceholderText('Set Bus Name')
         self.nameHBox.addWidget(self.nameInputLabel)
         starLabel = QLabel('*  ')
@@ -66,15 +90,15 @@ class AddBusDialog(QDialog):
 
         # V Magnitude Input Box
         self.vInputLabel = QLabel('Nominal Voltage:')
-        self.vInputLabel.setStyleSheet('color: #ffffff;')
+        self.vInputLabel.setStyleSheet(f'color: {"#ffffff" if theme == "dark" else "#000000"};')
         self.vWidget = QWidget()
         self.vHBox = QHBoxLayout()
         self.vMagLabel = QLabel('Vn: ')
         self.vMagInput = QLineEdit(self)
         self.vMagInput.setPlaceholderText('i.e. 345 KV')
         self.vUnitDropDown = QComboBox(self) 
-        self.vUnitDropDown.addItem('KV')
-        self.vUnitDropDown.addItem('PU')
+        self.vUnitDropDown.addItem('KV   ')
+        self.vUnitDropDown.addItem('PU   ')
         self.vUnitDropDown.activated.connect(self.perUnitActivator)
         self.vHBox.addWidget(self.vMagLabel)
         starLabel = QLabel('*  ')
@@ -125,7 +149,6 @@ class AddBusDialog(QDialog):
             self.vUnit = 'PU'
             self.vMagInput.setPlaceholderText('i.e. 1.02 PU')
             self.vBaseLabel = QLabel('Vb: ')
-            self.vBaseLabel.setStyleSheet('color: #ffffff;')
             self.vBaseStarLabel = QLabel('*  ')
             self.vBaseStarLabel.setStyleSheet('color: #f04747;')
             self.vBaseInput = QLineEdit(self)
@@ -151,9 +174,6 @@ class AddBusDialog(QDialog):
         inputList = []
         inputList.append(self.nameInput.text())
         inputList.append(self.vMagInput.text())
-        # inputList.append(self.vAngInput.text())
-        # inputList.append(self.pInput.text())
-        # inputList.append(self.qInput.text())
         if '' in inputList:
             self.inputError = True
             QMessageBox.warning(self, 'Fill all the necessary fields.',
@@ -172,7 +192,6 @@ class AddBusDialog(QDialog):
         if self.vUnit == 'PU':
             vMag = float(self.vMagInput.text()) * float(self.vBaseInput.text())
 
-
         # Creating the BusBar
         bus = BusBar(
             id = self.busId,
@@ -181,8 +200,6 @@ class AddBusDialog(QDialog):
             bType = self.busType, 
             zone = int(zone),
             vMag = float(vMag),
-            # P = float(self.pInput.text()),
-            # Q = float(self.qInput.text()),
             capacity = self.capacity,
             orient = self.orient,
             points = self.points,
@@ -190,6 +207,7 @@ class AddBusDialog(QDialog):
         bus.log()
         bus.append2CSV(self.projectPath)
         super().accept()
+
 
 class EditBusDialog(QDialog):
     def __init__(self, parent) -> None:

@@ -43,6 +43,7 @@ class Grid(QWidget):
         self.insertingOrient = '-90'
         self.handActivatedPos = None
         self.moveActivatedPos = None
+        self.themeMode = 'dark'
 
         # State Properties
         self.selectMode = False
@@ -146,7 +147,7 @@ class Grid(QWidget):
             self.dataToShow = None
 
     def onMouseIdle(self):
-        if self.afterRun and self.selectMode:
+        if self.afterRun:
             self.handleAfterRun()
     # def keyPressEvent(self, event):
     #     if event.key() == Qt.Key.Key_Space:
@@ -180,7 +181,7 @@ class Grid(QWidget):
             if self.insertBusMode:
                 pos = self.snap(event.pos())
                 defaultCapacity = 1
-                self.addBusDialog = AddBusDialog(self)
+                self.addBusDialog = AddBusDialog(self, self.themeMode)
                 self.addBusDialog.busPos = pos
                 self.busCounter += 1
                 self.addBusDialog.busId = self.busCounter
@@ -284,7 +285,7 @@ class Grid(QWidget):
                 # to a bus
                 for bus, (point, capacity, orient, points, id) in self.busses.items():
                     for i in range(len(points)):
-                        if points[i] == self.secondPointPos and points[i] not in self.tokenBusPorts:
+                        if points[i] == self.secondPointPos: #and points[i] not in self.tokenBusPorts:
                             connection2 = id 
                             # Direct Line
                             self.tempPath.pop() 
@@ -299,7 +300,7 @@ class Grid(QWidget):
                                     self.firstNode = None
                                     # self.tokenBusPorts.append(points[i])
                                     self.update()
-                                    self.addLineDialog = AddLineDialog(self, connection1, connection2)
+                                    self.addLineDialog = AddLineDialog(self, connection1, connection2, self.themeMode)
                                     self.addLineDialog.projectPath = self.projectPath
                                     self.addLineDialog.exec()
                                     self.updateGuiElementsCSV()
@@ -325,7 +326,7 @@ class Grid(QWidget):
                                             trafoTuple = (point, ori, hands, bus1, connection2)
                                             self.trafos.update({connection1: trafoTuple})
                                             # print(self.trafos)
-                                            self.addTraffoDialog = AddTrafoDialog(self, bus1, connection2)
+                                            self.addTraffoDialog = AddTrafoDialog(self, bus1, connection2, self.themeMode)
                                             self.addTraffoDialog.trafoPos = point
                                             self.addTraffoDialog.trafoOrient = ori 
                                             self.addTraffoDialog.trafoHands = hands 
@@ -343,7 +344,7 @@ class Grid(QWidget):
                                         self.paths.append(line)
                                         self.firstNode = None
                                         self.update()
-                                        self.addGenDialog = AddGenDialog(self, connection2)
+                                        self.addGenDialog = AddGenDialog(self, connection2, self.themeMode)
                                         self.addGenDialog.projectPath = self.projectPath
                                         self.addGenDialog.genId = gen 
                                         self.addGenDialog.genPos = point
@@ -360,7 +361,7 @@ class Grid(QWidget):
                                         self.paths.append(line)
                                         self.firstNode = None
                                         self.update()
-                                        self.addLoadDialog = AddLoadDialog(self, connection2)
+                                        self.addLoadDialog = AddLoadDialog(self, connection2, self.themeMode)
                                         self.addLoadDialog.projectPath = self.projectPath
                                         self.addLoadDialog.loadId = load 
                                         self.addLoadDialog.loadPos = point
@@ -377,7 +378,7 @@ class Grid(QWidget):
                                         self.paths.append(line)
                                         self.firstNode = None
                                         self.update()
-                                        self.addSlackDialog = AddSlackDialog(self, connection1)
+                                        self.addSlackDialog = AddSlackDialog(self, connection1, self.themeMode)
                                         self.addSlackDialog.projectPath = self.projectPath
                                         self.addSlackDialog.slackId = slack
                                         self.addSlackDialog.slackPos = point
@@ -420,7 +421,7 @@ class Grid(QWidget):
                                             # self.tokenBusPorts.append(hands[i])
                                             trafoTuple = (point, ori, hands, bus1, connection1)
                                             updates.append((trafo, trafoTuple))  # Add to updates
-                                            self.addTraffoDialog = AddTrafoDialog(self, bus1, connection2)
+                                            self.addTraffoDialog = AddTrafoDialog(self, bus1, connection2, self.themeMode)
                                             self.addTraffoDialog.trafoPos = point
                                             self.addTraffoDialog.trafoOrient = ori 
                                             self.addTraffoDialog.trafoHands = hands 
@@ -452,7 +453,7 @@ class Grid(QWidget):
                                 self.paths.append(line)
                                 self.firstNode = None
                                 self.update()
-                                self.addGenDialog = AddGenDialog(self, connection1)
+                                self.addGenDialog = AddGenDialog(self, connection2, self.themeMode)
                                 self.addGenDialog.projectPath = self.projectPath
                                 self.addGenDialog.genId = gen 
                                 self.addGenDialog.genPos = point
@@ -478,7 +479,7 @@ class Grid(QWidget):
                                 self.paths.append(line)
                                 self.firstNode = None
                                 self.update()
-                                self.addLoadDialog = AddLoadDialog(self, connection1)
+                                self.addLoadDialog = AddLoadDialog(self, connection1, self.themeMode)
                                 self.addLoadDialog.projectPath = self.projectPath
                                 self.addLoadDialog.loadId = load 
                                 self.addLoadDialog.loadPos = point
@@ -504,7 +505,7 @@ class Grid(QWidget):
                                     self.paths.append(line)
                                     self.firstNode = None
                                     self.update()
-                                    self.addSlackDialog = AddSlackDialog(self, connection1)
+                                    self.addSlackDialog = AddSlackDialog(self, connection1, self.themeMode)
                                     self.addSlackDialog.projectPath = self.projectPath
                                     self.addSlackDialog.slackId = slack
                                     self.addSlackDialog.slackPos = point
@@ -1206,7 +1207,7 @@ class Grid(QWidget):
                                                          'capacity', 'orient', 'points'])
                 writer.writeheader()
                 writer.writerows(newBusList)
-                # print(f'-> Bus Data edited to {self.busCsvPath} successfuly.')
+                print(f'-> Bus Data edited to {self.busCsvPath} successfuly.')
 
     # Updates transformer CSV GUI parameters every time something new happens in the GUI
     def updateTrafoGUICSVParams(self) -> None:
@@ -1231,7 +1232,7 @@ class Grid(QWidget):
                 ])
                 writer.writeheader()
                 writer.writerows(newTrafoList)
-                # print(f'-> Transformer Data updated in {trafoCsvPath} successfully.')
+                print(f'-> Transformer Data updated in {trafoCsvPath} successfully.')
 
     def updateGenGUICSVParams(self) -> None:
         csvPath = self.projectPath + '/Gens.csv'
@@ -1254,7 +1255,7 @@ class Grid(QWidget):
                 ])
                 writer.writeheader()
                 writer.writerows(newGenList)
-            # print(f'-> Gen Data updated in {csvPath} successfully.')
+            print(f'-> Gen Data updated in {csvPath} successfully.')
 
     def updateSlackGUICSVParams(self) -> None:
         csvPath = self.projectPath + '/Slacks.csv'
@@ -1275,7 +1276,7 @@ class Grid(QWidget):
                                                           'pos', 'orient', 'hand'])
                 writer.writeheader()
                 writer.writerows(newSlackList)
-            # print(f'-> Slack Data updated in {csvPath} successfully.')
+            print(f'-> Slack Data updated in {csvPath} successfully.')
 
     def updateLoadGUICSVParams(self) -> None:
         csvPath = self.projectPath + '/Loads.csv'
@@ -1296,7 +1297,7 @@ class Grid(QWidget):
                                                           'pos', 'orient', 'hand'])
                 writer.writeheader()
                 writer.writerows(newLoadList)
-            # print(f'-> Load Data updated in {csvPath} successfully.')
+            print(f'-> Load Data updated in {csvPath} successfully.')
 
     def updateGuiElementsCSV(self) -> None:
         self.guiCsvPath = self.projectPath + '/GUI.csv'
@@ -1332,7 +1333,7 @@ class Grid(QWidget):
                                                           'tokenSlackHands'])
                 writer.writeheader()
                 writer.writerow(data)
-                # print(f'-> GUI Data edited to {self.guiCsvPath} successfuly.')
+                print(f'-> GUI Data edited to {self.guiCsvPath} successfuly.')
             self.setDrawingParams()
 
     def loadGUI(self) -> None:
@@ -2297,6 +2298,7 @@ class Grid(QWidget):
         self.updateGenGUICSVParams()
         self.updateLoadGUICSVParams()
         self.updateSlackGUICSVParams()
+        self.updateGuiElementsCSV()
 
     def handleAfterRun(self) -> None:
         # Handle Buses
@@ -2310,7 +2312,7 @@ class Grid(QWidget):
                     with open(csvPath) as csvfile:
                         reader = csv.DictReader(csvfile)
                         for idx, row in enumerate(reader): # this is temporary
-                            if idx == id:
+                            if idx + 1 == id:
                                 self.dataToShow = {
                                     'Vm': f'{float(row['vm_pu']):.4f}' + ' (PU)',
                                     'Va': f'{float(row['va_degree']):.4f}' + ' (Deg)',
@@ -2331,7 +2333,7 @@ class Grid(QWidget):
                     with open(csvPath) as csvfile:
                         reader = csv.DictReader(csvfile)
                         for idx, row in enumerate(reader): # this is temporary
-                            if idx == trafo:
+                            if idx + 1 == trafo:
                                 self.dataToShow = {
                                     'P HV': f'{float(row['p_hv_mw']):.4f}' + ' (MW)',
                                     'Q HV': f'{float(row['q_hv_mvar']):.4f}' + ' (MVAR)',
@@ -2369,7 +2371,7 @@ class Grid(QWidget):
                     with open(csvPath) as csvfile:
                         reader = csv.DictReader(csvfile)
                         for idx, row in enumerate(reader): # this is temporary
-                            if idx == load:
+                            if idx + 1 == load:
                                 self.dataToShow = {
                                     'P': f'{float(row['p_mw']):.4f}' + ' (MW)',
                                     'Q': f'{float(row['q_mvar']):.4f}' + ' (MVAR)',
@@ -2399,7 +2401,7 @@ class Grid(QWidget):
         rectWidth = maxTextWidth + 2 * padding
         rectHeight = int(totalHeight) + padding
 
-        painter.setBrush(QBrush(QColor(44, 47, 51, 255)))
+        painter.setBrush(QBrush(self.selectRectColor))
         painter.setPen(Qt.PenStyle.NoPen)  # No border outline
         painter.drawRect(rectX, rectY, rectWidth, rectHeight)
 
@@ -2419,6 +2421,7 @@ class Grid(QWidget):
         #Toggle grid colors between dark and light modes
         if mode == 'dark':
             # Dark mode colors
+            self.themeMode = 'dark'
             self.lineColor = QColor(100, 100, 100, 100)
             self.dotColor = QColor(125, 125, 125, 125)
             self.connectionColor = QColor(140, 140, 140, 140)
@@ -2430,6 +2433,7 @@ class Grid(QWidget):
             self.selectRectColor = QColor(255, 255, 255, int(255 * 0.1))  # with 10% transparency
         elif mode == 'light':
             # Light mode colors
+            self.themeMode = 'light'
             self.lineColor = QColor(200, 200, 200, 100)
             self.dotColor = QColor(175, 175, 175, 125)
             self.connectionColor = QColor(150, 150, 150, 140)

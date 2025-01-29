@@ -1,3 +1,0 @@
-id,name,hvBus,lvBus,pos,orient,hands,sn_mva,vk_percent,vkr_percent,tap_step_percent
-1,i'm not aftraid,2,1,"[736, 320]",180,"[[768, 320], [704, 320]]",10.0,10.0,0.5,2.0
-2,qwdqwd,2,1,"[832, 352]",180,"[[864, 352], [800, 352]]",1.0,1.0,1.0,1.0

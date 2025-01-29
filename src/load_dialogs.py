@@ -6,36 +6,59 @@ from PyQt6.QtGui import QDoubleValidator
 from PyQt6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget, QLabel, QDialogButtonBox, QMessageBox
 
 class AddLoadDialog(QDialog):
-    def __init__(self, parent, bus) -> None:
+    def __init__(self, parent, bus, theme = 'dark') -> None:
         super().__init__(parent)
         self.setWindowTitle('Add Load')
-        self.setStyleSheet('''
-        QDialog {
-            font-size: 24px;
-            color: #ffffff;
+        self.setStyleSheet(f'''
+        QDialog {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
             border: 2px solid #7289da;
             border-radius: 10px;
             padding: 2px;
-        }
-        QLineEdit {
+        }}
+        QLineEdit {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QLabel {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#d9d9d9' if theme == 'light' else '#23272a'};
+        }}
+        QLabel {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QComboBox {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QComboBox {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#23272a' if theme == 'dark' else '#d9d9d9'};
+            border: 1px solid #7289da;
+            border-radius: 5px;
+        }}
+        QCheckBox {{
             font-size: 12px;
-            color: #ffffff;
-        }
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QDialogButtonBox QPushButton {{
+            font-size: 12px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #7289da;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QDialogButtonBox QPushButton:hover {{
+            font-size: 12px;
+            background-color: #99aab5;
+            padding: 5px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            border: 1px solid #7289da;
+        }}
         ''')
         self.title = QLabel('Add Load to Network')
-        self.title.setStyleSheet('''
-            color: #ffffff;
+        self.title.setStyleSheet(f'''
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            font-weight: bold;
             border: 2px solid #7289da;
             border-radius: 5px;
-            padding: 8px;
+            padding: 10px;
         ''')
         self.projectPath = None
         self.inputError = False
@@ -49,13 +72,12 @@ class AddLoadDialog(QDialog):
         self.pWidget = QWidget()
         self.pHBox = QHBoxLayout()
         self.pInputLabel = QLabel('Active Power (P):')
-        self.pInputLabel.setStyleSheet('color: #ffffff;')
         self.pLabel = QLabel('P: ')
         self.pInput = QLineEdit(self)
         self.pInput.setPlaceholderText('i.e. 100 MW')
         self.pUnitDropDown = QComboBox(self)
-        self.pUnitDropDown.addItem('MW')
-        self.pUnitDropDown.addItem('PU')
+        self.pUnitDropDown.addItem('MW   ')
+        self.pUnitDropDown.addItem('PU   ')
         self.pUnitDropDown.activated.connect(self.updatePUnit)
         starLabelP = QLabel('*  ')
         starLabelP.setStyleSheet('color: #f04747;')
@@ -69,13 +91,12 @@ class AddLoadDialog(QDialog):
         self.qWidget = QWidget()
         self.qHBox = QHBoxLayout()
         self.qInputLabel = QLabel('Reactive Power (Q):')
-        self.qInputLabel.setStyleSheet('color: #ffffff;')
         self.qLabel = QLabel('Q: ')
         self.qInput = QLineEdit(self)
         self.qInput.setPlaceholderText('i.e. 20 MVAR')
         self.qUnitDropDown = QComboBox(self)
-        self.qUnitDropDown.addItem('MVar')
-        self.qUnitDropDown.addItem('PU')
+        self.qUnitDropDown.addItem('MVar   ')
+        self.qUnitDropDown.addItem('PU   ')
         self.qUnitDropDown.activated.connect(self.updateQUnit)
         starLabelQ = QLabel('*  ')
         starLabelQ.setStyleSheet('color: #f04747;')
@@ -121,7 +142,6 @@ class AddLoadDialog(QDialog):
     def addPBaseFields(self) -> None:
         if not hasattr(self, 'pBaseLabel'):
             self.pBaseLabel = QLabel('SBase: ')
-            self.pBaseLabel.setStyleSheet('color: #ffffff;')
             self.pBaseStarLabel = QLabel('*  ')
             self.pBaseStarLabel.setStyleSheet('color: #f04747;')
             self.pBaseInput = QLineEdit(self)
@@ -140,7 +160,6 @@ class AddLoadDialog(QDialog):
     def addQBaseFields(self) -> None:
         if not hasattr(self, 'qBaseLabel'):
             self.qBaseLabel = QLabel('SBase: ')
-            self.qBaseLabel.setStyleSheet('color: #ffffff;')
             self.qBaseStarLabel = QLabel('*  ')
             self.qBaseStarLabel.setStyleSheet('color: #f04747;')
             self.qBaseInput = QLineEdit(self)

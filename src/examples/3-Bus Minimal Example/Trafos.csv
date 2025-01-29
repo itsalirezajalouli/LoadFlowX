@@ -1,1 +1,2 @@
 id,name,hvBus,lvBus,pos,orient,hands,sn_mva,vk_percent,vkr_percent,tap_step_percent
+1,Trafo,1,2,"[576, 384]",180,"[[608, 384], [544, 384]]",0.4,6.0,1.425,0.0

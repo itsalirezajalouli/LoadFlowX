@@ -3,50 +3,76 @@ from psa_components import Line
 from PyQt6.QtWidgets import QDialog, QLabel, QWidget, QHBoxLayout, QLineEdit, QComboBox, QVBoxLayout, QDialogButtonBox, QMessageBox, QCheckBox
 
 class AddLineDialog(QDialog):
-    def __init__(self, parent, bus1, bus2) -> None:
+    def __init__(self, parent, bus1, bus2, theme='dark') -> None:
         super().__init__(parent)
         self.projectPath = None
         self.inputError = False
         self.bus1Id = bus1
         self.bus2Id = bus2
-        self.extraParams = False  
+        self.extraParams = False
         self.setWindowTitle('Add Line')
-        self.setStyleSheet('''
-        QDialog {
-            font-size: 24px;
-            color: #ffffff;
+
+        # Apply theme-specific styles
+        self.setStyleSheet(f'''
+        QDialog {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
             border: 2px solid #7289da;
             border-radius: 10px;
             padding: 2px;
-        }
-        QLineEdit {
+        }}
+        QLineEdit {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QLabel {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#d9d9d9' if theme == 'light' else '#23272a'};
+        }}
+        QLabel {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QComboBox {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QComboBox {
-            font-size: 12px;
-            color: #ffffff;
-        }
-        ''')
-        self.title = QLabel('Add Line to Network')
-        self.title.setStyleSheet('''
-            border: 2px solid #7289da;
-            color: #ffffff;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#23272a' if theme == 'dark' else '#d9d9d9'};
+            border: 1px solid #7289da;
             border-radius: 5px;
-            padding: 8px;
+        }}
+        QCheckBox {{
+            font-size: 12px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QDialogButtonBox QPushButton {{
+            font-size: 12px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #7289da;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QDialogButtonBox QPushButton:hover {{
+            font-size: 12px;
+            background-color: #99aab5;
+            padding: 5px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            border: 1px solid #7289da;
+        }}
+        ''')
+
+        self.title = QLabel('Add Line to Network')
+        self.title.setStyleSheet(f'''
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            font-weight: bold;
+            border: 2px solid #7289da;
+            border-radius: 5px;
+            padding: 10px;
         ''')
 
         # Line Name Input Box
         self.nameWidget = QWidget()
         self.nameHBox = QHBoxLayout()
         self.nameInputLabel = QLabel('Line Name:')
-        self.nameInputLabel.setStyleSheet('color: #ffffff;')
         self.nameInput = QLineEdit(self)
         self.nameInput.setPlaceholderText('Set a name for the line')
+        self.nameInputLabel.setStyleSheet(f'color: {"#ffffff" if theme == "dark" else "#000000"};')
         starLabel = QLabel('*  ')
         starLabel.setStyleSheet('color: #f04747;')
         self.nameHBox.addWidget(self.nameInputLabel)
@@ -56,7 +82,7 @@ class AddLineDialog(QDialog):
 
         # Impedance Inputs (R, X)
         self.impedanceLabel = QLabel('Impedance (R, X):')
-        self.impedanceLabel.setStyleSheet('color: #ffffff;')
+        self.impedanceLabel.setStyleSheet(f'color: {"#ffffff" if theme == "dark" else "#000000"};')
         self.impedanceWidget = QWidget()
         self.impedanceHBox = QHBoxLayout()
 
@@ -73,13 +99,13 @@ class AddLineDialog(QDialog):
         self.lenWidget = QWidget()
         self.lenHBox = QHBoxLayout()
         self.lenLabel = QLabel('Length (km):')
-        self.lenLabel.setStyleSheet('color: #ffffff;')
+        self.lenLabel.setStyleSheet(f'color: {"#ffffff" if theme == "dark" else "#000000"};')
         starLabel = QLabel('*  ')
         starLabel.setStyleSheet('color: #f04747;')
         self.lenInput = QLineEdit(self)
         self.lenInput.setPlaceholderText('Length of the line (km)')
         self.lenUnitDropDown = QComboBox(self)
-        self.lenUnitDropDown.addItem('KM')
+        self.lenUnitDropDown.addItem('KM   ')
         self.lenHBox.addWidget(self.lenLabel)
         self.lenHBox.addWidget(starLabel)
         self.lenHBox.addWidget(self.lenInput)
@@ -88,7 +114,7 @@ class AddLineDialog(QDialog):
 
         # Capacitance and Max Current Inputs
         self.additionalFieldsLabel = QLabel('Additional Parameters:')
-        self.additionalFieldsLabel.setStyleSheet('color: #ffffff;')
+        self.additionalFieldsLabel.setStyleSheet(f'color: {"#ffffff" if theme == "dark" else "#000000"};')
         self.additionalFieldsHBox = QHBoxLayout()
 
         self.cInput = QLineEdit(self)
@@ -103,7 +129,7 @@ class AddLineDialog(QDialog):
 
         # Checkbox for Extra Parameters
         self.extraParamsCheckBox = QCheckBox('Extra Parameters')
-        self.extraParamsCheckBox.setStyleSheet('color: #ffffff;')
+        self.extraParamsCheckBox.setStyleSheet(f'color: {"#ffffff" if theme == "dark" else "#000000"};')
         self.extraParamsCheckBox.stateChanged.connect(self.toggleExtraParameters)
 
         # Button Box

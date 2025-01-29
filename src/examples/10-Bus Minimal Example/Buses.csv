@@ -1,0 +1,11 @@
+id,bType,vMag,zone,vAng,P,Q,name,pos,capacity,orient,points
+1,BusType.SLACK,10.0,0,NaN,NaN,NaN,Bus 1,"[256, 192]",1,-90,"[[256, 192]]"
+2,BusType.SLACK,0.4,0,NaN,NaN,NaN,Bus 2,"[576, 192]",1,-90,"[[576, 192]]"
+3,BusType.SLACK,0.4,0,NaN,NaN,NaN,Bus 3,"[672, 192]",2,-90,"[[672, 192], [672, 224]]"
+4,BusType.SLACK,0.4,0,NaN,NaN,NaN,Bus 4,"[864, 192]",2,-90,"[[864, 192], [864, 224]]"
+5,BusType.SLACK,0.4,0,NaN,NaN,NaN,Bus 5,"[1056, 192]",2,-90,"[[1056, 192], [1056, 224]]"
+6,BusType.SLACK,0.4,0,NaN,NaN,NaN,Bus 6,"[1248, 192]",2,-90,"[[1248, 192], [1248, 224]]"
+7,BusType.SLACK,0.4,0,NaN,NaN,NaN,Bus 7,"[768, 416]",1,180,"[[768, 416]]"
+8,BusType.SLACK,0.4,0,NaN,NaN,NaN,Bus 8,"[960, 416]",1,180,"[[960, 416]]"
+9,BusType.SLACK,0.4,0,NaN,NaN,NaN,Bus 9,"[1152, 416]",1,180,"[[1152, 416]]"
+10,BusType.SLACK,0.4,0,NaN,NaN,NaN,Bus 10,"[1344, 416]",1,180,"[[1344, 416]]"

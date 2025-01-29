@@ -41,13 +41,24 @@ Tasks:
     - [x] gui
     - [x] grid
     - [ ] dialogs
+        - [x] bus
+        - [x] line
+        - [x] load
+        - [x] slack
+        - [x] gen
+        - [x] trafo
+- [x] bug: erasing doesn't update GUI csv's lines so they remain the same after loading
+- [x] token lists bugs
 - [ ] fixing and understanding why the calculations were wrong
-- [ ] adding edit mechanism to all the elements
-- [ ] Smooth hand movement
-- [ ] Add the error handling of AddGenDialog to all
-...
+    - [x] do the simple network example of pandapower : correct calculations
+- [ ] fix the coloring of run flow window
+- [ ] fix the select rectangle
+- [ ] flags need to get right
 
 Tasks for the future:
+- [ ] adding edit mechanism to all the elements
+- [ ] Smooth hand movemen
+- [ ] Add the error handling of AddGenDialog to all
 - [ ] adding undo and redo
 - [ ] adding export to schematics
 - [ ] proper load and save system

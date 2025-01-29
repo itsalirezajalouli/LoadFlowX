@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QDoubleValidator
 
 class AddGenDialog(QDialog):
-    def __init__(self, parent, bus) -> None:
+    def __init__(self, parent, bus, theme = 'dark') -> None:
         super().__init__(parent)
         self.projectPath = None
         self.inputError = False
@@ -17,39 +17,60 @@ class AddGenDialog(QDialog):
         self.genOri = None
         self.genHand = None
         self.setWindowTitle('Add Generator')
-        self.setStyleSheet('''
-        QDialog {
-            font-size: 24px;
-            color: #ffffff;
+
+        # Apply theme-specific styles
+        self.setStyleSheet(f'''
+        QDialog {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
             border: 2px solid #7289da;
             border-radius: 10px;
             padding: 2px;
-        }
-        QLineEdit {
+        }}
+        QLineEdit {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QLabel {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#d9d9d9' if theme == 'light' else '#23272a'};
+        }}
+        QLabel {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QComboBox {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QComboBox {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#23272a' if theme == 'dark' else '#d9d9d9'};
+            border: 1px solid #7289da;
+            border-radius: 5px;
+        }}
+        QCheckBox {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QCheckBox {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QDialogButtonBox QPushButton {{
             font-size: 12px;
-            color: #ffffff;
-        }
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #7289da;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QDialogButtonBox QPushButton:hover {{
+            font-size: 12px;
+            background-color: #99aab5;
+            padding: 5px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            border: 1px solid #7289da;
+        }}
         ''')
         
         # Title
         self.title = QLabel('Add Generator to Network')
-        self.title.setStyleSheet('''
-            color: #ffffff;
+        self.title.setStyleSheet(f'''
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            font-weight: bold;
             border: 2px solid #7289da;
             border-radius: 5px;
-            padding: 8px;
+            padding: 10px;
         ''')
 
         # Generator Name Input
@@ -75,8 +96,8 @@ class AddGenDialog(QDialog):
         self.pInput.setPlaceholderText('Active Power')
         self.pInput.setValidator(QDoubleValidator())
         self.pUnitDropDown = QComboBox(self)
-        self.pUnitDropDown.addItem('MW')
-        self.pUnitDropDown.addItem('PU')
+        self.pUnitDropDown.addItem('MW   ')
+        self.pUnitDropDown.addItem('PU   ')
         self.pUnitDropDown.currentIndexChanged.connect(self.updatePUnit)
         self.pHBox.addWidget(self.pLabel)
         self.pHBox.addWidget(starLabelP)
@@ -94,8 +115,8 @@ class AddGenDialog(QDialog):
         self.vmInput.setPlaceholderText('Voltage Magnitude')
         self.vmInput.setValidator(QDoubleValidator())
         self.vmUnitDropDown = QComboBox(self)
-        self.vmUnitDropDown.addItem('PU')
-        self.vmUnitDropDown.addItem('kV')
+        self.vmUnitDropDown.addItem('PU   ')
+        self.vmUnitDropDown.addItem('KV   ')
         self.vmUnitDropDown.currentIndexChanged.connect(self.updateVmUnit)
         self.vmHBox.addWidget(self.vmLabel)
         self.vmHBox.addWidget(starLabelVm)

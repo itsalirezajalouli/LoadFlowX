@@ -8,7 +8,7 @@ from simulator import runLoadFlow
 from PyQt6.QtCore import QSize
 from start_window import StartUp
 from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtGui import QAction, QIcon, QCursor, QPixmap
+from PyQt6.QtGui import QAction, QIcon, QCursor, QPixmap, QColor
 from PyQt6.QtWidgets import QHBoxLayout, QMainWindow, QStatusBar, QVBoxLayout, QWidget, QToolButton
 
 # Main Window Object
@@ -33,8 +33,8 @@ class MainWindow(QMainWindow):
                 'secondaryBackground': '#e0e0e0',  # Lighter secondary
                 'buttonBackground': '#d9d9d9',  # Light button background
                 'buttonBorder': '#d9d9d9',
-                'buttonHoverBorder': '#4b6cb7',  # Soft blue for hover
-                'buttonPressedBorder': '#ff9800',  # Orange highlight
+                'buttonHoverBorder': QColor(220, 80, 80).name(),   
+                'buttonPressedBorder': QColor(30, 144, 255).name(),  
                 'text': '#333333'  # Dark text for contrast
             }
         }
@@ -218,42 +218,43 @@ class MainWindow(QMainWindow):
             }
         '''
         # Light Mode Styles
-        self.normalStyle4light = '''
-            QToolButton {
+        colors = self.THEMES['light']
+        self.normalStyle4light = f'''
+            QToolButton {{
                 font-size: 24px;
                 background-color: #d9d9d9; /* Updated background color */
                 border: 1px solid #d9d9d9;
                 border-radius: 10px;
                 padding: 2px;
                 color: #333333;
-            }
-            QToolButton:hover {
+            }}
+            QToolButton:hover {{
                 background-color: #e0e0e0;
-                border: 1px solid #4b6cb7;
-            }
-            QToolButton:pressed {
+                border: 1px solid {colors['buttonHoverBorder']};
+            }}
+            QToolButton:pressed {{
                 background-color: #d9d9d9;
-                border: 1px solid #ff9800;
-            }
+                border: 1px solid {colors['buttonPressedBorder']};
+            }}
         '''
 
-        self.toggledStyle4light = '''
-            QToolButton {
+        self.toggledStyle4light = f'''
+            QToolButton {{
                 font-size: 24px;
                 background-color: #d9d9d9; /* Updated background color */
-                border: 1px solid #ff9800;
+                border: 1px solid {colors['buttonPressedBorder']};
                 border-radius: 10px;
                 padding: 2px;
                 color: #333333;
-            }
-            QToolButton:hover {
+            }}
+            QToolButton:hover {{
                 background-color: #e0e0e0;
-                border: 1px solid #4b6cb7;
-            }
-            QToolButton:pressed {
+                border: 1px solid {colors['buttonHoverBorder']};
+            }}
+            QToolButton:pressed {{
                 background-color: #d9d9d9;
-                border: 1px solid #4b6cb7;
-            }
+                border: 1px solid {colors['buttonHoverBorder']};
+            }}
         '''
 
         self.normalStyle = self.normalStyle4dark
@@ -832,6 +833,7 @@ class MainWindow(QMainWindow):
         print(f'-> Slack header cleared to {self.slackCSV} successfuly.')
 
     def toggleTheme(self) -> None:
+        self.unsetCursor()
         self.grid.insertLoadMode = False
         self.grid.insertBusMode = False
         self.grid.insertLineMode = False
