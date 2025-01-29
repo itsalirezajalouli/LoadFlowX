@@ -30,8 +30,8 @@ class MainWindow(QMainWindow):
             },
             'light': {
                 'background': '#f0f0f0',  # Light grey background
-                'secondaryBackground': '#d9d9d9',  # Lighter secondary
-                'buttonBackground': '#e0e0e0',  # Light button background
+                'secondaryBackground': '#e0e0e0',  # Lighter secondary
+                'buttonBackground': '#d9d9d9',  # Light button background
                 'buttonBorder': '#d9d9d9',
                 'buttonHoverBorder': '#4b6cb7',  # Soft blue for hover
                 'buttonPressedBorder': '#ff9800',  # Orange highlight
@@ -178,42 +178,86 @@ class MainWindow(QMainWindow):
         self.symbolsToolbox.setFixedWidth(52)
         self.symbolsToolbox.setFixedHeight(260)
         self.toolBoxLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.normalStyle = '''
-                QToolButton {
-                    font-size: 24px;
-                    background-color: #3b3e45;
-                    border: 1px solid #3b3e45;
-                    border-radius: 10px;
-                    padding: 2px;
-                    color: #ffffff;
-                }
-                QToolButton:hover {
-                    background-color: #3b3e45;
-                    border: 1px solid #7289da;
-                }
-                QToolButton:pressed {
-                    background-color: #23272a;
-                    border: 1px solid #FAA61A;
-                }
-                '''
-        self.toggledStyle = '''
-                QToolButton {
-                    font-size: 24px;
-                    background-color: #23272a;
-                    border: 1px solid #FAA61A;
-                    border-radius: 10px;
-                    padding: 2px;
-                    color: #ffffff;
-                }
-                QToolButton:hover {
-                    background-color: #3b3e45;
-                    border: 1px solid #7289da;
-                }
-                QToolButton:pressed {
-                    background-color: #23272a;
-                    border: 1px solid #FAA61A;
-                }
-                '''
+
+        # Dark Mode Styles
+        self.normalStyle4dark = '''
+            QToolButton {
+                font-size: 24px;
+                background-color: #3b3e45;
+                border: 1px solid #3b3e45;
+                border-radius: 10px;
+                padding: 2px;
+                color: #ffffff;
+            }
+            QToolButton:hover {
+                background-color: #3b3e45;
+                border: 1px solid #7289da;
+            }
+            QToolButton:pressed {
+                background-color: #23272a;
+                border: 1px solid #FAA61A;
+            }
+        '''
+
+        self.toggledStyle4dark = '''
+            QToolButton {
+                font-size: 24px;
+                background-color: #23272a;
+                border: 1px solid #FAA61A;
+                border-radius: 10px;
+                padding: 2px;
+                color: #ffffff;
+            }
+            QToolButton:hover {
+                background-color: #3b3e45;
+                border: 1px solid #7289da;
+            }
+            QToolButton:pressed {
+                background-color: #23272a;
+                border: 1px solid #FAA61A;
+            }
+        '''
+        # Light Mode Styles
+        self.normalStyle4light = '''
+            QToolButton {
+                font-size: 24px;
+                background-color: #d9d9d9; /* Updated background color */
+                border: 1px solid #d9d9d9;
+                border-radius: 10px;
+                padding: 2px;
+                color: #333333;
+            }
+            QToolButton:hover {
+                background-color: #e0e0e0;
+                border: 1px solid #4b6cb7;
+            }
+            QToolButton:pressed {
+                background-color: #d9d9d9;
+                border: 1px solid #ff9800;
+            }
+        '''
+
+        self.toggledStyle4light = '''
+            QToolButton {
+                font-size: 24px;
+                background-color: #d9d9d9; /* Updated background color */
+                border: 1px solid #ff9800;
+                border-radius: 10px;
+                padding: 2px;
+                color: #333333;
+            }
+            QToolButton:hover {
+                background-color: #e0e0e0;
+                border: 1px solid #4b6cb7;
+            }
+            QToolButton:pressed {
+                background-color: #d9d9d9;
+                border: 1px solid #4b6cb7;
+            }
+        '''
+
+        self.normalStyle = self.normalStyle4dark
+        self.toggledStyle = self.toggledStyle4dark
 
         #   Edit button
         self.editGridButton = QToolButton()
@@ -249,13 +293,13 @@ class MainWindow(QMainWindow):
         self.viewBar.addWidget(self.eraseButt)
 
         #   Zoom In button
-        zoomInButt = QToolButton()
-        zoomInButt.setIcon(QIcon('../icons/zoomIn.png'))
-        zoomInButt.setIconSize(QSize(self.buttSize, self.buttSize))
-        zoomInButt.setStyleSheet(self.normalStyle)
+        self.zoomInButt = QToolButton()
+        self.zoomInButt.setIcon(QIcon('../icons/zoomIn.png'))
+        self.zoomInButt.setIconSize(QSize(self.buttSize, self.buttSize))
+        self.zoomInButt.setStyleSheet(self.normalStyle)
         if self.grid is not None:
-            zoomInButt.clicked.connect(self.grid.zoomIn)
-        self.viewBar.addWidget(zoomInButt)
+            self.zoomInButt.clicked.connect(self.grid.zoomIn)
+        self.viewBar.addWidget(self.zoomInButt)
 
         #   Zoom Out button
         self.zoomOutButt = QToolButton()
@@ -267,12 +311,12 @@ class MainWindow(QMainWindow):
         self.viewBar.addWidget(self.zoomOutButt)
 
         #   Run button
-        self.themeButton = QToolButton()
-        self.themeButton.setIcon(QIcon('../icons/run.png'))
-        self.themeButton.setIconSize(QSize(self.buttSize, self.buttSize))
-        self.themeButton.setStyleSheet(self.normalStyle)
-        self.themeButton.clicked.connect(self.run)
-        self.runLayout.addWidget(self.themeButton)
+        self.runButton = QToolButton()
+        self.runButton.setIcon(QIcon('../icons/run.png'))
+        self.runButton.setIconSize(QSize(self.buttSize, self.buttSize))
+        self.runButton.setStyleSheet(self.normalStyle)
+        self.runButton.clicked.connect(self.run)
+        self.runLayout.addWidget(self.runButton)
 
         #   theme button
         self.themeButton = QToolButton()
@@ -445,7 +489,10 @@ class MainWindow(QMainWindow):
 
     def addLine(self) -> None:
         # change cursor
-        icon = QPixmap('../icons/line.png')
+        if self.isThemeLight:
+            icon = QPixmap('../icons/lightMode/line.png')
+        else:
+            icon = QPixmap('../icons/line.png')
         scaledIcon = icon.scaled(QSize(32, 32))  
         cursor = QCursor(scaledIcon)
         self.setCursor(cursor)
@@ -601,7 +648,10 @@ class MainWindow(QMainWindow):
 
     def hand(self) -> None:
         # change cursor
-        icon = QPixmap('../icons/hand.png')
+        if self.isThemeLight:
+            icon = QPixmap('../icons/lightMode/hand.png')
+        else:
+            icon = QPixmap('../icons/hand.png')
         scaledIcon = icon.scaled(QSize(32, 32))  
         cursor = QCursor(scaledIcon)
         self.setCursor(cursor)
@@ -632,7 +682,10 @@ class MainWindow(QMainWindow):
 
     def moveFunc(self) -> None:
         # change cursor
-        icon = QPixmap('../icons/move.png')
+        if self.isThemeLight:
+            icon = QPixmap('../icons/lightMode/move.png')
+        else:
+            icon = QPixmap('../icons/move.png')
         scaledIcon = icon.scaled(QSize(32, 32))  
         cursor = QCursor(scaledIcon)
         self.setCursor(cursor)
@@ -663,7 +716,10 @@ class MainWindow(QMainWindow):
 
     def erase(self) -> None:
         # change cursor
-        icon = QPixmap('../icons/eraseGrid.png')
+        if self.isThemeLight:
+            icon = QPixmap('../icons/lightMode/eraseGrid.png')
+        else:
+            icon = QPixmap('../icons/eraseGrid.png')
         scaledIcon = icon.scaled(QSize(32, 32))  
         cursor = QCursor(scaledIcon)
         self.setCursor(cursor)
@@ -776,6 +832,17 @@ class MainWindow(QMainWindow):
         print(f'-> Slack header cleared to {self.slackCSV} successfuly.')
 
     def toggleTheme(self) -> None:
+        self.grid.insertLoadMode = False
+        self.grid.insertBusMode = False
+        self.grid.insertLineMode = False
+        self.grid.insertTrafoMode = False
+        self.grid.selectMode = False
+        self.grid.insertGenMode = False
+        self.grid.insertSlackMode = False
+        self.grid.insertLoadMode = False
+        self.grid.handMode = False
+        self.grid.moveMode = False
+        self.grid.eraseMode = False
         if self.isThemeLight:
             self.themeButton.setIcon(QIcon('../icons/lightMode.png'))
             self.widget.setStyleSheet('''
@@ -786,6 +853,39 @@ class MainWindow(QMainWindow):
             self.applyGeneralStyle(widget = self.viewToolbox, theme = 'dark')
             self.applyGeneralStyle(widget = self.symbolsToolbox, theme = 'dark')
             self.applyGeneralStyle(widget = self.runWidget, theme = 'dark')
+            self.editGridButton.setIcon(QIcon('../icons/editGrid.png'))
+            self.moveButt.setIcon(QIcon('../icons/move.png'))
+            self.handButt.setIcon(QIcon('../icons/hand.png'))
+            self.eraseButt.setIcon(QIcon('../icons/eraseGrid.png'))
+            self.zoomInButt.setIcon(QIcon('../icons/zoomIn.png'))
+            self.zoomOutButt.setIcon(QIcon('../icons/zoomOut.png'))
+            self.runButton.setIcon(QIcon('../icons/run.png'))
+            self.themeButton.setIcon(QIcon('../icons/lightMode.png'))
+            self.addBusButton.setIcon(QIcon('../icons/bus.png'))
+            self.addLineButton.setIcon(QIcon('../icons/line.png'))
+            self.addTrafoButton.setIcon(QIcon('../icons/transformer.png'))
+            self.addGenButton.setIcon(QIcon('../icons/generator.png'))
+            self.addLoadButton.setIcon(QIcon('../icons/load.png'))
+            self.addSlackButton.setIcon(QIcon('../icons/slack.png'))
+
+            self.normalStyle = self.normalStyle4dark
+            self.toggledStyle = self.toggledStyle4dark
+
+            self.addTrafoButton.setStyleSheet(self.normalStyle)
+            self.addLineButton.setStyleSheet(self.normalStyle)
+            self.addBusButton.setStyleSheet(self.normalStyle)
+            self.addGenButton.setStyleSheet(self.normalStyle)
+            self.addSlackButton.setStyleSheet(self.normalStyle)
+            self.addLoadButton.setStyleSheet(self.normalStyle)
+            self.editGridButton.setStyleSheet(self.normalStyle)
+            self.handButt.setStyleSheet(self.normalStyle)
+            self.zoomInButt.setStyleSheet(self.normalStyle)
+            self.zoomOutButt.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
+            self.runButton.setStyleSheet(self.normalStyle)
+            self.themeButton.setStyleSheet(self.normalStyle)
+            self.eraseButt.setStyleSheet(self.normalStyle)
+            self.grid.toggleGridColors('dark')
         else:
             self.themeButton.setIcon(QIcon('../icons/darkMode.png'))
             self.applyGeneralStyle(widget = self.widget, theme = 'light')
@@ -794,6 +894,41 @@ class MainWindow(QMainWindow):
             self.applyContainerStyle(widget = self.viewToolbox, theme = 'light')
             self.applyContainerStyle(widget = self.symbolsToolbox, theme = 'light')
             self.applyContainerStyle(widget = self.runWidget, theme = 'light')
+            self.editGridButton.setIcon(QIcon('../icons/lightMode/editGrid.png'))
+            self.moveButt.setIcon(QIcon('../icons/lightMode/move.png'))
+            self.handButt.setIcon(QIcon('../icons/lightMode/hand.png'))
+            self.eraseButt.setIcon(QIcon('../icons/lightMode/eraseGrid.png'))
+            self.zoomInButt.setIcon(QIcon('../icons/lightMode/zoomIn.png'))
+            self.zoomOutButt.setIcon(QIcon('../icons/lightMode/zoomOut.png'))
+            self.runButton.setIcon(QIcon('../icons/lightMode/run.png'))
+            self.themeButton.setIcon(QIcon('../icons/lightMode/lightMode.png'))
+            self.addBusButton.setIcon(QIcon('../icons/lightMode/bus.png'))
+            self.addLineButton.setIcon(QIcon('../icons/lightMode/line.png'))
+            self.addTrafoButton.setIcon(QIcon('../icons/lightMode/transformer.png'))
+            self.addGenButton.setIcon(QIcon('../icons/lightMode/generator.png'))
+            self.addLoadButton.setIcon(QIcon('../icons/lightMode/load.png'))
+            self.addSlackButton.setIcon(QIcon('../icons/lightMode/slack.png'))
+
+            self.normalStyle = self.normalStyle4light
+            self.toggledStyle = self.toggledStyle4light
+
+            self.addTrafoButton.setStyleSheet(self.normalStyle)
+            self.addLineButton.setStyleSheet(self.normalStyle)
+            self.addBusButton.setStyleSheet(self.normalStyle)
+            self.addGenButton.setStyleSheet(self.normalStyle)
+            self.addSlackButton.setStyleSheet(self.normalStyle)
+            self.addLoadButton.setStyleSheet(self.normalStyle)
+            self.editGridButton.setStyleSheet(self.normalStyle)
+            self.handButt.setStyleSheet(self.normalStyle)
+            self.zoomInButt.setStyleSheet(self.normalStyle)
+            self.zoomOutButt.setStyleSheet(self.normalStyle)
+            self.moveButt.setStyleSheet(self.normalStyle)
+            self.runButton.setStyleSheet(self.normalStyle)
+            self.themeButton.setStyleSheet(self.normalStyle)
+            self.eraseButt.setStyleSheet(self.normalStyle)
+
+            self.grid.toggleGridColors('light')
+
         self.isThemeLight = not(self.isThemeLight) 
 
     def applyGeneralStyle(self, widget, theme: str):
@@ -811,3 +946,4 @@ class MainWindow(QMainWindow):
             color: {colors['text']};
             border-radius: 15px;
         ''')
+

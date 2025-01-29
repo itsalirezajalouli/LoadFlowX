@@ -30,6 +30,7 @@ class Grid(QWidget):
         self.dotColor = QColor(125, 125, 125, 125)
         self.connectionColor = QColor(140, 140, 140, 140)
         self.highLightWhite = QColor(255, 255, 255, 255)
+        self.selectRectColor = QColor(255, 255, 255, int(255 * 0.1))  # with 10% transparency
         self.txtColor = theme.toQtColor(theme.foreground)
         self.red = theme.toQtColor(theme.red) 
         self.blue = theme.toQtColor(theme.blue) 
@@ -726,7 +727,6 @@ class Grid(QWidget):
 
         # Drawing where the mouse is pointing to drop the item
         highLightedPoint = self.highLightedPoint
-        color = QColor(255, 255, 255, int(255 * 0.1))  # with 10% transparency
         self.symbolPen = QPen()
         self.symbolPen.setWidth(self.lineWidth)
         self.symbolPen.setColor(self.blue)
@@ -735,7 +735,7 @@ class Grid(QWidget):
         self.dotPen.setWidth(self.txtWidth)
         self.txtPen = QPen()
         self.txtPen.setWidth(self.txtWidth)
-        self.txtPen.setColor(color)
+        self.txtPen.setColor(self.selectRectColor)
 
         if highLightedPoint is not None:
             xHigh = highLightedPoint.x()
@@ -745,7 +745,7 @@ class Grid(QWidget):
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
                 # Set the fill color with 20% transparency
-                painter.setBrush(color)
+                painter.setBrush(self.selectRectColor)
                 painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
                 if self.insertLoadMode or self.insertSlackMode:
                     painter.drawRect(xHigh - self.dist, yHigh, 2 * self.dist, 2 * self.dist)
@@ -844,7 +844,7 @@ class Grid(QWidget):
             for bus, (point, capacity, orient, points, _) in self.busses.items():
                 if self.highLightedPoint == point or self.highLightedPoint in points:
                     # Set the fill color with 20% transparency
-                    painter.setBrush(color)
+                    painter.setBrush(self.selectRectColor)
                     painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
                     if orient == '-90':
                         painter.drawRect(point.x() - self.dist, point.y() - self.dist,
@@ -864,7 +864,7 @@ class Grid(QWidget):
             for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
                 if self.highLightedPoint == point or self.highLightedPoint in hands:
                     # Set the fill color with 20% transparency
-                    painter.setBrush(color)
+                    painter.setBrush(self.selectRectColor)
                     painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
                     painter.drawRect(point.x() - self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
                 else: 
@@ -873,7 +873,7 @@ class Grid(QWidget):
             for gen, (point, ori, hand) in self.gens.items():
                 if self.highLightedPoint == point or self.highLightedPoint == hand:
                     # Set the fill color with 20% transparency
-                    painter.setBrush(color)
+                    painter.setBrush(self.selectRectColor)
                     painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
                     painter.drawRect(point.x() - self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
                 else: 
@@ -884,7 +884,7 @@ class Grid(QWidget):
                 if self.highLightedPoint == point or self.highLightedPoint == centroid or \
                     self.highLightedPoint == hand:
                     # Set the fill color with 20% transparency
-                    painter.setBrush(color)
+                    painter.setBrush(self.selectRectColor)
                     painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
                     painter.drawRect(point.x() - self.dist, point.y(), 2 * self.dist, 2 * self.dist)
                 else: 
@@ -895,7 +895,7 @@ class Grid(QWidget):
                 if self.highLightedPoint == point or self.highLightedPoint == centroid or \
                     self.highLightedPoint == hand:
                     # Set the fill color with 20% transparency
-                    painter.setBrush(color)
+                    painter.setBrush(self.selectRectColor)
                     painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
                     painter.drawRect(point.x() - self.dist, point.y(), 2 * self.dist, 2 * self.dist)
                 else: 
@@ -2300,81 +2300,84 @@ class Grid(QWidget):
 
     def handleAfterRun(self) -> None:
         # Handle Buses
-        for bus, (point, capacity, orient, points, id) in self.busses.items():
-            xRange = range(point.x() - self.dist, point.x() + self.dist)
-            yRange = range(point.y() - self.dist, point.y() + capacity * self.dist)
-            if self.highLightedPoint.x() in xRange and self.highLightedPoint.y() in yRange:
-                # Open result bus csv
-                csvPath = self.projectPath + '/results_buses.csv'
-                with open(csvPath) as csvfile:
-                    reader = csv.DictReader(csvfile)
-                    for idx, row in enumerate(reader): # this is temporary
-                        if idx == id:
-                            self.dataToShow = {
-                                'Vm': f'{float(row['vm_pu']):.4f}' + ' (PU)',
-                                'Va': f'{float(row['va_degree']):.4f}' + ' (Deg)',
-                                'P': f'{float(row['p_mw']):.4f}' + ' (MW)',
-                                'Q': f'{float(row['q_mvar']):.4f}' + ' (MVAR)',
-                            }
-                        else:
-                            continue
-            else:
-                continue
+        csvPath = self.projectPath + '/results_buses.csv'
+        if os.path.isfile(csvPath):
+            for bus, (point, capacity, orient, points, id) in self.busses.items():
+                xRange = range(point.x() - self.dist, point.x() + self.dist)
+                yRange = range(point.y() - self.dist, point.y() + capacity * self.dist)
+                if self.highLightedPoint.x() in xRange and self.highLightedPoint.y() in yRange:
+                    # Open result bus csv
+                    with open(csvPath) as csvfile:
+                        reader = csv.DictReader(csvfile)
+                        for idx, row in enumerate(reader): # this is temporary
+                            if idx == id:
+                                self.dataToShow = {
+                                    'Vm': f'{float(row['vm_pu']):.4f}' + ' (PU)',
+                                    'Va': f'{float(row['va_degree']):.4f}' + ' (Deg)',
+                                    'P': f'{float(row['p_mw']):.4f}' + ' (MW)',
+                                    'Q': f'{float(row['q_mvar']):.4f}' + ' (MVAR)',
+                                }
+                            else:
+                                continue
+                else:
+                    continue
 
         # Handle Trafos
-        for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
-            if self.highLightedPoint == point:
-                # Open result trafo csv
-                csvPath = self.projectPath + '/results_trafos.csv'
-                with open(csvPath) as csvfile:
-                    reader = csv.DictReader(csvfile)
-                    for idx, row in enumerate(reader): # this is temporary
-                        if idx == trafo:
-                            self.dataToShow = {
-                                'P HV': f'{float(row['p_hv_mw']):.4f}' + ' (MW)',
-                                'Q HV': f'{float(row['q_hv_mvar']):.4f}' + ' (MVAR)',
-                                'P LV': f'{float(row['p_lv_mw']):.4f}' + ' (MW)',
-                                'Q LV': f'{float(row['q_lv_mvar']):.4f}' + ' (MVAR)',
-                                'P Loss': f'{float(row['pl_mw']):.4f}' + ' (MW)',
-                                'Q Loss': f'{float(row['ql_mvar']):.4f}' + ' (MVAR)',
-                                'I HV': f'{float(row['i_hv_ka']):.4f}' + ' (kA)',
-                                'I LV': f'{float(row['i_lv_ka']):.4f}' + ' (kA)',
-                                'Vm HV': f'{float(row['vm_hv_pu']):.4f}' + ' (PU)',
-                                'Va HV': f'{float(row['va_hv_degree']):.4f}' + ' (Deg)',
-                                'Vm LV': f'{float(row['vm_lv_pu']):.4f}' + ' (PU)',
-                                'Va LV': f'{float(row['va_lv_degree']):.4f}' + ' (Deg)',
-                                'Loading': f'{float(row['loading_percent']):.2f}' + ' (%)',
-                            }
-                        else:
-                            continue
-            else:
-                continue
+        csvPath = self.projectPath + '/results_trafos.csv'
+        if os.path.isfile(csvPath):
+            for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
+                if self.highLightedPoint == point:
+                    # Open result trafo csv
+                    with open(csvPath) as csvfile:
+                        reader = csv.DictReader(csvfile)
+                        for idx, row in enumerate(reader): # this is temporary
+                            if idx == trafo:
+                                self.dataToShow = {
+                                    'P HV': f'{float(row['p_hv_mw']):.4f}' + ' (MW)',
+                                    'Q HV': f'{float(row['q_hv_mvar']):.4f}' + ' (MVAR)',
+                                    'P LV': f'{float(row['p_lv_mw']):.4f}' + ' (MW)',
+                                    'Q LV': f'{float(row['q_lv_mvar']):.4f}' + ' (MVAR)',
+                                    'P Loss': f'{float(row['pl_mw']):.4f}' + ' (MW)',
+                                    'Q Loss': f'{float(row['ql_mvar']):.4f}' + ' (MVAR)',
+                                    'I HV': f'{float(row['i_hv_ka']):.4f}' + ' (kA)',
+                                    'I LV': f'{float(row['i_lv_ka']):.4f}' + ' (kA)',
+                                    'Vm HV': f'{float(row['vm_hv_pu']):.4f}' + ' (PU)',
+                                    'Va HV': f'{float(row['va_hv_degree']):.4f}' + ' (Deg)',
+                                    'Vm LV': f'{float(row['vm_lv_pu']):.4f}' + ' (PU)',
+                                    'Va LV': f'{float(row['va_lv_degree']):.4f}' + ' (Deg)',
+                                    'Loading': f'{float(row['loading_percent']):.2f}' + ' (%)',
+                                }
+                            else:
+                                continue
+                else:
+                    continue
 
         # Handle Loads
-        for load, (point, ori, hand) in self.loads.items():
-            if ori == '-90':
-                centroid = QPoint(point.x(), point.y() + self.dist)
-            elif ori == '0':
-                centroid = QPoint(point.x() + self.dist, point.y())
-            elif ori == '90':
-                centroid = QPoint(point.x(), point.y() - self.dist)
-            elif ori == '180':
-                centroid = QPoint(point.x() - self.dist, point.y())
-            if self.highLightedPoint == point or self.highLightedPoint == centroid :
-                # Open result trafo csv
-                csvPath = self.projectPath + '/results_loads.csv'
-                with open(csvPath) as csvfile:
-                    reader = csv.DictReader(csvfile)
-                    for idx, row in enumerate(reader): # this is temporary
-                        if idx == load:
-                            self.dataToShow = {
-                                'P': f'{float(row['p_mw']):.4f}' + ' (MW)',
-                                'Q': f'{float(row['q_mvar']):.4f}' + ' (MVAR)',
-                            }
-                        else:
-                            continue
-            else:
-                continue
+        csvPath = self.projectPath + '/results_loads.csv'
+        if os.path.isfile(csvPath):
+            for load, (point, ori, hand) in self.loads.items():
+                if ori == '-90':
+                    centroid = QPoint(point.x(), point.y() + self.dist)
+                elif ori == '0':
+                    centroid = QPoint(point.x() + self.dist, point.y())
+                elif ori == '90':
+                    centroid = QPoint(point.x(), point.y() - self.dist)
+                elif ori == '180':
+                    centroid = QPoint(point.x() - self.dist, point.y())
+                if self.highLightedPoint == point or self.highLightedPoint == centroid :
+                    # Open result trafo csv
+                    with open(csvPath) as csvfile:
+                        reader = csv.DictReader(csvfile)
+                        for idx, row in enumerate(reader): # this is temporary
+                            if idx == load:
+                                self.dataToShow = {
+                                    'P': f'{float(row['p_mw']):.4f}' + ' (MW)',
+                                    'Q': f'{float(row['q_mvar']):.4f}' + ' (MVAR)',
+                                }
+                            else:
+                                continue
+                else:
+                    continue
 
     def drawInfoBox(self, painter: QPainter) -> None:
 
@@ -2411,3 +2414,31 @@ class Grid(QWidget):
             n += lineSpacing
             painter.drawText(QPoint(txtPointX, txtPointY), txt)
 
+
+    def toggleGridColors(self, mode: str):
+        #Toggle grid colors between dark and light modes
+        if mode == 'dark':
+            # Dark mode colors
+            self.lineColor = QColor(100, 100, 100, 100)
+            self.dotColor = QColor(125, 125, 125, 125)
+            self.connectionColor = QColor(140, 140, 140, 140)
+            self.highLightWhite = QColor(255, 255, 255, 255)  # White for dark background
+            self.txtColor = QColor(255, 255, 255)  # White text
+            self.red = QColor(240, 71, 71)  # Red from theme
+            self.blue = QColor(114, 137, 218)  # Discord's brand blue
+            self.yellow = QColor(250, 166, 26)  # Yellow for warnings
+            self.selectRectColor = QColor(255, 255, 255, int(255 * 0.1))  # with 10% transparency
+        elif mode == 'light':
+            # Light mode colors
+            self.lineColor = QColor(200, 200, 200, 100)
+            self.dotColor = QColor(175, 175, 175, 125)
+            self.connectionColor = QColor(150, 150, 150, 140)
+            self.highLightWhite = QColor(50, 50, 50, 255)  # Dark for light background
+            self.txtColor = QColor(0, 0, 0)  # Black text
+            self.red = QColor(220, 80, 80)  # Adjusted red for visibility
+            self.blue = self.red  
+            self.yellow = QColor(30, 144, 255)  # Dodger blue for visibility
+            self.selectRectColor = QColor(0, 0, 0, int(255 * 0.1))  # Black with 10% transparency
+
+        self.update()
+        print(f'Switched to {mode} mode.')

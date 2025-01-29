@@ -37,10 +37,12 @@ Tasks:
     - [x] slack dialog
     - [x] gen dialog
     - [x] trafo dialog
+- [ ] toggle dark mode and light mode
+    - [x] gui
+    - [x] grid
+    - [ ] dialogs
 - [ ] fixing and understanding why the calculations were wrong
 - [ ] adding edit mechanism to all the elements
-- [ ] toggle dark mode and light mode
-    - [ ] gui
 - [ ] Smooth hand movement
 - [ ] Add the error handling of AddGenDialog to all
 ...
