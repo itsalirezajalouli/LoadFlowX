@@ -10,6 +10,7 @@ class AddLineDialog(QDialog):
         self.bus1Id = bus1
         self.bus2Id = bus2
         self.extraParams = False
+        self.canceled = False
         self.setWindowTitle('Add Line')
 
         # Apply theme-specific styles
@@ -196,4 +197,8 @@ class AddLineDialog(QDialog):
 
         line.log()
         line.append2CSV(self.projectPath)
+        super().accept()
+
+    def reject(self) -> None:
+        self.canceled = True
         super().accept()

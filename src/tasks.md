@@ -37,31 +37,45 @@ Tasks:
     - [x] slack dialog
     - [x] gen dialog
     - [x] trafo dialog
-- [ ] toggle dark mode and light mode
+- [x] bug: erasing doesn't update GUI csv's lines so they remain the same after loading
+- [x] token lists bugs
+- [x] simulator.py : make result csv for all and load for all in gui
+- [x] fix handleAfter Run
+- [x] toggle dark mode and light mode
     - [x] gui
     - [x] grid
-    - [ ] dialogs
+    - [x] dialogs
         - [x] bus
         - [x] line
         - [x] load
         - [x] slack
         - [x] gen
         - [x] trafo
-- [x] bug: erasing doesn't update GUI csv's lines so they remain the same after loading
-- [x] token lists bugs
+        - [x] run dialog
+        - [x] results dialog
+- [x] flags need to get right & styling under flags
+- [x] fix the select rectangle
 - [ ] fixing and understanding why the calculations were wrong
     - [x] do the simple network example of pandapower : correct calculations
-- [ ] fix the coloring of run flow window
-- [ ] fix the select rectangle
-- [ ] flags need to get right
+    - [ ] adding extra variables for line, slack and bus to make sure everything works
+- [ ] add canceling
+    - [x] run dialog
+    - [x] bus dialog
+    - [x] line dialog
+    - [ ] trafo dialog
+    - [ ] gen dialog
+    - [ ] load dialog
+    - [ ] slack dialog
+- [ ] adding edit mechanism to all the elements
+- [ ] fixing line gui bug
 
 Tasks for the future:
-- [ ] adding edit mechanism to all the elements
+- [ ] add opf
 - [ ] Smooth hand movemen
 - [ ] Add the error handling of AddGenDialog to all
 - [ ] adding undo and redo
 - [ ] adding export to schematics
-- [ ] proper load and save system
+- [ ] full ass debug of load and save system
 
 # places where i should fix the csvs:
 - dialog 

@@ -12,6 +12,7 @@ class AddBusDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle('Add Bus Bar')
         self.vUnit = 'KV'
+        self.canceled = False
 
         # Apply theme-specific styles
         self.setStyleSheet(f'''
@@ -206,6 +207,10 @@ class AddBusDialog(QDialog):
         )
         bus.log()
         bus.append2CSV(self.projectPath)
+        super().accept()
+
+    def reject(self) -> None:
+        self.canceled = True
         super().accept()
 
 

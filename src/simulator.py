@@ -1,18 +1,19 @@
 # Imports
-import csv
+from csv import DictReader
 import pandapower as pp
 
 # Methods of load flow calculations 
 def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str, 
-                genCsv: str, loadCsv: str, slacksCsv: str, method: str, maxIter) -> tuple[bool, str]:
+                genCsv: str, loadCsv: str, slacksCsv: str, method: str, maxIter,
+                freq: float, sBase) -> tuple[bool, str]:
 
     try:
         # Create empty network from scratch
-        net = pp.create_empty_network(sn_mva = 100, f_hz = 60)
+        net = pp.create_empty_network(sn_mva = sBase, f_hz = freq)
 
         # Load and add buses
         with open(busCsv) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             for row in reader:
                 pp.create_bus(
                     net, vn_kv = float(row['vMag']), zone = int(row['zone']),
@@ -23,7 +24,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
         # Load and add lines
         # First create the standard type with the actual parameters you want
         with open(lineCsv) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             for row in reader:
                 if row['bus1id'] != row['bus2id']:
                     # Create a unique std_type for each line
@@ -62,7 +63,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
 
         # Load and add generators
         with open(genCsv) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             for row in reader:
                 pp.create_gen(
                     net,
@@ -82,7 +83,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
 
         # Load and add transformers
         with open(trafoCsv) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             for row in reader:
                 # Extract parameters
                 hv_bus = int(row["hvBus"])
@@ -93,7 +94,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
                 tap_step_percent = float(row["tap_step_percent"])
 
                 # Create a custom transformer standard type
-                std_type = create_transformer_std_type(
+                std_type = createTransformerStdType(
                     net,
                     hv_kv=net.bus.vn_kv[hv_bus],
                     lv_kv=net.bus.vn_kv[lv_bus],
@@ -116,7 +117,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
         
         # Load and add loads
         with open(loadCsv) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             counter = 0
             for row in reader:
                 counter += 1
@@ -133,7 +134,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
 
         # Load and add slacks
         with open(slacksCsv) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             for row in reader:
                 pp.create_ext_grid(net, bus = int(row['bus']), vm_pu = float(row['vmPU']),
                                    va_degree = float(row['vaD']), slack_weight = 1,
@@ -171,15 +172,15 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
         net.res_line.to_csv(f'{resultPath}_lines.csv', index=True)
         net.res_trafo.to_csv(f'{resultPath}_trafos.csv', index=True)
         net.res_load.to_csv(f'{resultPath}_loads.csv', index=True)
+        net.res_gen.to_csv(f'{resultPath}_gens.csv', index=True)
+        net.res_ext_grid.to_csv(f'{resultPath}_slacks.csv', index=True)
         return True, ''
 
     except Exception as e:
         return False, str(e)
 
-def create_transformer_std_type(net, hv_kv, lv_kv, sn_mva, vk_percent, vkr_percent, tap_step_percent):
-    """
-    Create a transformer standard type in the pandapower network.
-    """
+def createTransformerStdType(net, hv_kv, lv_kv, sn_mva, vk_percent, vkr_percent, tap_step_percent):
+    # Create a transformer standard type in the pandapower network.
     std_type_name = f"custom_std_type_{hv_kv}_{lv_kv}"
     pp.create_std_type(
         net,

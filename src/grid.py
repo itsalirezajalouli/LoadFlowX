@@ -49,8 +49,8 @@ class Grid(QWidget):
         self.selectMode = False
         self.handMode = False
         self.eraseMode = False
-
         self.moveMode = False
+
         self.insertBusMode = False
         self.insertLineMode = False
         self.insertTrafoMode = False
@@ -190,9 +190,12 @@ class Grid(QWidget):
                 self.addBusDialog.capacity = defaultCapacity 
                 self.addBusDialog.points = [] 
                 self.addBusDialog.exec()
-                busName = self.addBusDialog.nameInput.text()
-                id = self.busCounter
-                self.setBusDict(busName, pos, defaultCapacity, self.insertingOrient, id)
+                if not self.addBusDialog.canceled:
+                    busName = self.addBusDialog.nameInput.text()
+                    id = self.busCounter
+                    self.setBusDict(busName, pos, defaultCapacity, self.insertingOrient, id)
+                else:
+                    self.busCounter -= 1
 
             # Placing a Transformator 
             if self.insertTrafoMode:
@@ -237,10 +240,10 @@ class Grid(QWidget):
                 for bus, (point, capacity, orient, points, id) in self.busses.items():
                     for i in range(len(points)):
                         if points[i] == self.firstPointPos:
-                            if points[i] not in self.tokenBusPorts:
-                                self.correctNodeSelect = True
-                                self.firstNode = (id, i, 'bus')
-                                # self.tokenBusPorts.append(points[i])
+                            # if points[i] not in self.tokenBusPorts:
+                            self.correctNodeSelect = True
+                            self.firstNode = (id, i, 'bus')
+                            # self.tokenBusPorts.append(points[i])
 
                 # from a transformer 
                 for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
@@ -296,15 +299,16 @@ class Grid(QWidget):
                                        firstNodeType, 'bus')
                             if firstNodeType == 'bus':
                                 if line not in self.paths and revLine not in self.paths:
-                                    self.paths.append(line)
-                                    self.firstNode = None
                                     # self.tokenBusPorts.append(points[i])
-                                    self.update()
                                     self.addLineDialog = AddLineDialog(self, connection1, connection2, self.themeMode)
                                     self.addLineDialog.projectPath = self.projectPath
                                     self.addLineDialog.exec()
-                                    self.updateGuiElementsCSV()
+                                    if not self.addLineDialog.canceled:
+                                        self.updateGuiElementsCSV()
+                                        self.paths.append(line)
+                                    self.firstNode = None
                                     self.tempPath.clear() 
+                                    self.update()
 
                             # from a tranformer to a bus
                             if firstNodeType == 'trafo':
@@ -651,7 +655,7 @@ class Grid(QWidget):
         if not componentUpdated:
             for load, (point, orient, hand) in self.loads.items():
                 ldX, ldY = point.x(), point.y()
-                if x == ldX and y == ldY:
+                if (x == ldX and y == ldY):
                     newOrient = getNextOrientation(orient, event.angleDelta().y() > 0)
                     self.setLoadDict(load, pos, newOrient)
                     componentUpdated = True
@@ -749,7 +753,14 @@ class Grid(QWidget):
                 painter.setBrush(self.selectRectColor)
                 painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
                 if self.insertLoadMode or self.insertSlackMode:
-                    painter.drawRect(xHigh - self.dist, yHigh, 2 * self.dist, 2 * self.dist)
+                    if self.insertingOrient == '-90':
+                        painter.drawRect(highLightedPoint.x() - self.dist, highLightedPoint.y(), 2 * self.dist, 2 * self.dist)
+                    elif self.insertingOrient == '0':
+                        painter.drawRect(highLightedPoint.x(), highLightedPoint.y() - self.dist, 2 * self.dist, 2 * self.dist)
+                    elif self.insertingOrient == '90':
+                        painter.drawRect(highLightedPoint.x() - self.dist, highLightedPoint.y() - 2 * self.dist, 2 * self.dist, 2 * self.dist)
+                    elif self.insertingOrient == '180':
+                        painter.drawRect(highLightedPoint.x() - 2 * self.dist, highLightedPoint.y() - self.dist, 2 * self.dist, 2 * self.dist)
                 else:
                     painter.drawRect(xHigh - self.dist, yHigh - self.dist, 2 * self.dist, 2 * self.dist)
                 painter.setPen(self.symbolPen)
@@ -881,24 +892,38 @@ class Grid(QWidget):
                     painter.setBrush(Qt.BrushStyle.NoBrush)
 
             for load, (point, ori, hand) in self.loads.items():
-                centroid = QPoint(point.x(), point.y() + self.dist)
+                centroid = self.centroidMaker(point, ori)
                 if self.highLightedPoint == point or self.highLightedPoint == centroid or \
                     self.highLightedPoint == hand:
                     # Set the fill color with 20% transparency
                     painter.setBrush(self.selectRectColor)
                     painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
-                    painter.drawRect(point.x() - self.dist, point.y(), 2 * self.dist, 2 * self.dist)
+                    if ori == '-90':
+                        painter.drawRect(point.x() - self.dist, point.y(), 2 * self.dist, 2 * self.dist)
+                    elif ori == '0':
+                        painter.drawRect(point.x(), point.y() - self.dist, 2 * self.dist, 2 * self.dist)
+                    elif ori == '90':
+                        painter.drawRect(point.x() - self.dist, point.y() - 2 * self.dist, 2 * self.dist, 2 * self.dist)
+                    elif ori == '180':
+                        painter.drawRect(point.x() - 2 * self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
                 else: 
                     painter.setBrush(Qt.BrushStyle.NoBrush)
 
             for slack, (point, ori, hand) in self.slacks.items():
-                centroid = QPoint(point.x(), point.y() + self.dist)
+                centroid = self.centroidMaker(point, ori)
                 if self.highLightedPoint == point or self.highLightedPoint == centroid or \
                     self.highLightedPoint == hand:
                     # Set the fill color with 20% transparency
                     painter.setBrush(self.selectRectColor)
                     painter.setPen(Qt.PenStyle.NoPen)  # No border for the rectangle   
-                    painter.drawRect(point.x() - self.dist, point.y(), 2 * self.dist, 2 * self.dist)
+                    if ori == '-90':
+                        painter.drawRect(point.x() - self.dist, point.y(), 2 * self.dist, 2 * self.dist)
+                    elif ori == '0':
+                        painter.drawRect(point.x(), point.y() - self.dist, 2 * self.dist, 2 * self.dist)
+                    elif ori == '90':
+                        painter.drawRect(point.x() - self.dist, point.y() - 2 * self.dist, 2 * self.dist, 2 * self.dist)
+                    elif ori == '180':
+                        painter.drawRect(point.x() - 2 * self.dist, point.y() - self.dist, 2 * self.dist, 2 * self.dist)
                 else: 
                     painter.setBrush(Qt.BrushStyle.NoBrush)
 
@@ -1458,11 +1483,11 @@ class Grid(QWidget):
             # print('-> slacks: ', self.slacks)
             self.update()
 
-    def openRunDialog(self) -> str:
-        self.runSimDialog = RunSimDialog(self, self.freq, self.sBase)
+    def openRunDialog(self):
+        self.runSimDialog = RunSimDialog(self, self.freq, self.sBase, self.themeMode)
         self.runSimDialog.projectPath = self.projectPath
         self.runSimDialog.exec()
-        return self.runSimDialog.activatedMethod, self.runSimDialog.maxIter
+        return self.runSimDialog.activatedMethod, self.runSimDialog.maxIter, self.runSimDialog.canceled, self.runSimDialog.freq, self.runSimDialog.sBase
 
     def setDrawingParams(self) -> None:
         if self.dist == 16:
@@ -1816,9 +1841,11 @@ class Grid(QWidget):
             'Buses': paths['buses'],
             'Lines': paths['lines'],
             'Transformers': paths['transformers'],
-            'Loads': paths['loads']
+            'Loads': paths['loads'],
+            'Generators': paths['gens'],
+            'Slacks': paths['slacks'],
         }
-        self.csvViewer = CsvViewer(self, csvPaths, time)
+        self.csvViewer = CsvViewer(self, csvPaths, time, self.themeMode)
         self.csvViewer.exec()
 
     def handleHandMode(self):
@@ -2170,7 +2197,7 @@ class Grid(QWidget):
 
         # Handle Loads
         for load, (point, ori, hand) in self.loads.items():
-            centroid = QPoint(point.x(), point.y() + self.dist)
+            centroid = self.centroidMaker(point, ori)
             if point == self.moveActivatedPos or hand == self.moveActivatedPos or \
                 centroid == self.moveActivatedPos:
                 newOriginX = point.x() + xDiff
@@ -2185,7 +2212,7 @@ class Grid(QWidget):
 
         # Handle Slacks
         for slack, (point, ori, hand) in self.slacks.items():
-            centroid = QPoint(point.x(), point.y() + self.dist)
+            centroid = self.centroidMaker(point, ori)
             if point == self.moveActivatedPos or hand == self.moveActivatedPos or \
                 centroid == self.moveActivatedPos:
                 newOriginX = point.x() + xDiff
@@ -2269,7 +2296,7 @@ class Grid(QWidget):
         erased = {}
         print('self.loads:', self.loads)
         for load, (point, ori, hand) in self.loads.items():
-            centroid = QPoint(point.x(), point.y() + self.dist)
+            centroid = self.centroidMaker(point, ori)
             if point == self.highLightedPoint or hand == self.highLightedPoint or \
                 centroid == self.highLightedPoint:
                 continue
@@ -2282,7 +2309,7 @@ class Grid(QWidget):
         # Handle Slack
         erased = {}
         for slack, (point, ori, hand) in self.slacks.items():
-            centroid = QPoint(point.x(), point.y() + self.dist)
+            centroid = self.centroidMaker(point, ori)
             if point == self.highLightedPoint or hand == self.highLightedPoint or \
                 centroid == self.highLightedPoint:
                 continue
@@ -2328,7 +2355,7 @@ class Grid(QWidget):
         csvPath = self.projectPath + '/results_trafos.csv'
         if os.path.isfile(csvPath):
             for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
-                if self.highLightedPoint == point:
+                if self.highLightedPoint == point or self.highLightedPoint in hands:
                     # Open result trafo csv
                     with open(csvPath) as csvfile:
                         reader = csv.DictReader(csvfile)
@@ -2354,20 +2381,35 @@ class Grid(QWidget):
                 else:
                     continue
 
+        # Handle Gens
+        csvPath = self.projectPath + '/results_gens.csv'
+        if os.path.isfile(csvPath):
+            for gen, (point, ori, hand) in self.gens.items():
+                if self.highLightedPoint == point or self.highLightedPoint == hand:
+                    # Open result gen csv
+                    with open(csvPath) as csvfile:
+                        reader = csv.DictReader(csvfile)
+                        for idx, row in enumerate(reader): # this is temporary
+                            if idx + 1 == gen:
+                                self.dataToShow = {
+                                    'P': f'{float(row['p_mw']):.4f}' + ' (MW)',
+                                    'Q': f'{float(row['q_mvar']):.4f}' + ' (MVAR)',
+                                    'Vm': f'{float(row['vm_pu']):.4f}' + ' (PU)',
+                                    'Va': f'{float(row['va_degree']):.4f}' + ' (Deg)',
+                                }
+                            else:
+                                continue
+                else:
+                    continue
+
+
         # Handle Loads
         csvPath = self.projectPath + '/results_loads.csv'
         if os.path.isfile(csvPath):
             for load, (point, ori, hand) in self.loads.items():
-                if ori == '-90':
-                    centroid = QPoint(point.x(), point.y() + self.dist)
-                elif ori == '0':
-                    centroid = QPoint(point.x() + self.dist, point.y())
-                elif ori == '90':
-                    centroid = QPoint(point.x(), point.y() - self.dist)
-                elif ori == '180':
-                    centroid = QPoint(point.x() - self.dist, point.y())
+                centroid = self.centroidMaker(point, ori)
                 if self.highLightedPoint == point or self.highLightedPoint == centroid :
-                    # Open result trafo csv
+                    # Open result load csv
                     with open(csvPath) as csvfile:
                         reader = csv.DictReader(csvfile)
                         for idx, row in enumerate(reader): # this is temporary
@@ -2380,6 +2422,25 @@ class Grid(QWidget):
                                 continue
                 else:
                     continue
+
+        # Handle Slacks
+        csvPath = self.projectPath + '/results_slacks.csv'
+        for slack, (point, ori, hand) in self.slacks.items():
+            centroid = self.centroidMaker(point, ori)
+            if self.highLightedPoint == point or self.highLightedPoint == centroid :
+                # Open result slack csv
+                with open(csvPath) as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    for idx, row in enumerate(reader): # this is temporary
+                        if idx + 1 == slack:
+                            self.dataToShow = {
+                                'P': f'{float(row['p_mw']):.4f}' + ' (MW)',
+                                'Q': f'{float(row['q_mvar']):.4f}' + ' (MVAR)',
+                            }
+                        else:
+                            continue
+            else:
+                continue
 
     def drawInfoBox(self, painter: QPainter) -> None:
 
@@ -2446,3 +2507,14 @@ class Grid(QWidget):
 
         self.update()
         print(f'Switched to {mode} mode.')
+
+    def centroidMaker(self, point, ori):
+        if ori == '-90':
+            centroid = QPoint(point.x(), point.y() + self.dist)
+        elif ori == '0':
+            centroid = QPoint(point.x() + self.dist, point.y())
+        elif ori == '90':
+            centroid = QPoint(point.x(), point.y() - self.dist)
+        elif ori == '180':
+            centroid = QPoint(point.x() - self.dist, point.y())
+        return centroid
