@@ -17,7 +17,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
                 pp.create_bus(
                     net, vn_kv = float(row['vMag']), zone = int(row['zone']),
                     name = row['name'], index = int(row['id']), in_service = True,
-                    type = 'b', max_vm_pu = 1.06, min_vm_pu = 0.94,
+                    type = 'b', max_vm_pu = 1.1, min_vm_pu = 0.9,
                 )
         
         # Load and add lines
@@ -126,7 +126,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
                                p_mw = float(row['pMW']),
                                q_mvar = float(row['qMW']),
                                scaling = 1,
-                               # type = None,
+                               type = None,
                                in_service = True,
                                index = int(row['id']),
                                controllable = False)
@@ -137,8 +137,8 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
             for row in reader:
                 pp.create_ext_grid(net, bus = int(row['bus']), vm_pu = float(row['vmPU']),
                                    va_degree = float(row['vaD']), slack_weight = 1,
-                                   in_service = True, max_p_mw = 646, min_p_mw = 0,
-                                   max_q_mvar = 300, min_q_mvar = -100,
+                                   in_service = True, max_p_mw = 250, min_p_mw = 10,
+                                   max_q_mvar = 300, min_q_mvar = -300,
                                    index = int(row['id']))
 
         # Run power flow
