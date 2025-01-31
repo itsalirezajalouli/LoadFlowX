@@ -1,0 +1,2 @@
+id,bus,vmPU,vaD,pos,orient,hand,minP,maxP,minQ,maxQ
+1,1,0.982,0.0,"[512, 1152]",-90,"[512, 1152]",0.0,646.0,-100.0,300.0

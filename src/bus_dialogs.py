@@ -1,18 +1,19 @@
 # Imports 
 import os
-import csv
+from csv import DictReader, DictWriter
 from psa_components import BusBar, BusType
 from PyQt6.QtGui import QDoubleValidator
-from PyQt6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget, QLabel, QDialogButtonBox, QMessageBox
+from PyQt6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLineEdit, 
+                           QVBoxLayout, QWidget, QLabel, QDialogButtonBox, 
+                           QMessageBox, QCheckBox)
 
-# Dialogs Related to Bus Objects
-# self.canceled = False
 class AddBusDialog(QDialog):
     def __init__(self, parent, theme = 'dark') -> None:
         super().__init__(parent)
         self.setWindowTitle('Add Bus Bar')
         self.vUnit = 'KV'
         self.canceled = False
+        self.extraParams = False
 
         # Apply theme-specific styles
         self.setStyleSheet(f'''
@@ -38,6 +39,10 @@ class AddBusDialog(QDialog):
             background-color: {'#23272a' if theme == 'dark' else '#d9d9d9'};
             border: 1px solid #7289da;
             border-radius: 5px;
+        }}
+        QCheckBox {{
+            font-size: 12px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
         }}
         QDialogButtonBox QPushButton {{
             font-size: 12px;
@@ -111,6 +116,15 @@ class AddBusDialog(QDialog):
 
         self.vMagInput.setValidator(QDoubleValidator())
 
+        # Checkbox for Extra Parameters
+        self.extraParamsCheckBox = QCheckBox('Extra Parameters')
+        self.extraParamsCheckBox.setStyleSheet(f'color: {"#ffffff" if theme == "dark" else "#000000"};')
+        self.extraParamsCheckBox.stateChanged.connect(self.toggleExtraParameters)
+
+        # Additional Parameters Section
+        self.additionalFieldsLabel = QLabel('Additional Parameters:')
+        self.additionalFieldsLabel.setStyleSheet(f'color: {"#ffffff" if theme == "dark" else "#000000"};')
+
         # Zone Input Box
         self.zWidget = QWidget()
         self.zHBox = QHBoxLayout()
@@ -120,6 +134,22 @@ class AddBusDialog(QDialog):
         self.zHBox.addWidget(self.zoneLabel)
         self.zHBox.addWidget(self.zoneInput)
         self.zWidget.setLayout(self.zHBox)
+
+        # Max and Min Voltage Widget
+        self.voltageConstraintsWidget = QWidget()
+        self.voltageConstraintsHBox = QHBoxLayout()
+        
+        self.maxVmInput = QLineEdit(self)
+        self.maxVmInput.setPlaceholderText('Max Vm (p.u.)')
+        self.maxVmInput.setValidator(QDoubleValidator())
+        
+        self.minVmInput = QLineEdit(self)
+        self.minVmInput.setPlaceholderText('Min Vm (p.u.)')
+        self.minVmInput.setValidator(QDoubleValidator())
+        
+        self.voltageConstraintsHBox.addWidget(self.maxVmInput)
+        self.voltageConstraintsHBox.addWidget(self.minVmInput)
+        self.voltageConstraintsWidget.setLayout(self.voltageConstraintsHBox)
 
         # Button Box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -131,9 +161,22 @@ class AddBusDialog(QDialog):
         layout.addWidget(self.nameWidget)
         layout.addWidget(self.vInputLabel)
         layout.addWidget(self.vWidget)
+        layout.addWidget(self.extraParamsCheckBox)
+        layout.addWidget(self.additionalFieldsLabel)
         layout.addWidget(self.zWidget)
+        layout.addWidget(self.voltageConstraintsWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
+
+        # Initially hide extra parameters
+        self.toggleExtraParameters()
+
+    def toggleExtraParameters(self):
+        """Toggle visibility of extra parameter fields"""
+        self.extraParams = self.extraParamsCheckBox.isChecked()
+        self.additionalFieldsLabel.setVisible(self.extraParams)
+        self.zWidget.setVisible(self.extraParams)
+        self.voltageConstraintsWidget.setVisible(self.extraParams)
 
     # Handling per unit combo box
     def perUnitActivator(self, index) -> None:
@@ -163,7 +206,7 @@ class AddBusDialog(QDialog):
         csvPath = self.projectPath + '/Buses.csv'
         if os.path.exists(csvPath):
             with open(csvPath) as csvfile:
-                reader = csv.DictReader(csvfile)
+                reader = DictReader(csvfile)
                 names = [row['name'] for row in reader]
                 if self.nameInput.text() in names:
                     self.inputError = True
@@ -172,9 +215,7 @@ class AddBusDialog(QDialog):
                     return
 
         # Handling Empty Inputs Error
-        inputList = []
-        inputList.append(self.nameInput.text())
-        inputList.append(self.vMagInput.text())
+        inputList = [self.nameInput.text(), self.vMagInput.text()]
         if '' in inputList:
             self.inputError = True
             QMessageBox.warning(self, 'Fill all the necessary fields.',
@@ -193,7 +234,11 @@ class AddBusDialog(QDialog):
         if self.vUnit == 'PU':
             vMag = float(self.vMagInput.text()) * float(self.vBaseInput.text())
 
-        # Creating the BusBar
+        # Default voltage limits if not specified
+        maxVm = float(self.maxVmInput.text()) if self.maxVmInput.text() else 1.1  # Default max 1.1 p.u.
+        minVm = float(self.minVmInput.text()) if self.minVmInput.text() else 0.9  # Default min 0.9 p.u.
+
+        # Creating the BusBar with additiona l parameters
         bus = BusBar(
             id = self.busId,
             pos = self.busPos,
@@ -204,6 +249,8 @@ class AddBusDialog(QDialog):
             capacity = self.capacity,
             orient = self.orient,
             points = self.points,
+            maxVm = maxVm,
+            minVm = minVm
         )
         bus.log()
         bus.append2CSV(self.projectPath)
@@ -213,202 +260,146 @@ class AddBusDialog(QDialog):
         self.canceled = True
         super().accept()
 
-
 class EditBusDialog(QDialog):
-    def __init__(self, parent) -> None:
+    def __init__(self, parent, projectPath, busName, theme='dark'):
         super().__init__(parent)
         self.setWindowTitle('Edit Bus Bar')
-        self.setStyleSheet('''
-        QDialog {
-            font-size: 24px;
-            color: #ffffff;
+        self.projectPath = projectPath
+        self.busName = busName
+        self.vUnit = 'KV'
+        self.canceled = False
+        self.extraParams = False
+
+        # Apply theme-specific styles
+        self.setStyleSheet(f'''
+        QDialog {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
             border: 2px solid #7289da;
             border-radius: 10px;
             padding: 2px;
-        }
-        QLineEdit {
+        }}
+        QLineEdit {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QLabel {
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#d9d9d9' if theme == 'light' else '#23272a'}
+        }}
+        QLabel {{
+            font-size: 14px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QComboBox {{
             font-size: 12px;
-            color: #ffffff;
-        }
-        QComboBox {
-            font-size: 12px;
-            color: #ffffff;
-        }
-        ''')
-        self.title = QLabel('Edit Selected Bus Bar')
-        self.title.setStyleSheet('''
-            color: #ffffff;
-            border: 2px solid #7289da;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            background-color: {'#23272a' if theme == 'dark' else '#d9d9d9'};
+            border: 1px solid #7289da;
             border-radius: 5px;
-            padding: 8px;
+        }}
+        QCheckBox {{
+            font-size: 12px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+        }}
+        QDialogButtonBox QPushButton {{
+            font-size: 12px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #7289da;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            border-radius: 5px
+        }}
+        QDialogButtonBox QPushButton:hover {{
+            font-size: 12px;
+            background-color: #99aab5;
+            padding: 5px;
+            color: {'#ffffff' if theme == 'dark' else '#000000'};
+            border: 1px solid #7289da;
+            border-radius: 5px
+        }}
         ''')
 
-        self.projectPath = None
-        self.inputError = False
-        self.previousName = None
+
+
+        self.loadBusData()
         
-        self.busId = None
-        self.busPos = None
-        self.busType = BusType.SLACK 
-        self.capacity = None
-        self.orient = None
-        self.points = None
-
-        # Bus Name Input Box
-        self.nameInputLabel = QLabel('Bus Name:')
-        self.nameInputLabel.setStyleSheet('color: #ffffff;')
+        # UI Elements
+        self.title = QLabel('Edit Bus Bar')
         self.nameInput = QLineEdit(self)
-        self.nameInput.setPlaceholderText('Set Your Bus Name')
+        self.nameInput.setText(self.busData['name'])
+        self.nameInput.setReadOnly(True)
 
-        # Bus Type Combo Box
-        self.typeInputLabel = QLabel('Bus Type:')
-        self.typeInputLabel.setStyleSheet('color: #ffffff;')
-        self.busTypeDropDown = QComboBox(self) 
-        self.busTypeDropDown.addItem('SLACK')
-        self.busTypeDropDown.addItem('PV')
-        self.busTypeDropDown.addItem('PQ')
-        self.busTypeDropDown.activated.connect(self.busTypeActivator)
-
-        # V Magnitude & Angle Input Box
-        self.vInputLabel = QLabel('Voltage (|V|∠δ):')
-        self.vInputLabel.setStyleSheet('color: #ffffff;')
-        self.vWidget = QWidget()
-        self.vHBox = QHBoxLayout()
         self.vMagInput = QLineEdit(self)
-        self.vMagInput.setPlaceholderText('|V|')
-        self.vAngInput = QLineEdit(self)
-        self.vAngInput.setPlaceholderText('δ')
-        self.vUnitDropDown = QComboBox(self) 
-        self.vUnitDropDown.addItem('PU')
-        self.vUnitDropDown.addItem('KV')
-        self.vUnitDropDown.addItem('V')
-        self.vDegreeTypeDropDown = QComboBox(self) 
-        self.vDegreeTypeDropDown.addItem('Deg')
-        self.vDegreeTypeDropDown.addItem('Rad')
-        self.vHBox.addWidget(self.vMagInput)
-        self.vHBox.addWidget(self.vUnitDropDown)
-        self.vHBox.addWidget(self.vAngInput)
-        self.vHBox.addWidget(self.vDegreeTypeDropDown)
-        self.vWidget.setLayout(self.vHBox)
-
-        # P & Q Input Box
-        self.pqInputLabel = QLabel('Active & Passive Power:')
-        self.pqInputLabel.setStyleSheet('color: #ffffff;')
-        self.pqWidget = QWidget()
-        self.pqHBox = QHBoxLayout()
-        self.pInput = QLineEdit(self)
-        self.pInput.setPlaceholderText('P')
-        self.qInput = QLineEdit(self)
-        self.qInput.setPlaceholderText('Q')
-        self.pUnitDropDown = QComboBox(self) 
-        self.pUnitDropDown.addItem('PU')
-        self.pUnitDropDown.addItem('KW')
-        self.qUnitDropDown = QComboBox(self) 
-        self.qUnitDropDown.addItem('PU')
-        self.qUnitDropDown.addItem('KVA')
-        self.pqHBox.addWidget(self.pInput)
-        self.pqHBox.addWidget(self.pUnitDropDown)
-        self.pqHBox.addWidget(self.qInput)
-        self.pqHBox.addWidget(self.qUnitDropDown)
-        self.pqWidget.setLayout(self.pqHBox)
-
+        self.vMagInput.setText(str(self.busData['vMag']))
         self.vMagInput.setValidator(QDoubleValidator())
-        self.vAngInput.setValidator(QDoubleValidator())
-        self.qInput.setValidator(QDoubleValidator())
-        self.pInput.setValidator(QDoubleValidator())
 
-        # Button Box
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        self.buttonBox.rejected.connect(self.reject)
-        self.buttonBox.accepted.connect(self.accept)
+        self.zoneInput = QLineEdit(self)
+        self.zoneInput.setText(str(self.busData['zone']))
 
+        self.maxVmInput = QLineEdit(self)
+        self.maxVmInput.setText(str(self.busData['maxVm']))
+        self.maxVmInput.setValidator(QDoubleValidator())
+
+        self.minVmInput = QLineEdit(self)
+        self.minVmInput.setText(str(self.busData['minVm']))
+        self.minVmInput.setValidator(QDoubleValidator())
+
+        # Layouts
         layout = QVBoxLayout()
         layout.addWidget(self.title)
-        layout.addWidget(self.nameInputLabel)
+        layout.addWidget(QLabel('Bus Name:'))
         layout.addWidget(self.nameInput)
-        layout.addWidget(self.typeInputLabel)
-        layout.addWidget(self.busTypeDropDown)
-        layout.addWidget(self.vInputLabel)
-        layout.addWidget(self.vWidget)
-        layout.addWidget(self.pqInputLabel)
-        layout.addWidget(self.pqWidget)
+        layout.addWidget(QLabel('Nominal Voltage:'))
+        layout.addWidget(self.vMagInput)
+        layout.addWidget(QLabel('Zone:'))
+        layout.addWidget(self.zoneInput)
+        layout.addWidget(QLabel('Max Voltage (p.u.):'))
+        layout.addWidget(self.maxVmInput)
+        layout.addWidget(QLabel('Min Voltage (p.u.):'))
+        layout.addWidget(self.minVmInput)
+
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
         layout.addWidget(self.buttonBox)
+
         self.setLayout(layout)
-
-    def busTypeActivator(self, index) -> None:
-        if index == 0: 
-            self.busType = BusType.SLACK
-        elif index == 1:
-            self.busType = BusType.PV
-        elif index == 2:
-            self.busType = BusType.PQ
-
-    def accept(self) -> None:
-        # Handling Same Name Bus Names
-        csvPath = self.projectPath + '/Buses.csv'
+    
+    def loadBusData(self):
+        csvPath = os.path.join(self.projectPath, 'Buses.csv')
+        self.busData = {}
         if os.path.exists(csvPath):
-            with open(csvPath) as csvfile:
-                reader = csv.DictReader(csvfile)
-                names = [row['name'] for row in reader]
-                if self.nameInput.text() != self.previousName:
-                    if self.nameInput.text() in names:
-                        self.inputError = True
-                        QMessageBox.warning(self, 'Clone Bus Name',
-                            'A bus with the same name already exists.', QMessageBox.StandardButton.Ok)
-                        return
+            with open(csvPath, newline='') as file:
+                reader = DictReader(file)
+                for row in reader:
+                    if row['name'] == self.busName:
+                        self.busData = row
+                        self.busData['vMag'] = float(row['vMag'])
+                        self.busData['zone'] = int(row['zone'])
+                        self.busData['maxVm'] = float(row['maxVm'])
+                        self.busData['minVm'] = float(row['minVm'])
+                        break
 
-        # Handling Empty Inputs Error
-        inputList = []
-        inputList.append(self.nameInput.text())
-        inputList.append(self.vMagInput.text())
-        inputList.append(self.vAngInput.text())
-        inputList.append(self.pInput.text())
-        inputList.append(self.qInput.text())
-        if '' in inputList:
-            self.inputError = True
-            QMessageBox.warning(self, 'Fill all the fields.',
-                'No field can be empty! Please fill them all.', QMessageBox.StandardButton.Ok)
-            return
-        else:
-            self.inputError = False
+    def accept(self):
+        csvPath = os.path.join(self.projectPath, 'Buses.csv')
+        tempPath = csvPath + '.tmp'
+        
+        with open(csvPath, 'r', newline='') as infile, open(tempPath, 'w', newline='') as outfile:
+            reader = DictReader(infile)
+            fieldnames = reader.fieldnames
+            writer = DictWriter(outfile, fieldnames=fieldnames)
+            writer.writeheader()
 
-        # Edit the BusBar
-        bus = BusBar(
-            id = self.busId,
-            pos = self.busPos,
-            name = self.nameInput.text(),
-            bType = self.busType, 
-            vAng = float(self.vAngInput.text()),
-            vMag = float(self.vMagInput.text()),
-            P = float(self.pInput.text()),
-            Q = float(self.qInput.text()),
-            capacity = self.capacity,
-            orient = self.orient,
-            points = self.points,
-        )
-        bus.log()
-        bus.editCSV(self.projectPath, self.previousName)
+            for row in reader:
+                if row['name'] == self.busName:
+                    row['name'] = self.nameInput.text()
+                    row['vMag'] = self.vMagInput.text()
+                    row['zone'] = self.zoneInput.text()
+                    row['maxVm'] = self.maxVmInput.text()
+                    row['minVm'] = self.minVmInput.text()
+                writer.writerow(row)
+
+        os.replace(tempPath, csvPath)
         super().accept()
-
-    def reject(self) -> None:
-        # Edit the BusBar
-        bus = BusBar(
-            id = self.busId,
-            pos = self.busPos,
-            name = self.nameInput.text(),
-            bType = self.busType, 
-            vAng = float(self.vAngInput.text()),
-            vMag = float(self.vMagInput.text()),
-            P = float(self.pInput.text()),
-            Q = float(self.qInput.text()),
-            capacity = self.capacity,
-            orient = self.orient,
-            points = self.points,
-        )
-        bus.log()
-        bus.editCSV(self.projectPath, self.previousName)
+    
+    def reject(self):
+        self.canceled = True
         super().reject()

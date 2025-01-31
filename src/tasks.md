@@ -55,19 +55,23 @@ Tasks:
         - [x] results dialog
 - [x] flags need to get right & styling under flags
 - [x] fix the select rectangle
-- [ ] fixing and understanding why the calculations were wrong
-    - [x] do the simple network example of pandapower : correct calculations
-    - [ ] adding extra variables for line, slack and bus to make sure everything works
-- [ ] add canceling
+- [x] add canceling
     - [x] run dialog
     - [x] bus dialog
     - [x] line dialog
-    - [ ] trafo dialog
-    - [ ] gen dialog
-    - [ ] load dialog
-    - [ ] slack dialog
+    - [x] trafo dialog
+    - [x] gen dialog
+    - [x] slack dialog
+    - [x] load dialog
+- [x] adding extra variables for line, slack and bus to make sure everything works
+    - [x] maxVm and minVm to busdialog
+    - [x] slack
+- [ ] fixing and understanding why the calculations were wrong
+    - [x] do the simple network example of pandapower : correct calculations
 - [ ] adding edit mechanism to all the elements
-- [ ] fixing line gui bug
+    - [x] bus
+- [ ] erasing for gui lines is not implemented correctly
+- [ ] remember to fix case 9 to be useable for presentation
 
 Tasks for the future:
 - [ ] add opf
@@ -79,9 +83,9 @@ Tasks for the future:
 
 # places where i should fix the csvs:
 - dialog 
+- psa
 - grid(loadgui)
 - grid (update csv)
-- psa
 - startup
 - gui (clean) 
-- simulator 
+- simulator u 

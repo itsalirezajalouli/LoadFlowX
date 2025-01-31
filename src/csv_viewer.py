@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import (QDialog, QTableWidget, QTableWidgetItem,
     QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QLabel, QHeaderView, QTabWidget)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPalette, QColor
-import csv
+from csv import reader
 
 class CsvViewer(QDialog):
     def __init__(self, parent: QWidget = None, csvPaths: dict = None, time = 0, theme: str = 'dark'):
@@ -172,7 +172,7 @@ class CsvViewer(QDialog):
                 table = self.createTable()
                 
                 with open(path, 'r') as file:
-                    csvReader = csv.reader(file)
+                    csvReader = reader(file)
                     headers = next(csvReader)
                     data = list(csvReader)
                 

@@ -215,9 +215,9 @@ class StartUp(QDialog):
             print(f'-> GUI header appended to {self.lineCSV} successfuly.')
 
             with open(self.busCSV, 'a', newline = '') as file:
-                writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'zone', 'vAng',
-                                                         'P', 'Q', 'name', 'pos',
-                                                         'capacity', 'orient', 'points'])
+                writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'zone', 'maxVm', 'minVm',
+                                                     'vAng','P', 'Q', 'name', 'pos',
+                                                     'capacity', 'orient', 'points'])
                 writer.writeheader()
             print(f'-> Bus header appended to {self.busCSV} successfuly.')
 
@@ -253,6 +253,7 @@ class StartUp(QDialog):
 
             with open(self.slackCSV, 'a', newline='') as file:
                 writer = csv.DictWriter(file, fieldnames=['id','bus', 'vmPU', 'vaD',
-                                                          'pos', 'orient', 'hand'])
+                                                      'pos', 'orient', 'hand',
+                                                      'minP', 'maxP', 'minQ', 'maxQ'])
                 writer.writeheader()
             print(f'-> Slack header appended to {self.slackCSV} successfuly.')

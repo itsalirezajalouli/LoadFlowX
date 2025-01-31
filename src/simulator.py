@@ -9,6 +9,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
 
     try:
         # Create empty network from scratch
+        print('sBase:', sBase, 'freq:', freq)
         net = pp.create_empty_network(sn_mva = sBase, f_hz = freq)
 
         # Load and add buses
@@ -18,7 +19,7 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
                 pp.create_bus(
                     net, vn_kv = float(row['vMag']), zone = int(row['zone']),
                     name = row['name'], index = int(row['id']), in_service = True,
-                    type = 'b', max_vm_pu = 1.1, min_vm_pu = 0.9,
+                    type = 'b', max_vm_pu = float(row['maxVm']), min_vm_pu = float(row['minVm']),
                 )
         
         # Load and add lines
@@ -138,8 +139,8 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
             for row in reader:
                 pp.create_ext_grid(net, bus = int(row['bus']), vm_pu = float(row['vmPU']),
                                    va_degree = float(row['vaD']), slack_weight = 1,
-                                   in_service = True, max_p_mw = 250, min_p_mw = 10,
-                                   max_q_mvar = 300, min_q_mvar = -300,
+                                   in_service = True, max_p_mw = float(row['maxP']), min_p_mw = float(row['minP']),
+                                   max_q_mvar = float(row['maxQ']), min_q_mvar = float(row['minQ']),
                                    index = int(row['id']))
 
         # Run power flow
@@ -165,6 +166,15 @@ def runLoadFlow(projectPth: str, busCsv: str, lineCsv: str, trafoCsv: str,
         # Check for convergence
         except pp.LoadflowNotConverged:
             return False, 'Load flow did not converge'
+
+        # Save network's data
+        dataPath = f'{projectPth}/data'
+        net.bus.to_csv(f'{dataPath}_buses.csv', index=True)
+        net.line.to_csv(f'{dataPath}_lines.csv', index=True)
+        net.trafo.to_csv(f'{dataPath}_trafos.csv', index=True)
+        net.load.to_csv(f'{dataPath}_loads.csv', index=True)
+        net.gen.to_csv(f'{dataPath}_gens.csv', index=True)
+        net.ext_grid.to_csv(f'{dataPath}_slacks.csv', index=True)
 
         # Save results
         resultPath = f'{projectPth}/results'

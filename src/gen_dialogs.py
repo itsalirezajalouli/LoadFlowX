@@ -16,6 +16,7 @@ class AddGenDialog(QDialog):
         self.genPos = None
         self.genOri = None
         self.genHand = None
+        self.canceled = False
         self.setWindowTitle('Add Generator')
 
         # Apply theme-specific styles
@@ -318,3 +319,7 @@ class AddGenDialog(QDialog):
             QMessageBox.critical(self, 'Error',
                                f'Failed to create generator: {str(e)}',
                                QMessageBox.StandardButton.Ok)
+
+    def reject(self) -> None:
+        self.canceled = True
+        super().reject()

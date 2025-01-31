@@ -16,6 +16,7 @@ class AddTrafoDialog(QDialog):
         self.inputError = False
         self.bus1Id = bus1 
         self.bus2Id = bus2 
+        self.canceled = False
         self.setWindowTitle('Add Transformer')
 
         # Apply theme-specific styles
@@ -195,3 +196,7 @@ class AddTrafoDialog(QDialog):
         trafo.log()
         trafo.append2CSV(self.projectPath)
         super().accept()
+
+    def reject(self) -> None:
+        self.canceled = True
+        super().reject()

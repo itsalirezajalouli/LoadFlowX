@@ -23,8 +23,8 @@ class BusBar():
                  bType: BusType,
                  vMag: float,
                  zone: int,
-                 # P: float, 
-                 # Q: float,
+                 maxVm: float,
+                 minVm: float,
                  capacity: int,
                  orient: str,
                  points: list,
@@ -35,6 +35,8 @@ class BusBar():
         self.bType = bType
         self.vMag = vMag
         self.zone = zone
+        self.maxVm = maxVm
+        self.minVm = minVm
         self.vAng = 'NaN'
         self.P = 'NaN'
         self.Q = 'NaN'
@@ -60,6 +62,8 @@ class BusBar():
         print(colored('-> Pos:', 'light_blue'), self.pos)
         print(colored('-> Voltage Magnitude:', 'light_blue'), self.vMag)
         print(colored('-> Zone:', 'light_blue'), self.zone)
+        print(colored('-> Max Vm:', 'light_blue'), self.maxVm)
+        print(colored('-> Min Vm:', 'light_blue'), self.minVm)
 
     def append2CSV(self, path: str) -> None:
         data = {
@@ -67,6 +71,8 @@ class BusBar():
             'bType': self.bType,
             'vMag': self.vMag,
             'zone': self.zone,
+            'maxVm': self.maxVm,
+            'minVm': self.minVm,
             'vAng': self.vAng,
             'P': self.P,
             'Q': self.Q,
@@ -78,8 +84,8 @@ class BusBar():
         }
         csvPath = path + '/Buses.csv'
         with open(csvPath, 'a', newline = '') as file:
-            writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'zone', 'vAng',
-                                                     'P', 'Q', 'name', 'pos',
+            writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'zone', 'maxVm', 'minVm',
+                                                     'vAng','P', 'Q', 'name', 'pos',
                                                      'capacity', 'orient', 'points'])
             writer.writerow(data)
         print(f'-> Bus data appended to {path} successfuly.')
@@ -105,8 +111,8 @@ class BusBar():
                 newBusList.append(row)
 
         with open(csvPath, 'w', newline = '') as file:
-            writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'vAng',
-                                                     'P', 'Q', 'name', 'pos',
+            writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'zone', 'maxVm', 'minVm',
+                                                     'vAng','P', 'Q', 'name', 'pos',
                                                      'capacity', 'orient', 'points'])
             writer.writeheader()
             writer.writerows(newBusList)
@@ -411,6 +417,10 @@ class Slack():
                  pos: QPoint,
                  orient: str,
                  hand: QPoint,
+                 minP: float,
+                 maxP: float,
+                 minQ: float,
+                 maxQ: float,
                  ) -> None:
         self.id = id
         self.bus = bus
@@ -419,6 +429,10 @@ class Slack():
         self.pos = (pos.x(), pos.y())
         self.orient = orient
         self.hand = (hand.x(), hand.y())
+        self.minP = minP
+        self.maxP = maxP
+        self.minQ = minQ
+        self.maxQ = maxQ
 
     def append2CSV(self, path: str) -> None:
         data = {
@@ -429,11 +443,16 @@ class Slack():
             'pos': json.dumps(self.pos),
             'orient': self.orient,
             'hand': json.dumps(self.hand),
+            'minP': self.minP,
+            'maxP': self.maxP,
+            'minQ': self.minQ,
+            'maxQ': self.maxQ,
         }
         csvPath = path + '/Slacks.csv'
         with open(csvPath, 'a', newline='') as file:
             writer = csv.DictWriter(file, fieldnames=['id','bus', 'vmPU', 'vaD',
-                                                      'pos', 'orient', 'hand'])
+                                                      'pos', 'orient', 'hand',
+                                                      'minP', 'maxP', 'minQ', 'maxQ'])
             writer.writerow(data)
         print(f'-> Slack data appended to {csvPath} successfully.')
 
@@ -452,3 +471,7 @@ class Slack():
         print(colored('-> Pos:', 'magenta'), self.pos)
         print(colored('-> Orientation:', 'magenta'), self.orient)
         print(colored('-> Hand:', 'magenta'), self.hand)
+        print(colored('-> Min P:', 'magenta'), self.minP)
+        print(colored('-> Max P:', 'magenta'), self.maxP)
+        print(colored('-> Min Q:', 'magenta'), self.minQ)
+        print(colored('-> Max Q:', 'magenta'), self.maxQ)

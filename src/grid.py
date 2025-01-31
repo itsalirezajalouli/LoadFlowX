@@ -1,19 +1,20 @@
 # Imports
-import os
-import csv
-import json
-import math
+from os.path import exists, isfile
+from csv import DictReader, DictWriter
+from json import loads, dumps
+from math import sin, pi
 from copy import deepcopy
 from PyQt6.QtCore import QPoint, Qt, QEvent, QTimer
+from PyQt6.QtGui import QColor, QPaintEvent, QPen, QPainter, QBrush, QPolygon
+from PyQt6.QtWidgets import QApplication, QWidget, QMessageBox
+
+from theme import DiscordPalette as theme
 from bus_dialogs import AddBusDialog, EditBusDialog
 from line_dialogs import AddLineDialog
 from gen_dialogs import AddGenDialog
 from load_dialogs import AddLoadDialog
 from slack_dialogs import AddSlackDialog
 from run_dialogs import RunSimDialog
-from theme import DiscordPalette as theme
-from PyQt6.QtGui import QColor, QPaintEvent, QPen, QPainter, QBrush, QPolygon
-from PyQt6.QtWidgets import QApplication, QWidget, QMessageBox
 from trafo_dialogs import AddTrafoDialog
 from csv_viewer import CsvViewer
 
@@ -68,6 +69,7 @@ class Grid(QWidget):
         self.editBusDialog = None
         self.addLineDialog = None
         self.addTrafoDialog = None
+        self.addSlackDialog = None
         self.runSimDialog = None
         self.csvViewer = None
         
@@ -249,7 +251,7 @@ class Grid(QWidget):
                 for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
                     for i in range(len(hands)):
                         if hands[i] == self.firstPointPos:
-                            if hands[i] not in self.tokenTrafoHands:
+                            # if hands[i] not in self.tokenTrafoHands:
                                 self.correctNodeSelect = True
                                 self.firstNode = (trafo, i, 'trafo')
                                 self.tokenTrafoHands.append(hands[i])
@@ -257,7 +259,7 @@ class Grid(QWidget):
                 # from a generator
                 for gen, (point, ori, hand) in self.gens.items():
                     if hand == self.firstPointPos:
-                        if hand not in self.tokenGenHands:
+                        # if hand not in self.tokenGenHands:
                             self.correctNodeSelect = True
                             self.firstNode = (gen, 0, 'gen')
                             self.tokenGenHands.append(hand)
@@ -265,7 +267,7 @@ class Grid(QWidget):
                 # from a load 
                 for load, (point, ori, hand) in self.loads.items():
                     if hand == self.firstPointPos:
-                        if hand not in self.tokenLoadHands:
+                        # if hand not in self.tokenLoadHands:
                             self.correctNodeSelect = True
                             self.firstNode = (load, 0, 'load')
                             self.tokenLoadHands.append(hand)
@@ -273,7 +275,7 @@ class Grid(QWidget):
                 # from a slack 
                 for slack, (point, ori, hand) in self.slacks.items():
                     if hand == self.firstPointPos:
-                        if hand not in self.tokenSlackHands:
+                        # if hand not in self.tokenSlackHands:
                             self.correctNodeSelect = True
                             self.firstNode = (slack, 0, 'slack')
                             self.tokenSlackHands.append(hand)
@@ -324,30 +326,25 @@ class Grid(QWidget):
                                             self.update()
                                     else:
                                         if connection1 == trafo:
-                                            self.paths.append(line)
-                                            self.firstNode = None
-                                            # self.tokenBusPorts.append(points[i])
                                             trafoTuple = (point, ori, hands, bus1, connection2)
-                                            self.trafos.update({connection1: trafoTuple})
-                                            # print(self.trafos)
-                                            self.addTraffoDialog = AddTrafoDialog(self, bus1, connection2, self.themeMode)
-                                            self.addTraffoDialog.trafoPos = point
-                                            self.addTraffoDialog.trafoOrient = ori 
-                                            self.addTraffoDialog.trafoHands = hands 
-                                            self.addTraffoDialog.trafoId = trafo
-                                            self.addTraffoDialog.projectPath = self.projectPath
-                                            self.addTraffoDialog.exec()
+                                            self.addTrafoDialog = AddTrafoDialog(self, bus1, connection2, self.themeMode)
+                                            self.addTrafoDialog.trafoPos = point
+                                            self.addTrafoDialog.trafoOrient = ori 
+                                            self.addTrafoDialog.trafoHands = hands 
+                                            self.addTrafoDialog.trafoId = trafo
+                                            self.addTrafoDialog.projectPath = self.projectPath
+                                            self.addTrafoDialog.exec()
+                                            if not self.addTrafoDialog.canceled:
+                                                self.trafos.update({connection1: trafoTuple})
+                                                self.updateGuiElementsCSV()
+                                                self.paths.append(line)
+                                            self.firstNode = None
                                             self.tempPath.clear() 
-                                            self.updateGuiElementsCSV()
                                             self.update()
 
                             if firstNodeType == 'gen':
                                 for gen, (point, ori, hand) in self.gens.items():
                                     if connection1 == gen:
-                                        self.tokenGenHands.append(self.firstPointPos)
-                                        self.paths.append(line)
-                                        self.firstNode = None
-                                        self.update()
                                         self.addGenDialog = AddGenDialog(self, connection2, self.themeMode)
                                         self.addGenDialog.projectPath = self.projectPath
                                         self.addGenDialog.genId = gen 
@@ -355,16 +352,17 @@ class Grid(QWidget):
                                         self.addGenDialog.genOri = ori
                                         self.addGenDialog.genHand = hand 
                                         self.addGenDialog.exec()
-                                        self.updateGuiElementsCSV()
+                                        if not self.addGenDialog.canceled:
+                                            self.updateGuiElementsCSV()
+                                            self.tokenGenHands.append(self.firstPointPos)
+                                            self.paths.append(line)
+                                        self.firstNode = None
                                         self.tempPath.clear() 
+                                        self.update()
 
                             if firstNodeType == 'load':
                                 for load, (point, ori, hand) in self.loads.items():
                                     if connection1 == load:
-                                        self.tokenLoadHands.append(self.firstPointPos)
-                                        self.paths.append(line)
-                                        self.firstNode = None
-                                        self.update()
                                         self.addLoadDialog = AddLoadDialog(self, connection2, self.themeMode)
                                         self.addLoadDialog.projectPath = self.projectPath
                                         self.addLoadDialog.loadId = load 
@@ -372,16 +370,18 @@ class Grid(QWidget):
                                         self.addLoadDialog.loadOri = ori 
                                         self.addLoadDialog.loadHand = hand 
                                         self.addLoadDialog.exec()
-                                        self.updateGuiElementsCSV()
+
+                                        if not self.addLoadDialog.canceled:
+                                            self.updateGuiElementsCSV()
+                                            self.tokenLoadHands.append(self.firstPointPos)
+                                            self.paths.append(line)
+                                        self.firstNode = None
                                         self.tempPath.clear() 
+                                        self.update()
 
                             if firstNodeType == 'slack':
                                 for slack, (point, ori, hand) in self.slacks.items():
                                     if connection1 == slack:
-                                        self.tokenSlackHands.append(self.firstPointPos)
-                                        self.paths.append(line)
-                                        self.firstNode = None
-                                        self.update()
                                         self.addSlackDialog = AddSlackDialog(self, connection1, self.themeMode)
                                         self.addSlackDialog.projectPath = self.projectPath
                                         self.addSlackDialog.slackId = slack
@@ -389,8 +389,14 @@ class Grid(QWidget):
                                         self.addSlackDialog.slackOri = ori
                                         self.addSlackDialog.slackHand = hand 
                                         self.addSlackDialog.exec()
-                                        self.updateGuiElementsCSV()
+
+                                        if not self.addSlackDialog.canceled:
+                                            self.tokenSlackHands.append(self.firstPointPos)
+                                            self.paths.append(line)
+                                            self.updateGuiElementsCSV()
+                                        self.firstNode = None
                                         self.tempPath.clear() 
+                                        self.update()
 
                 # to a transformer 
                 updates = []
@@ -419,24 +425,22 @@ class Grid(QWidget):
                                             self.tempPath.clear() 
                                             self.update()
                                     else:
-                                        # if connection2 == trafo:
-                                            self.paths.append(line)
-                                            self.firstNode = None
-                                            # self.tokenBusPorts.append(hands[i])
-                                            trafoTuple = (point, ori, hands, bus1, connection1)
-                                            updates.append((trafo, trafoTuple))  # Add to updates
-                                            self.addTraffoDialog = AddTrafoDialog(self, bus1, connection2, self.themeMode)
-                                            self.addTraffoDialog.trafoPos = point
-                                            self.addTraffoDialog.trafoOrient = ori 
-                                            self.addTraffoDialog.trafoHands = hands 
-                                            self.addTraffoDialog.trafoId = trafo
-                                            self.addTraffoDialog.projectPath = self.projectPath
-                                            self.addTraffoDialog.exec()
+                                        trafoTuple = (point, ori, hands, bus1, connection1)
+                                        updates.append((trafo, trafoTuple))  # Add to updates
+                                        self.addTrafoDialog = AddTrafoDialog(self, bus1, connection2, self.themeMode)
+                                        self.addTrafoDialog.trafoPos = point
+                                        self.addTrafoDialog.trafoOrient = ori 
+                                        self.addTrafoDialog.trafoHands = hands 
+                                        self.addTrafoDialog.trafoId = trafo
+                                        self.addTrafoDialog.projectPath = self.projectPath
+                                        self.addTrafoDialog.exec()
+                                        if not self.addTrafoDialog.canceled:
+                                            self.trafos.update({connection1: trafoTuple})
                                             self.updateGuiElementsCSV()
-
-                                            self.firstNode = None
-                                            self.tempPath.clear() 
-                                            self.update()
+                                            self.paths.append(line)
+                                        self.tempPath.clear() 
+                                        self.firstNode = None
+                                        self.update()
                 if len(updates) > 0:
                     for key, value in updates:
                         self.trafos[key] = value
@@ -453,20 +457,20 @@ class Grid(QWidget):
                             revLine = (connection2, connection1, firstPoint, 0, tempPath,
                                        firstNodeType, 'gen')
                             if line not in self.paths and revLine not in self.paths:
-                                self.tokenGenHands.append(hand)
-                                self.paths.append(line)
-                                self.firstNode = None
-                                self.update()
                                 self.addGenDialog = AddGenDialog(self, connection2, self.themeMode)
                                 self.addGenDialog.projectPath = self.projectPath
                                 self.addGenDialog.genId = gen 
                                 self.addGenDialog.genPos = point
-                                self.addGenDialog.genOri = ori 
+                                self.addGenDialog.genOri = ori
                                 self.addGenDialog.genHand = hand 
                                 self.addGenDialog.exec()
-                                self.updateGuiElementsCSV()
+                                if not self.addGenDialog.canceled:
+                                    self.updateGuiElementsCSV()
+                                    self.tokenGenHands.append(self.firstPointPos)
+                                    self.paths.append(line)
+                                self.firstNode = None
                                 self.tempPath.clear() 
-
+                                self.update()
                 # to a load
                 for load, (point, ori, hand) in self.loads.items():
                     if hand == self.secondPointPos and hand not in self.tokenLoadHands:
@@ -479,10 +483,6 @@ class Grid(QWidget):
                             revLine = (connection2, connection1, firstPoint, 0, tempPath,
                                        firstNodeType, 'load')
                             if line not in self.paths and revLine not in self.paths:
-                                self.tokenLoadHands.append(hand)
-                                self.paths.append(line)
-                                self.firstNode = None
-                                self.update()
                                 self.addLoadDialog = AddLoadDialog(self, connection1, self.themeMode)
                                 self.addLoadDialog.projectPath = self.projectPath
                                 self.addLoadDialog.loadId = load 
@@ -490,8 +490,14 @@ class Grid(QWidget):
                                 self.addLoadDialog.loadOri = ori
                                 self.addLoadDialog.loadHand = hand
                                 self.addLoadDialog.exec()
-                                self.updateGuiElementsCSV()
-                                self.tempPath.clear()
+
+                                if not self.addLoadDialog.canceled:
+                                    self.updateGuiElementsCSV()
+                                    self.tokenLoadHands.append(self.firstPointPos)
+                                    self.paths.append(line)
+                                self.firstNode = None
+                                self.tempPath.clear() 
+                                self.update()
 
                     # to a slack
                     for slack, (point, ori, hand) in self.slacks.items():
@@ -505,19 +511,21 @@ class Grid(QWidget):
                                 revLine = (connection2, connection1, firstPoint, 0, tempPath,
                                            firstNodeType, 'slack')
                                 if line not in self.paths and revLine not in self.paths:
-                                    self.tokenSlackHands.append(hand)
-                                    self.paths.append(line)
-                                    self.firstNode = None
-                                    self.update()
                                     self.addSlackDialog = AddSlackDialog(self, connection1, self.themeMode)
                                     self.addSlackDialog.projectPath = self.projectPath
                                     self.addSlackDialog.slackId = slack
                                     self.addSlackDialog.slackPos = point
                                     self.addSlackDialog.slackOri = ori
-                                    self.addSlackDialog.slackHand = hand
+                                    self.addSlackDialog.slackHand = hand 
                                     self.addSlackDialog.exec()
-                                    self.updateGuiElementsCSV()
-                                    self.tempPath.clear()
+
+                                    if not self.addSlackDialog.canceled:
+                                        self.tokenSlackHands.append(self.firstPointPos)
+                                        self.paths.append(line)
+                                        self.updateGuiElementsCSV()
+                                    self.firstNode = None
+                                    self.tempPath.clear() 
+                                    self.update()
 
 
         # Double Clicked on an existing bus
@@ -532,14 +540,8 @@ class Grid(QWidget):
                 busX = point.x()
                 busY = point.y()
                 if self.withinBounds(x, y, busX, busY, self.dist, capacity, orient):
-                    self.initEditBox(bus, point)
-                    editedBus = bus
-                    editedTuple = bigTuple
-            if editedBus is not None:
-                # editedBus = self.editedBusses(editedBus, editedTuple)
-                del self.busses[editedBus]
-                editedBus = None
-                self.update()
+                    self.editBusDialog = EditBusDialog(self, self.projectPath, bus, self.themeMode)
+                    self.editBusDialog.exec()
 
         # Hand mode pressed
         if event.button() == Qt.MouseButton.LeftButton and self.handMode:
@@ -974,6 +976,9 @@ class Grid(QWidget):
                         if i2 == 0:
                             secondNode = point
                         else:
+                            # print('points:',points,'i1', i1,'i2:', i2)
+                            # print('bus:',bus, 'point:', point)
+                            # print('connection1:',connection1, 'connection2:', connection2)
                             secondNode = points[i2]
 
                 # from and to trafo
@@ -1154,39 +1159,8 @@ class Grid(QWidget):
         self.updateGuiElementsCSV()
 
     def initEditBox(self, busName: str, point: QPoint) -> None:
-        self.editBusDialog = EditBusDialog(self)
-        self.editBusDialog.projectPath = self.projectPath
-        self.busCsvPath = self.projectPath + '/Buses.csv'
-        with open(self.busCsvPath) as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if busName == row['name']:
-                    # print(busName)
-                    # print(row['name'])
-                    posList = json.loads(row['pos'].strip())
-                    x, y = map(int, posList)
-                    pos = QPoint(x, y)
-                    pointsList = []
-                    pointsArray = json.loads(row['points'].strip())
-                    for px, py in pointsArray:
-                        # print(px, py)
-                        point = QPoint(int(px), int(py))
-                        pointsList.append(point)
-                    # print(pointsList)
-                    self.editBusDialog.busPos = pos 
-                    self.editBusDialog.busId = row['id']
-                    self.editBusDialog.nameInput.setText(row['name'])
-                    self.editBusDialog.previousName = row['name']
-                    self.editBusDialog.vMagInput.setText(row['vMag'])
-                    self.editBusDialog.vAngInput.setText(row['vAng'])
-                    self.editBusDialog.pInput.setText(row['P'])
-                    self.editBusDialog.qInput.setText(row['Q'])
-                    self.editBusDialog.capacity = row['capacity'],
-                    self.editBusDialog.orient = row['orient'],
-                    self.editBusDialog.points = pointsList,
-                    self.editBusDialog.exec()
-                    self.updateBusCSVGuiParams()
-                    self.update()
+        self.editBusDialog = EditBusDialog(self, self.projectPath, busName, self.themeMode)
+        self.editBusDialog.exec()
 
     def editedBusses(self, editedBus: str, bigTuple: tuple) -> str:
         if self.editBusDialog is not None:
@@ -1209,27 +1183,27 @@ class Grid(QWidget):
     # Updates bus csv gui parameters everytime something new happens in gui
     def updateBusCSVGuiParams(self) -> None:
         self.busCsvPath = self.projectPath + '/Buses.csv'
-        if os.path.exists(self.busCsvPath):
+        if exists(self.busCsvPath):
             newBusList = []
             with open(self.busCsvPath) as csvfile:
-                reader = csv.DictReader(csvfile)
+                reader = DictReader(csvfile)
                 for row in reader:
                     for bus, (point, capacity, orient, points, id) in self.busses.items():
                         if row['name'] == bus:
-                            row['pos'] = json.dumps((point.x(), point.y()))
+                            row['pos'] = dumps((point.x(), point.y()))
                             row['capacity'] = capacity 
                             row['orient'] = orient
                             pointsList = []
                             for p in points:
                                 tup = (p.x(), p.y())
                                 pointsList.append(tup)
-                            row['points'] = json.dumps(pointsList)
+                            row['points'] = dumps(pointsList)
                             newBusList.append(row)
 
             with open(self.busCsvPath, 'w', newline = '') as file:
-                writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'zone', 'vAng',
-                                                         'P', 'Q', 'name', 'pos',
-                                                         'capacity', 'orient', 'points'])
+                writer = DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'zone', 'maxVm', 'minVm',
+                                                     'vAng','P', 'Q', 'name', 'pos',
+                                                     'capacity', 'orient', 'points'])
                 writer.writeheader()
                 writer.writerows(newBusList)
                 print(f'-> Bus Data edited to {self.busCsvPath} successfuly.')
@@ -1237,21 +1211,21 @@ class Grid(QWidget):
     # Updates transformer CSV GUI parameters every time something new happens in the GUI
     def updateTrafoGUICSVParams(self) -> None:
         trafoCsvPath = self.projectPath + '/Trafos.csv'
-        if os.path.exists(trafoCsvPath):
+        if exists(trafoCsvPath):
             newTrafoList = []
             with open(trafoCsvPath) as csvfile:
-                reader = csv.DictReader(csvfile)
+                reader = DictReader(csvfile)
                 for row in reader:
                     for trafo, (point, orient, hands, hvBus, lvBus) in self.trafos.items():
                         if int(row['id']) == trafo:
-                            row['pos'] = json.dumps((point.x(), point.y()))
+                            row['pos'] = dumps((point.x(), point.y()))
                             row['orient'] = orient
                             handsList = [(h.x(), h.y()) for h in hands]
-                            row['hands'] = json.dumps(handsList)
+                            row['hands'] = dumps(handsList)
                             newTrafoList.append(row)
 
             with open(trafoCsvPath, 'w', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=[
+                writer = DictWriter(file, fieldnames=[
                     'id', 'name', 'hvBus', 'lvBus', 'pos', 'orient', 'hands', 
                     'sn_mva', 'vk_percent', 'vkr_percent', 'tap_step_percent'
                 ])
@@ -1261,20 +1235,20 @@ class Grid(QWidget):
 
     def updateGenGUICSVParams(self) -> None:
         csvPath = self.projectPath + '/Gens.csv'
-        if os.path.exists(csvPath):
+        if exists(csvPath):
             newGenList = []
             with open(csvPath) as csvfile:
-                reader = csv.DictReader(csvfile)
+                reader = DictReader(csvfile)
                 for row in reader:
                     for gen, (point, orient, hand) in self.gens.items():
                         if int(row['id']) == gen:
-                            row['pos'] = json.dumps((point.x(), point.y()))
+                            row['pos'] = dumps((point.x(), point.y()))
                             row['orient'] = orient
-                            row['hand'] = json.dumps((hand.x(), hand.y()))
+                            row['hand'] = dumps((hand.x(), hand.y()))
                             newGenList.append(row)
 
             with open(csvPath, 'w', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=[
+                writer = DictWriter(file, fieldnames=[
                     'id', 'bus', 'name', 'pMW', 'vmPU', 'minQMvar', 'maxQMvar', 
                     'minPMW', 'maxPMW', 'pos', 'orient', 'hand'
                 ])
@@ -1284,41 +1258,42 @@ class Grid(QWidget):
 
     def updateSlackGUICSVParams(self) -> None:
         csvPath = self.projectPath + '/Slacks.csv'
-        if os.path.exists(csvPath):
+        if exists(csvPath):
             newSlackList = []
             with open(csvPath) as csvfile:
-                reader = csv.DictReader(csvfile)
+                reader = DictReader(csvfile)
                 for row in reader:
                     for slack, (point, orient, hand) in self.slacks.items():
                         if int(row['id']) == slack:
-                            row['pos'] = json.dumps((point.x(), point.y()))
+                            row['pos'] = dumps((point.x(), point.y()))
                             row['orient'] = orient
-                            row['hand'] = json.dumps((hand.x(), hand.y()))
+                            row['hand'] = dumps((hand.x(), hand.y()))
                             newSlackList.append(row)
 
             with open(csvPath, 'w', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=['id','bus', 'vmPU', 'vaD',
-                                                          'pos', 'orient', 'hand'])
+                writer = DictWriter(file, fieldnames=['id','bus', 'vmPU', 'vaD',
+                                                      'pos', 'orient', 'hand',
+                                                      'minP', 'maxP', 'minQ', 'maxQ'])
                 writer.writeheader()
                 writer.writerows(newSlackList)
             print(f'-> Slack Data updated in {csvPath} successfully.')
 
     def updateLoadGUICSVParams(self) -> None:
         csvPath = self.projectPath + '/Loads.csv'
-        if os.path.exists(csvPath):
+        if exists(csvPath):
             newLoadList = []
             with open(csvPath) as csvfile:
-                reader = csv.DictReader(csvfile)
+                reader = DictReader(csvfile)
                 for row in reader:
                     for load, (point, orient, hand) in self.loads.items():
                         if int(row['id']) == load:
-                            row['pos'] = json.dumps((point.x(), point.y()))
+                            row['pos'] = dumps((point.x(), point.y()))
                             row['orient'] = orient
-                            row['hand'] = json.dumps((hand.x(), hand.y()))
+                            row['hand'] = dumps((hand.x(), hand.y()))
                             newLoadList.append(row)
 
             with open(csvPath, 'w', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=['id', 'bus', 'pMW', 'qMW',
+                writer = DictWriter(file, fieldnames=['id', 'bus', 'pMW', 'qMW',
                                                           'pos', 'orient', 'hand'])
                 writer.writeheader()
                 writer.writerows(newLoadList)
@@ -1328,7 +1303,7 @@ class Grid(QWidget):
         self.guiCsvPath = self.projectPath + '/GUI.csv'
 
         # Saving GUI paths
-        if os.path.exists(self.guiCsvPath):
+        if exists(self.guiCsvPath):
             newPaths = []
             for p in self.paths:
                 connection1, connection2, i1, i2, pathList, firstNodeType, secNodeType = p 
@@ -1340,7 +1315,7 @@ class Grid(QWidget):
                 newPaths.append(bigTuple)
             data = {
                 'dist': self.dist,
-                'paths': json.dumps(newPaths),
+                'paths': dumps(newPaths),
                 'busCounter': self.busCounter,
                 'trafoCounter': self.trafoCounter,
                 'genCounter': self.genCounter,
@@ -1352,7 +1327,7 @@ class Grid(QWidget):
                 # 'tokenSlackHands': self.tokenSlackHands,
             }
             with open(self.guiCsvPath, 'w', newline = '') as file:
-                writer = csv.DictWriter(file, fieldnames=['dist','paths', 'busCounter',
+                writer = DictWriter(file, fieldnames=['dist','paths', 'busCounter',
                           'trafoCounter', 'genCounter', 'loadCounter', 'slackCounter',
                             'tokenGenHands', 'tokenTrafoHands', 'tokenLoadHands',
                                                           'tokenSlackHands'])
@@ -1371,7 +1346,7 @@ class Grid(QWidget):
 
         # Load GUI settings
         with open(self.guiCsvPath) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             for row in reader:
                 self.dist = int(row['dist'])
                 self.busCounter = int(row['busCounter'])
@@ -1382,13 +1357,13 @@ class Grid(QWidget):
                 print('buscounter:', self.busCounter)
                 print('trafocounter:', self.trafoCounter)
                 print('gencounter:', self.genCounter)
-                print('loadcounter:', self.genCounter)
-                print('slackcounter:', self.genCounter)
+                print('loadcounter:', self.loadCounter)
+                print('slackcounter:', self.slackCounter)
                 # self.tokenTrafoHands = json.loads(row['tokenTrafoHands'].strip())
                 # self.tokenGenHands = json.loads(row['tokenGenHands'].strip())
                 # self.tokenLoadHands = json.loads(row['tokenLoadHands'].strip())
                 # self.tokenSlackHands = json.loads(row['tokenSlackHands'].strip())
-                pathArray = json.loads(row['paths'].strip())
+                pathArray = loads(row['paths'].strip())
                 paths = []
                 for p in pathArray:
                     connection1, connection2, i1, i2, pathList, firstNodeType, secNodeType = p 
@@ -1405,13 +1380,13 @@ class Grid(QWidget):
 
         # Load buses
         with open(self.busCsvPath) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             for row in reader:
-                posList = json.loads(row['pos'].strip())
+                posList = loads(row['pos'].strip())
                 x, y = map(int, posList)
                 pos = QPoint(x, y)
                 pointsList = []
-                pointsArray = json.loads(row['points'].strip())
+                pointsArray = loads(row['points'].strip())
                 for px, py in pointsArray:
                     pointsList.append(QPoint(int(px), int(py)))
                 bigTuple = (pos, int(row['capacity']), row['orient'],
@@ -1423,13 +1398,13 @@ class Grid(QWidget):
 
         # Load transformers
         with open(self.trafoCsvPath) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             for row in reader:
-                posList = json.loads(row['pos'].strip())
+                posList = loads(row['pos'].strip())
                 x, y = map(int, posList)
                 pos = QPoint(x, y)
                 handsList = []
-                handsArray = json.loads(row['hands'].strip())
+                handsArray = loads(row['hands'].strip())
                 for hx, hy in handsArray:
                     handsList.append(QPoint(int(hx), int(hy)))
                 bigTuple = (pos, row['orient'], handsList, int(row['hvBus']), int(row['lvBus']))
@@ -1440,12 +1415,12 @@ class Grid(QWidget):
 
         # Load generators
         with open(self.genCsvPath) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             for row in reader:
-                posList = json.loads(row['pos'].strip())
+                posList = loads(row['pos'].strip())
                 x, y = map(int, posList)
                 pos = QPoint(x, y)
-                handList = json.loads(row['hand'].strip())
+                handList = loads(row['hand'].strip())
                 hx, hy = map(int, handList)
                 hand = QPoint(hx, hy)
                 bigTuple = (pos, row['orient'], hand)
@@ -1455,12 +1430,12 @@ class Grid(QWidget):
 
         # Load loads
         with open(self.loadCsvPath) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             for row in reader:
-                posList = json.loads(row['pos'].strip())
+                posList = loads(row['pos'].strip())
                 x, y = map(int, posList)
                 pos = QPoint(x, y)
-                handList = json.loads(row['hand'].strip())
+                handList = loads(row['hand'].strip())
                 hx, hy = map(int, handList)
                 hand = QPoint(hx, hy)
                 bigTuple = (pos, row['orient'], hand)
@@ -1470,12 +1445,12 @@ class Grid(QWidget):
 
         # Load slacks
         with open(self.slackCsvPath) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             for row in reader:
-                posList = json.loads(row['pos'].strip())
+                posList = loads(row['pos'].strip())
                 x, y = map(int, posList)
                 pos = QPoint(x, y)
-                handList = json.loads(row['hand'].strip())
+                handList = loads(row['hand'].strip())
                 hx, hy = map(int, handList)
                 hand = QPoint(hx, hy)
                 bigTuple = (pos, row['orient'], hand)
@@ -1597,7 +1572,7 @@ class Grid(QWidget):
         
         for i in range(waveSteps + 1):
             px = x - waveWidth // 2 + int(i * stepSize)
-            py = y + int(math.sin(- 2 * math.pi * i / waveSteps) * waveHeight)
+            py = y + int(sin(- 2 * pi * i / waveSteps) * waveHeight)
             sinePoints.append((px, py))
         
         for i in range(len(sinePoints) - 1):
@@ -2245,6 +2220,7 @@ class Grid(QWidget):
             if point == self.highLightedPoint or self.highLightedPoint in points:
                 bus2go = str(id)
                 print('2go:',bus2go)
+                self.busCounter -= 1
                 continue
             else:
                 bigTuple = (point, capacity, orient, points, id)
@@ -2255,7 +2231,7 @@ class Grid(QWidget):
         linesCsv = self.projectPath + '/Lines.csv'
         newLines = []
         with open(linesCsv) as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = DictReader(csvfile)
             for row in reader:
                 if row['bus1id'] == bus2go or row['bus2id'] == bus2go:
                     continue
@@ -2263,7 +2239,7 @@ class Grid(QWidget):
                     newLines.append(row)
 
         with open(linesCsv, 'w', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames=[
+            writer = DictWriter(file, fieldnames=[
                 'name', 'bus1id', 'bus2id', 'R', 'X', 
                 'len', 'c_nf_per_km', 'max_i_ka'
             ])
@@ -2274,23 +2250,23 @@ class Grid(QWidget):
         erased = {}
         for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
             if point == self.highLightedPoint or self.highLightedPoint in hands:
+                self.trafoCounter -= 1
                 continue
             else:
                 bigTuple = (point, ori, hands, bus1, bus2)
                 erased[trafo] = bigTuple
         self.trafos = erased
-        self.tokenTrafoHands = []
 
         # Handle Gens 
         erased = {}
         for gen, (point, ori, hand) in self.gens.items():
             if point == self.highLightedPoint or self.highLightedPoint == hand:
+                self.genCounter -= 1
                 continue
             else:
                 bigTuple = (point, ori, hand)
                 erased[gen] = bigTuple
         self.gens = erased
-        self.tokenGenHands = []
 
         # Handle Loads 
         erased = {}
@@ -2299,12 +2275,12 @@ class Grid(QWidget):
             centroid = self.centroidMaker(point, ori)
             if point == self.highLightedPoint or hand == self.highLightedPoint or \
                 centroid == self.highLightedPoint:
+                self.loadCounter -= 1
                 continue
             else:
                 bigTuple = (point, ori, hand)
                 erased[load] = bigTuple
         self.loads = erased
-        self.tokenLoadHands = []
 
         # Handle Slack
         erased = {}
@@ -2312,12 +2288,12 @@ class Grid(QWidget):
             centroid = self.centroidMaker(point, ori)
             if point == self.highLightedPoint or hand == self.highLightedPoint or \
                 centroid == self.highLightedPoint:
+                self.slackCounter -= 1
                 continue
             else:
                 bigTuple = (point, ori, hand)
                 erased[slack] = bigTuple
         self.slacks = erased
-        self.tokenSlackHands = []
 
         self.update()
         self.updateBusCSVGuiParams()
@@ -2330,14 +2306,14 @@ class Grid(QWidget):
     def handleAfterRun(self) -> None:
         # Handle Buses
         csvPath = self.projectPath + '/results_buses.csv'
-        if os.path.isfile(csvPath):
+        if isfile(csvPath):
             for bus, (point, capacity, orient, points, id) in self.busses.items():
                 xRange = range(point.x() - self.dist, point.x() + self.dist)
                 yRange = range(point.y() - self.dist, point.y() + capacity * self.dist)
                 if self.highLightedPoint.x() in xRange and self.highLightedPoint.y() in yRange:
                     # Open result bus csv
                     with open(csvPath) as csvfile:
-                        reader = csv.DictReader(csvfile)
+                        reader = DictReader(csvfile)
                         for idx, row in enumerate(reader): # this is temporary
                             if idx + 1 == id:
                                 self.dataToShow = {
@@ -2353,12 +2329,12 @@ class Grid(QWidget):
 
         # Handle Trafos
         csvPath = self.projectPath + '/results_trafos.csv'
-        if os.path.isfile(csvPath):
+        if isfile(csvPath):
             for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
                 if self.highLightedPoint == point or self.highLightedPoint in hands:
                     # Open result trafo csv
                     with open(csvPath) as csvfile:
-                        reader = csv.DictReader(csvfile)
+                        reader = DictReader(csvfile)
                         for idx, row in enumerate(reader): # this is temporary
                             if idx + 1 == trafo:
                                 self.dataToShow = {
@@ -2383,12 +2359,12 @@ class Grid(QWidget):
 
         # Handle Gens
         csvPath = self.projectPath + '/results_gens.csv'
-        if os.path.isfile(csvPath):
+        if isfile(csvPath):
             for gen, (point, ori, hand) in self.gens.items():
                 if self.highLightedPoint == point or self.highLightedPoint == hand:
                     # Open result gen csv
                     with open(csvPath) as csvfile:
-                        reader = csv.DictReader(csvfile)
+                        reader = DictReader(csvfile)
                         for idx, row in enumerate(reader): # this is temporary
                             if idx + 1 == gen:
                                 self.dataToShow = {
@@ -2405,13 +2381,13 @@ class Grid(QWidget):
 
         # Handle Loads
         csvPath = self.projectPath + '/results_loads.csv'
-        if os.path.isfile(csvPath):
+        if isfile(csvPath):
             for load, (point, ori, hand) in self.loads.items():
                 centroid = self.centroidMaker(point, ori)
                 if self.highLightedPoint == point or self.highLightedPoint == centroid :
                     # Open result load csv
                     with open(csvPath) as csvfile:
-                        reader = csv.DictReader(csvfile)
+                        reader = DictReader(csvfile)
                         for idx, row in enumerate(reader): # this is temporary
                             if idx + 1 == load:
                                 self.dataToShow = {
@@ -2425,22 +2401,23 @@ class Grid(QWidget):
 
         # Handle Slacks
         csvPath = self.projectPath + '/results_slacks.csv'
-        for slack, (point, ori, hand) in self.slacks.items():
-            centroid = self.centroidMaker(point, ori)
-            if self.highLightedPoint == point or self.highLightedPoint == centroid :
-                # Open result slack csv
-                with open(csvPath) as csvfile:
-                    reader = csv.DictReader(csvfile)
-                    for idx, row in enumerate(reader): # this is temporary
-                        if idx + 1 == slack:
-                            self.dataToShow = {
-                                'P': f'{float(row['p_mw']):.4f}' + ' (MW)',
-                                'Q': f'{float(row['q_mvar']):.4f}' + ' (MVAR)',
-                            }
-                        else:
-                            continue
-            else:
-                continue
+        if isfile(csvPath):
+            for slack, (point, ori, hand) in self.slacks.items():
+                centroid = self.centroidMaker(point, ori)
+                if self.highLightedPoint == point or self.highLightedPoint == centroid :
+                    # Open result slack csv
+                    with open(csvPath) as csvfile:
+                        reader = DictReader(csvfile)
+                        for idx, row in enumerate(reader): # this is temporary
+                            if idx + 1 == slack:
+                                self.dataToShow = {
+                                    'P': f'{float(row['p_mw']):.4f}' + ' (MW)',
+                                    'Q': f'{float(row['q_mvar']):.4f}' + ' (MVAR)',
+                                }
+                            else:
+                                continue
+                else:
+                    continue
 
     def drawInfoBox(self, painter: QPainter) -> None:
 

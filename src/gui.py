@@ -1,7 +1,7 @@
 # Main GUI setup and window management
 
 # Imports
-import csv
+from csv import DictWriter
 from time import perf_counter
 from grid import Grid
 from simulator import runLoadFlow 
@@ -855,19 +855,19 @@ class MainWindow(QMainWindow):
         self.slackCSV = self.projectPath + '/Slacks.csv'
 
         with open(self.guiCSV, 'w', newline = '') as file:
-            writer = csv.DictWriter(file,fieldnames=['dist','paths'])
+            writer = DictWriter(file,fieldnames=['dist','paths'])
             writer.writeheader()
         print(f'-> GUI header cleared to {self.lineCSV} successfuly.')
 
         with open(self.busCSV, 'w', newline = '') as file:
-            writer = csv.DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'zone', 'vAng',
-                                                     'P', 'Q', 'name', 'pos',
+            writer = DictWriter(file,fieldnames=['id', 'bType', 'vMag', 'zone', 'maxVm', 'minVm',
+                                                     'vAng','P', 'Q', 'name', 'pos',
                                                      'capacity', 'orient', 'points'])
             writer.writeheader()
         print(f'-> Bus header cleared to {self.busCSV} successfuly.')
 
         with open(self.lineCSV, 'w', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames=[
+            writer = DictWriter(file, fieldnames=[
                 'name', 'bus1id', 'bus2id', 'R', 'X',
                 'len', 'c_nf_per_km', 'max_i_ka'
             ])
@@ -875,7 +875,7 @@ class MainWindow(QMainWindow):
         print(f'-> Line header cleared to {self.lineCSV} successfuly.')
 
         with open(self.genCSV, 'w', newline = '') as file:
-            writer = csv.DictWriter(file, fieldnames=[
+            writer = DictWriter(file, fieldnames=[
                 'id', 'bus', 'name', 'pMW', 'vmPU', 'minQMvar', 'maxQMvar', 
                 'minPMW', 'maxPMW', 'pos', 'orient', 'hand'
             ])
@@ -883,7 +883,7 @@ class MainWindow(QMainWindow):
         print(f'-> Gen header cleared to {self.genCSV} successfuly.')
 
         with open(self.trafoCSV, 'w', newline = '') as file:
-            writer = csv.DictWriter(file, fieldnames=[
+            writer = DictWriter(file, fieldnames=[
                 'id', 'name', 'hvBus', 'lvBus', 'pos', 'orient', 'hands', 
                 'sn_mva', 'vk_percent', 'vkr_percent', 'tap_step_percent'
             ])
@@ -891,14 +891,15 @@ class MainWindow(QMainWindow):
         print(f'-> Trafo header cleared to {self.trafoCSV} successfuly.')
 
         with open(self.loadCSV, 'w', newline = '') as file:
-            writer = csv.DictWriter(file, fieldnames=['id','bus', 'vmPU', 'vaD',
-                                                          'pos', 'orient', 'hand'])
+            writer = DictWriter(file, fieldnames=['id', 'bus', 'pMW', 'qMW',
+                                                      'pos', 'orient', 'hand'])
             writer.writeheader()
         print(f'-> Load header cleared to {self.loadCSV} successfuly.')
 
         with open(self.slackCSV, 'w', newline = '') as file:
-            writer = csv.DictWriter(file, fieldnames=['id','bus', 'vmPU', 'vaD',
-                                                          'pos', 'orient', 'hand'])
+            writer = DictWriter(file, fieldnames=['id','bus', 'vmPU', 'vaD',
+                                                  'pos', 'orient', 'hand',
+                                                  'minP', 'maxP', 'minQ', 'maxQ'])
             writer.writeheader()
         print(f'-> Slack header cleared to {self.slackCSV} successfuly.')
 

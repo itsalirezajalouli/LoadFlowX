@@ -1,6 +1,4 @@
 # Imports 
-import os
-import csv
 from psa_components import Load
 from PyQt6.QtGui import QDoubleValidator
 from PyQt6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget, QLabel, QDialogButtonBox, QMessageBox
@@ -8,6 +6,7 @@ from PyQt6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QVBoxLay
 class AddLoadDialog(QDialog):
     def __init__(self, parent, bus, theme = 'dark') -> None:
         super().__init__(parent)
+        self.canceled = False
         self.setWindowTitle('Add Load')
         self.setStyleSheet(f'''
         QDialog {{
@@ -206,3 +205,7 @@ class AddLoadDialog(QDialog):
         load.log()
         load.append2CSV(self.projectPath)
         super().accept()
+
+    def reject(self) -> None:
+        self.canceled = True
+        super().reject()

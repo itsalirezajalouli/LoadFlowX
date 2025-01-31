@@ -1,6 +1,8 @@
 # Dialogs for slack
 from psa_components import Slack
-from PyQt6.QtWidgets import QDialog, QLabel, QWidget, QHBoxLayout, QLineEdit, QComboBox, QVBoxLayout, QDialogButtonBox, QMessageBox
+from PyQt6.QtWidgets import (QDialog, QLabel, QWidget, QHBoxLayout, QLineEdit, 
+                           QComboBox, QVBoxLayout, QDialogButtonBox, QMessageBox, 
+                           QCheckBox)
 from PyQt6.QtGui import QDoubleValidator
 
 class AddSlackDialog(QDialog):
@@ -13,6 +15,8 @@ class AddSlackDialog(QDialog):
         self.slackPos = None
         self.slackOri = None
         self.slackHand = None
+        self.canceled = False
+        self.extraParams = False
         self.setWindowTitle('Add Bus')
 
         # Apply theme-specific styles
@@ -112,6 +116,45 @@ class AddSlackDialog(QDialog):
         self.vAngHBox.addWidget(self.vangInput)
         self.vAngHBox.addWidget(self.vangUnitDropDown)
 
+        # Checkbox for Extra Parameters
+        self.extraParamsCheckBox = QCheckBox('Power Limits')
+        self.extraParamsCheckBox.stateChanged.connect(self.toggleExtraParameters)
+
+        # Additional Parameters Section
+        self.additionalFieldsLabel = QLabel('Power Limits:')
+        
+        # Active Power Limits
+        self.pLimitsWidget = QWidget()
+        self.pLimitsHBox = QHBoxLayout()
+        
+        self.minPInput = QLineEdit(self)
+        self.minPInput.setPlaceholderText('Min P (MW)')
+        self.minPInput.setValidator(QDoubleValidator())
+        
+        self.maxPInput = QLineEdit(self)
+        self.maxPInput.setPlaceholderText('Max P (MW)')
+        self.maxPInput.setValidator(QDoubleValidator())
+        
+        self.pLimitsHBox.addWidget(self.minPInput)
+        self.pLimitsHBox.addWidget(self.maxPInput)
+        self.pLimitsWidget.setLayout(self.pLimitsHBox)
+
+        # Reactive Power Limits
+        self.qLimitsWidget = QWidget()
+        self.qLimitsHBox = QHBoxLayout()
+        
+        self.minQInput = QLineEdit(self)
+        self.minQInput.setPlaceholderText('Min Q (MVAr)')
+        self.minQInput.setValidator(QDoubleValidator())
+        
+        self.maxQInput = QLineEdit(self)
+        self.maxQInput.setPlaceholderText('Max Q (MVAr)')
+        self.maxQInput.setValidator(QDoubleValidator())
+        
+        self.qLimitsHBox.addWidget(self.minQInput)
+        self.qLimitsHBox.addWidget(self.maxQInput)
+        self.qLimitsWidget.setLayout(self.qLimitsHBox)
+
         # Button Box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.buttonBox.rejected.connect(self.reject)
@@ -123,8 +166,22 @@ class AddSlackDialog(QDialog):
         layout.addWidget(self.nameInput)
         layout.addLayout(self.vMagHBox)
         layout.addLayout(self.vAngHBox)
+        layout.addWidget(self.extraParamsCheckBox)
+        layout.addWidget(self.additionalFieldsLabel)
+        layout.addWidget(self.pLimitsWidget)
+        layout.addWidget(self.qLimitsWidget)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
+
+        # Initially hide extra parameters
+        self.toggleExtraParameters()
+
+    def toggleExtraParameters(self):
+        #Toggle visibility of power limit fields
+        self.extraParams = self.extraParamsCheckBox.isChecked()
+        self.additionalFieldsLabel.setVisible(self.extraParams)
+        self.pLimitsWidget.setVisible(self.extraParams)
+        self.qLimitsWidget.setVisible(self.extraParams)
 
     def handleVoltageUnitChange(self, index):
         if index == 0:  # PU selected
@@ -163,15 +220,32 @@ class AddSlackDialog(QDialog):
         if self.vangUnitDropDown.currentText() == 'rad':
             vang = vang * (180 / 3.141592653589793)  # Convert to degrees
 
-        slack = Slack(
-            id=self.slackId,
-            bus=self.bus,
-            vmPU=vMag,
-            vaD=vang,
-            pos=self.slackPos,
-            orient=self.slackOri,
-            hand=self.slackHand,
-        )
+        # Default PQ limits if not specified
+        minP = float(self.minPInput.text()) if self.minPInput.text() else 0.0  
+        maxP = float(self.maxPInput.text()) if self.maxPInput.text() else 1e6  
+        minQ = float(self.minQInput.text()) if self.minQInput.text() else -1e6 
+        maxQ = float(self.maxQInput.text()) if self.maxQInput.text() else 1e6  
+
+        # Prepare slack parameters
+        slack_params = {
+            'id': self.slackId,
+            'bus': self.bus,
+            'vmPU': vMag,
+            'vaD': vang,
+            'pos': self.slackPos,
+            'orient': self.slackOri,
+            'hand': self.slackHand,
+            'minP': minP,
+            'maxP': maxP,
+            'minQ': minQ,
+            'maxQ': maxQ,
+        }
+
+        slack = Slack(**slack_params)
         slack.log()
         slack.append2CSV(self.projectPath)
         super().accept()
+
+    def reject(self) -> None:
+        self.canceled = True
+        super().reject()

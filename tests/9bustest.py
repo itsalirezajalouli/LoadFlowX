@@ -1,7 +1,7 @@
 import pandapower.networks as nw
 import pandapower as pp
 
-net = nw.case9()
+net = nw.case39()
 print('bus' + 100 * '-' + '\n', net.bus)
 print('line' + 100 * '-' + '\n', net.line)
 print('trafo' + 100 * '-' + '\n', net.trafo)
