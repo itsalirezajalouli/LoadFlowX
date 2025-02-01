@@ -1,3 +1,0 @@
-id,bType,vMag,zone,maxVm,minVm,vAng,P,Q,name,pos,capacity,orient,points
-1,BusType.SLACK,222,11,33.0,44.0,NaN,NaN,NaN,chihirooooo,"[800, 288]",1,-90,[]
-2,BusType.SLACK,23.0,2,1.0,1.0,NaN,NaN,NaN,qqq,"[928, 288]",1,-90,[]
