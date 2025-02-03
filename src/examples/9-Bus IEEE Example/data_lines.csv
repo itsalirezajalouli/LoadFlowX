@@ -1,0 +1,10 @@
+,name,std_type,from_bus,to_bus,length_km,r_ohm_per_km,x_ohm_per_km,c_nf_per_km,g_us_per_km,max_i_ka,df,parallel,type,in_service,max_loading_percent
+0,L1to4,custom_type_L1to4,1,4,1.0,0.0,68.5584,0.0,0.0,0.41837,1.0,1,ol,True,100.0
+1,L4to5,custom_type_L4to5,4,5,1.0,20.23425,109.503,352.117636,0.0,0.41837,1.0,1,ol,True,100.0
+2,L5to6,custom_type_L5to6,5,9,1.0,46.41975,202.3425,797.836164,0.0,0.251022,1.0,1,ol,True,100.0
+3,L3to6,custom_type_L3to6,3,9,1.0,0.0,69.74865,0.0,0.0,0.502044,1.0,1,ol,True,100.0
+4,L6to7,custom_type_L6to7,9,7,1.0,14.163975,119.9772,465.775861,0.0,0.251022,1.0,1,ol,True,100.0
+5,L7to8,custom_type_L7to8,7,8,1.0,10.117125,85.698,332.060303,0.0,0.41837,1.0,1,ol,True,100.0
+6,L 8 to 2,custom_type_L 8 to 2,8,2,1.0,0.0,74.390625,0.0,0.0,0.41837,1.0,1,ol,True,100.0
+7,L8to9,custom_type_L8to9,8,6,1.0,38.088,191.63025,681.949347,0.0,0.41837,1.0,1,ol,True,100.0
+8,L9to4,custom_type_L9to4,6,4,1.0,11.9025,101.17125,392.232304,0.0,0.41837,1.0,1,ol,True,100.0

@@ -1,0 +1,4 @@
+,name,bus,p_mw,q_mvar,const_z_percent,const_i_percent,sn_mva,scaling,in_service,type,controllable
+2,1,5,90.0,30.0,0.0,0.0,,1.0,True,,False
+1,2,6,125.0,50.0,0.0,0.0,,1.0,True,,False
+3,3,7,100.0,35.0,0.0,0.0,,1.0,True,,False

@@ -64,6 +64,8 @@ class Grid(QWidget):
         self.correctNodeSelect = False 
         self.spacePressed = False  # Track the state of the Space key
 
+        self.whileMoving = False
+
         # Dialogs
         self.addBusDialog = None
         self.editBusDialog = None
@@ -402,7 +404,7 @@ class Grid(QWidget):
                 updates = []
                 for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
                     for i in range(len(hands)):
-                        if hands[i] == self.secondPointPos and self.secondPointPos not in self.tokenTrafoHands:
+                        if hands[i] == self.secondPointPos: #and self.secondPointPos not in self.tokenTrafoHands:
                             connection2 = trafo
                             self.tempPath.pop() 
                             tempPath = deepcopy(self.tempPath)
@@ -447,7 +449,7 @@ class Grid(QWidget):
 
                 # to a generator 
                 for gen, (point, ori, hand) in self.gens.items():
-                    if hand == self.secondPointPos and hand not in self.tokenGenHands:
+                    if hand == self.secondPointPos: # and hand not in self.tokenGenHands:
                         if firstNodeType == 'bus':
                             connection2 = gen
                             self.tempPath.pop() 
@@ -473,7 +475,7 @@ class Grid(QWidget):
                                 self.update()
                 # to a load
                 for load, (point, ori, hand) in self.loads.items():
-                    if hand == self.secondPointPos and hand not in self.tokenLoadHands:
+                    if hand == self.secondPointPos: # and hand not in self.tokenLoadHands:
                         if firstNodeType == 'bus':
                             connection2 = load
                             self.tempPath.pop()
@@ -501,7 +503,7 @@ class Grid(QWidget):
 
                     # to a slack
                     for slack, (point, ori, hand) in self.slacks.items():
-                        if hand == self.secondPointPos and hand not in self.tokenSlackHands:
+                        if hand == self.secondPointPos: #and hand not in self.tokenSlackHands:
                             if firstNodeType == 'bus':
                                 connection2 = slack
                                 self.tempPath.pop()
@@ -2125,9 +2127,13 @@ class Grid(QWidget):
         xDiff = self.highLightedPoint.x() - self.moveActivatedPos.x()
         yDiff = self.highLightedPoint.y() - self.moveActivatedPos.y()
 
+        movingElement = []
+
         # Handle Buses
         for bus, (point, capacity, orient, points, id) in self.busses.items():
             if point == self.moveActivatedPos or self.moveActivatedPos in points:
+                element = (bus, 'bus')
+                movingElement.append(element)
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)
@@ -2138,12 +2144,17 @@ class Grid(QWidget):
                     for p in points
                 ]
 
-                bigTuple = (point, capacity, orient, newPoints, id)
-                self.busses.update({bus: bigTuple})
+                if element == movingElement[0]:
+                    bigTuple = (point, capacity, orient, newPoints, id)
+                    self.busses.update({bus: bigTuple})
+                else:
+                    continue
 
         # Handle Transformers
         for trafo, (point, ori, hands, bus1, bus2) in self.trafos.items():
             if point == self.moveActivatedPos or self.moveActivatedPos in hands:
+                element = (trafo, 'trafo')
+                movingElement.append(element)
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)
@@ -2154,12 +2165,18 @@ class Grid(QWidget):
                     for h in hands
                 ]
 
-                bigTuple = (point, ori, newHands, bus1, bus2)
-                self.trafos.update({trafo: bigTuple})
+                if element == movingElement[0]:
+                    bigTuple = (point, ori, newHands, bus1, bus2)
+                    self.trafos.update({trafo: bigTuple})
+                else:
+                    continue
+
 
         # Handle Generators
         for gen, (point, ori, hand) in self.gens.items():
             if point == self.moveActivatedPos or hand == self.moveActivatedPos:
+                element = (gen, 'gen')
+                movingElement.append(element)
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)
@@ -2167,14 +2184,19 @@ class Grid(QWidget):
 
                 newHand = self.snap(QPoint(hand.x() + xDiff, hand.y() + yDiff))
 
-                bigTuple = (point, ori, newHand)
-                self.gens.update({gen: bigTuple})
+                if element == movingElement[0]:
+                    bigTuple = (point, ori, newHand)
+                    self.gens.update({gen: bigTuple})
+                else:
+                    continue
 
         # Handle Loads
         for load, (point, ori, hand) in self.loads.items():
             centroid = self.centroidMaker(point, ori)
             if point == self.moveActivatedPos or hand == self.moveActivatedPos or \
                 centroid == self.moveActivatedPos:
+                element = (load, 'load')
+                movingElement.append(element)
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)
@@ -2182,14 +2204,20 @@ class Grid(QWidget):
 
                 newHand = self.snap(QPoint(hand.x() + xDiff, hand.y() + yDiff))
 
-                bigTuple = (point, ori, newHand)
-                self.loads.update({load: bigTuple})
+                if element == movingElement[0]:
+                    bigTuple = (point, ori, newHand)
+                    self.loads.update({load: bigTuple})
+                else:
+                    continue
+
 
         # Handle Slacks
         for slack, (point, ori, hand) in self.slacks.items():
             centroid = self.centroidMaker(point, ori)
             if point == self.moveActivatedPos or hand == self.moveActivatedPos or \
                 centroid == self.moveActivatedPos:
+                element = (load, 'load')
+                movingElement.append(element)
                 newOriginX = point.x() + xDiff
                 newOriginY = point.y() + yDiff
                 newOrigin = QPoint(newOriginX, newOriginY)
@@ -2197,8 +2225,11 @@ class Grid(QWidget):
 
                 newHand = self.snap(QPoint(hand.x() + xDiff, hand.y() + yDiff))
 
-                bigTuple = (point, ori, newHand)
-                self.slacks.update({slack: bigTuple})
+                if element == movingElement[0]:
+                    bigTuple = (point, ori, newHand)
+                    self.slacks.update({slack: bigTuple})
+                else:
+                    continue
 
         self.moveActivatedPos = self.highLightedPoint
         self.updateBusCSVGuiParams()
