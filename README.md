@@ -24,7 +24,7 @@ LoadFlowX is a powerful and User-friendly software for performing power system l
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/yourusername/LoadFlowX.git  
+git clone https://github.com/itsalirezajalouli/LoadFlowX.git  
 cd LoadFlowX
 ```
 
