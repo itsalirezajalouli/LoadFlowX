@@ -69,8 +69,8 @@ class MainWindow(QMainWindow):
         docMenu = self.menu.addMenu('&Docs')
 
         # New Project Button
-        newButton = QAction('New Project', self)
-        newButton.setStatusTip('Make a new project file')
+        newButton = QAction('New Project', self) 
+        newButton.setStatusTip('Make a new project file') 
         newButton.triggered.connect(self.makeProject)
         fileMenu.addAction(newButton)
         fileMenu.addSeparator()
