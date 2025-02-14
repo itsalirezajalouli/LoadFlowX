@@ -23,22 +23,26 @@ LoadFlowX is a powerful and User-friendly software for performing power system l
 
 1. Clone this repository:
 
+```bash
 git clone https://github.com/yourusername/LoadFlowX.git  
 cd LoadFlowX
-
+```
 
 2. Install dependencies:
 
+```bash
 pip install -r requirements.txt
 
-
+```
 
 ## Usage
 
 - Navigate to the src directory and run the main script:
 
+```bash
 cd src  
 python main.py
+```
 
 ## License
 
