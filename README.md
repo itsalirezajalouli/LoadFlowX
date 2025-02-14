@@ -53,3 +53,6 @@ python main.py
 
 This project is licensed under the MIT License.
 
+## Contact
+
+For support or queries, please contact me at billypushr@gmail.com.
