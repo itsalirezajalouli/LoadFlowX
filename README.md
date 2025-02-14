@@ -2,6 +2,11 @@
 
 LoadFlowX is a powerful and User-friendly software for performing power system load flow analysis. It helps engineers and researchers analyze voltage, current, and power distribution in electrical networks.
 
+## Images
+
+![IEEE 9 Bus Example in Dark Mode](./darkModeDemo9Bus.jpg)
+![IEEE 39 Bus Example in Light Mode](./lightModeDemo39Bus.jpg)
+
 ## Features
 
 - Accurate load flow computations
