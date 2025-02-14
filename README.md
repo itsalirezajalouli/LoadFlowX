@@ -1,22 +1,46 @@
-#   DickSilent
+#   LoadFlowX
 
-##  TODO!
-- [x] Add Clear & Hand Button
-- [ ] Add Select Box when hovering on a bus
-- [x] Write a path finding script that gets the two clicked points and finds the shortes set of node between them
-- [x] Write the editing bus with clicking on them
-- [x] CSV system is shit
-- [ ] Complete the Add Line Class, it's incomplete
-- [ ] Complete the Add Bus Class, 
-- [ ] Fix the reject button error
-- [ ] Implement Add Transformer Class
-- [ ] Implement Add Generator Class
-- [ ] Implement Add Load Class
-- [ ] Double check pp datastructures:
--       static gen
--       external grid
--       transformators
--       impedance
-- [x] per unity algorithem, pp deos not have any data structure for this!
-- [x] add objects geodata to csv files
-- [ ] add result writer to add_element.py
+LoadFlowX is a powerful and User-friendly software for performing power system load flow analysis. It helps engineers and researchers analyze voltage, current, and power distribution in electrical networks.
+
+## Features
+
+- Accurate load flow computations
+ 
+- Supports multiple power system models
+ 
+- User-friendly command-line interface
+ 
+- Open-source and customizable
+
+
+## Installation
+
+### Prerequisites
+
+- Ensure you have Python 3.8+ installed on your system.
+
+### Setup
+
+1. Clone this repository:
+
+git clone https://github.com/yourusername/LoadFlowX.git  
+cd LoadFlowX
+
+
+2. Install dependencies:
+
+pip install -r requirements.txt
+
+
+
+## Usage
+
+- Navigate to the src directory and run the main script:
+
+cd src  
+python main.py
+
+## License
+
+This project is licensed under the MIT License.
+
