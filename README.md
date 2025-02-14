@@ -4,7 +4,7 @@ LoadFlowX is a powerful and User-friendly software for performing power system l
 
 ## Images
 
-![IEEE 9 Bus Example in Dark Mode](./darkModeDemo9Bus.jpg)
+![IEEE 9 Bus Example in Dark Mode](./darkModeDemo9Bus.png)
 ![IEEE 39 Bus Example in Light Mode](./lightModeDemo39Bus.jpg)
 
 ## Features
